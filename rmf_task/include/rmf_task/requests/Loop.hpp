@@ -47,9 +47,9 @@ public:
     std::size_t start_waypoint,
     std::size_t finish_waypoint,
     std::size_t num_loops,
-    std::shared_ptr<rmf_battery::MotionPowerSink> motion_sink,
-    std::shared_ptr<rmf_battery::DevicePowerSink> ambient_sink,
-    std::shared_ptr<rmf_traffic::agv::Planner> planner,
+    rmf_battery::ConstMotionPowerSinkPtr motion_sink,
+    rmf_battery::ConstDevicePowerSinkPtr ambient_sink,
+    std::shared_ptr<const rmf_traffic::agv::Planner> planner,
     rmf_traffic::Time start_time,
     bool drain_battery = true);
   
@@ -93,9 +93,9 @@ public:
     std::size_t start_waypoint,
     std::size_t finish_waypoint,
     std::size_t num_loops,
-    std::shared_ptr<rmf_battery::MotionPowerSink> motion_sink,
-    std::shared_ptr<rmf_battery::DevicePowerSink> ambient_sink,
-    std::shared_ptr<rmf_traffic::agv::Planner> planner,
+    rmf_battery::ConstMotionPowerSinkPtr motion_sink,
+    rmf_battery::ConstDevicePowerSinkPtr ambient_sink,
+    std::shared_ptr<const rmf_traffic::agv::Planner> planner,
     rmf_traffic::Time start_time,
     bool drain_battery = true,
     ConstPriorityPtr priority = nullptr);

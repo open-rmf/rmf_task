@@ -25,6 +25,9 @@ namespace rmf_task {
 // Forward declare abstract interface. The definition will remain as internal detail.
 class CostCalculator;
 
+using CostCalculatorPtr = std::shared_ptr<CostCalculator>;
+using ConstCostCalculatorPtr = std::shared_ptr<const CostCalculator>;
+
 } // namespace rmf_task
 
 # endif // RMF_TASK__COSTCALCULATOR_HPP

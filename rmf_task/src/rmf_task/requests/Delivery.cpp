@@ -35,9 +35,9 @@ public:
   std::size_t dropoff_waypoint;
   std::string dropoff_ingestor;
   std::vector<DispenserRequestItem> items;
-  std::shared_ptr<rmf_battery::MotionPowerSink> motion_sink;
-  std::shared_ptr<rmf_battery::DevicePowerSink> device_sink;
-  std::shared_ptr<rmf_traffic::agv::Planner> planner;
+  rmf_battery::ConstMotionPowerSinkPtr motion_sink;
+  rmf_battery::ConstDevicePowerSinkPtr device_sink;
+  std::shared_ptr<const rmf_traffic::agv::Planner> planner;
   rmf_traffic::Time start_time;
   bool drain_battery;
 
@@ -52,9 +52,9 @@ rmf_task::DescriptionPtr DeliveryDescription::make(
   std::size_t dropoff_waypoint,
   std::string dropoff_ingestor,
   std::vector<DispenserRequestItem> items,
-  std::shared_ptr<rmf_battery::MotionPowerSink> motion_sink,
-  std::shared_ptr<rmf_battery::DevicePowerSink> device_sink,
-  std::shared_ptr<rmf_traffic::agv::Planner> planner,
+  rmf_battery::ConstMotionPowerSinkPtr motion_sink,
+  rmf_battery::ConstDevicePowerSinkPtr device_sink,
+  std::shared_ptr<const rmf_traffic::agv::Planner> planner,
   rmf_traffic::Time start_time,
   bool drain_battery)
 {
@@ -337,16 +337,15 @@ DeliveryDescription::Start DeliveryDescription::dropoff_start(
 }
 
 //==============================================================================
-ConstRequestPtr Delivery::make(
-  const std::string& id,
+ConstRequestPtr Delivery::make(const std::string& id,
   std::size_t pickup_waypoint,
   std::string pickup_dispenser,
   std::size_t dropoff_waypoint,
   std::string dropoff_ingestor,
   std::vector<DispenserRequestItem> items,
-  std::shared_ptr<rmf_battery::MotionPowerSink> motion_sink,
-  std::shared_ptr<rmf_battery::DevicePowerSink> device_sink,
-  std::shared_ptr<rmf_traffic::agv::Planner> planner,
+  rmf_battery::ConstMotionPowerSinkPtr motion_sink,
+  rmf_battery::ConstDevicePowerSinkPtr device_sink,
+  std::shared_ptr<const rmf_traffic::agv::Planner> planner,
   rmf_traffic::Time start_time,
   bool drain_battery,
   ConstPriorityPtr priority)
@@ -357,13 +356,14 @@ ConstRequestPtr Delivery::make(
     dropoff_waypoint,
     dropoff_ingestor,
     items,
-    motion_sink,
-    device_sink,
-    planner,
+    std::move(motion_sink),
+    std::move(device_sink),
+    std::move(planner),
     start_time,
     drain_battery);
 
-  return std::make_shared<Request>(id, start_time, priority, description);
+  return std::make_shared<Request>(
+    id, start_time, std::move(priority), description);
 
 }
 

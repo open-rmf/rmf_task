@@ -44,11 +44,11 @@ public:
   static DescriptionPtr make(
     std::size_t start_waypoint,
     std::size_t end_waypoint,
-    rmf_traffic::Trajectory& cleaning_path,
-    std::shared_ptr<rmf_battery::MotionPowerSink> motion_sink,
-    std::shared_ptr<rmf_battery::DevicePowerSink> ambient_sink,
-    std::shared_ptr<rmf_battery::DevicePowerSink> cleaning_sink,
-    std::shared_ptr<rmf_traffic::agv::Planner> planner,
+    const rmf_traffic::Trajectory& cleaning_path,
+    rmf_battery::ConstMotionPowerSinkPtr motion_sink,
+    rmf_battery::ConstDevicePowerSinkPtr ambient_sink,
+    rmf_battery::ConstDevicePowerSinkPtr cleaning_sink,
+    std::shared_ptr<const rmf_traffic::agv::Planner> planner,
     rmf_traffic::Time start_time,
     bool drain_battery = true);
 
@@ -85,11 +85,11 @@ public:
     const std::string& id,
     std::size_t start_waypoint,
     std::size_t end_waypoint,
-    rmf_traffic::Trajectory& cleaning_path,
-    std::shared_ptr<rmf_battery::MotionPowerSink> motion_sink,
-    std::shared_ptr<rmf_battery::DevicePowerSink> ambient_sink,
-    std::shared_ptr<rmf_battery::DevicePowerSink> cleaning_sink,
-    std::shared_ptr<rmf_traffic::agv::Planner> planner,
+    const rmf_traffic::Trajectory& cleaning_path,
+    rmf_battery::ConstMotionPowerSinkPtr motion_sink,
+    rmf_battery::ConstDevicePowerSinkPtr ambient_sink,
+    rmf_battery::ConstDevicePowerSinkPtr cleaning_sink,
+    std::shared_ptr<const rmf_traffic::agv::Planner> planner,
     rmf_traffic::Time start_time,
     bool drain_battery = true,
     ConstPriorityPtr priority = nullptr);

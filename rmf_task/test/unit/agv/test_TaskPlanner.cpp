@@ -176,8 +176,8 @@ SCENARIO("Grid World")
   const auto cost_calculator =
     rmf_task::BinaryPriorityScheme::make_cost_calculator();
 
-  std::shared_ptr<TaskPlanner::Configuration> task_config =
-    std::make_shared<TaskPlanner::Configuration>(
+  TaskPlanner::Configuration task_config =
+    TaskPlanner::Configuration(
       battery_system,
       motion_sink,
       device_sink,
