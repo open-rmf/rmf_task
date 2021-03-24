@@ -31,9 +31,9 @@ public:
   std::size_t start_waypoint;
   std::size_t finish_waypoint;
   std::size_t num_loops;
-  std::shared_ptr<rmf_battery::MotionPowerSink> motion_sink;
-  std::shared_ptr<rmf_battery::DevicePowerSink> ambient_sink;
-  std::shared_ptr<rmf_traffic::agv::Planner> planner;
+  rmf_battery::ConstMotionPowerSinkPtr motion_sink;
+  rmf_battery::ConstDevicePowerSinkPtr ambient_sink;
+  std::shared_ptr<const rmf_traffic::agv::Planner> planner;
   rmf_traffic::Time start_time;
   bool drain_battery;
 
@@ -46,9 +46,9 @@ DescriptionPtr LoopDescription::make(
   std::size_t start_waypoint,
   std::size_t finish_waypoint,
   std::size_t num_loops,
-  std::shared_ptr<rmf_battery::MotionPowerSink> motion_sink,
-  std::shared_ptr<rmf_battery::DevicePowerSink> ambient_sink,
-  std::shared_ptr<rmf_traffic::agv::Planner> planner,
+  rmf_battery::ConstMotionPowerSinkPtr motion_sink,
+  rmf_battery::ConstDevicePowerSinkPtr ambient_sink,
+  std::shared_ptr<const rmf_traffic::agv::Planner> planner,
   rmf_traffic::Time start_time,
   bool drain_battery)
 {
@@ -356,9 +356,9 @@ ConstRequestPtr Loop::make(
   std::size_t start_waypoint,
   std::size_t finish_waypoint,
   std::size_t num_loops,
-  std::shared_ptr<rmf_battery::MotionPowerSink> motion_sink,
-  std::shared_ptr<rmf_battery::DevicePowerSink> ambient_sink,
-  std::shared_ptr<rmf_traffic::agv::Planner> planner,
+  rmf_battery::ConstMotionPowerSinkPtr motion_sink,
+  rmf_battery::ConstDevicePowerSinkPtr ambient_sink,
+  std::shared_ptr<const rmf_traffic::agv::Planner> planner,
   rmf_traffic::Time start_time,
   bool drain_battery,
   ConstPriorityPtr priority)
@@ -367,13 +367,14 @@ ConstRequestPtr Loop::make(
     start_waypoint,
     finish_waypoint,
     num_loops,
-    motion_sink,
-    ambient_sink,
-    planner,
+    std::move(motion_sink),
+    std::move(ambient_sink),
+    std::move(planner),
     start_time,
     drain_battery);
 
-  return std::make_shared<Request>(id, start_time, priority, description);
+  return std::make_shared<Request>(
+    id, start_time, std::move(priority), description);
 
 }
 

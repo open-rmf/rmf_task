@@ -35,18 +35,18 @@ class TaskPlanner::Configuration::Implementation
 public:
 
   rmf_battery::agv::BatterySystem battery_system;
-  std::shared_ptr<rmf_battery::MotionPowerSink> motion_sink;
-  std::shared_ptr<rmf_battery::DevicePowerSink> ambient_sink;
-  std::shared_ptr<rmf_traffic::agv::Planner> planner;
-  std::shared_ptr<rmf_task::CostCalculator> cost_calculator;
+  rmf_battery::ConstMotionPowerSinkPtr motion_sink;
+  rmf_battery::ConstDevicePowerSinkPtr ambient_sink;
+  std::shared_ptr<const rmf_traffic::agv::Planner> planner;
+  ConstCostCalculatorPtr cost_calculator;
 };
 
 TaskPlanner::Configuration::Configuration(
   rmf_battery::agv::BatterySystem battery_system,
-  std::shared_ptr<rmf_battery::MotionPowerSink> motion_sink,
-  std::shared_ptr<rmf_battery::DevicePowerSink> ambient_sink,
-  std::shared_ptr<rmf_traffic::agv::Planner> planner,
-  std::shared_ptr<rmf_task::CostCalculator> cost_calculator)
+  rmf_battery::ConstMotionPowerSinkPtr motion_sink,
+  rmf_battery::ConstDevicePowerSinkPtr ambient_sink,
+  std::shared_ptr<const rmf_traffic::agv::Planner> planner,
+  ConstCostCalculatorPtr cost_calculator)
 : _pimpl(rmf_utils::make_impl<Implementation>(
       Implementation{
         battery_system,
@@ -60,7 +60,8 @@ TaskPlanner::Configuration::Configuration(
 }
 
 //==============================================================================
-const rmf_battery::agv::BatterySystem& TaskPlanner::Configuration::battery_system()
+const rmf_battery::agv::BatterySystem&
+TaskPlanner::Configuration::battery_system() const
 {
   return _pimpl->battery_system;
 }
@@ -74,23 +75,22 @@ auto TaskPlanner::Configuration::battery_system(
 }
 
 //==============================================================================
-const std::shared_ptr<rmf_battery::MotionPowerSink>&
-TaskPlanner::Configuration::motion_sink() const
+const std::shared_ptr<const rmf_battery::MotionPowerSink>& TaskPlanner::Configuration::motion_sink() const
 {
   return _pimpl->motion_sink;
 }
 
 //==============================================================================
 auto TaskPlanner::Configuration::motion_sink(
-  std::shared_ptr<rmf_battery::MotionPowerSink> motion_sink) -> Configuration&
+  rmf_battery::ConstMotionPowerSinkPtr motion_sink) -> Configuration&
 {
   if (motion_sink)
-    _pimpl->motion_sink = motion_sink;
+    _pimpl->motion_sink = std::move(motion_sink);
   return *this;
 }
 
 //==============================================================================
-const std::shared_ptr<rmf_battery::DevicePowerSink>&
+const rmf_battery::ConstDevicePowerSinkPtr&
 TaskPlanner::Configuration::ambient_sink() const
 {
   return _pimpl->ambient_sink;
@@ -98,15 +98,15 @@ TaskPlanner::Configuration::ambient_sink() const
 
 //==============================================================================
 auto TaskPlanner::Configuration::ambient_sink(
-  std::shared_ptr<rmf_battery::DevicePowerSink> ambient_sink) -> Configuration&
+  rmf_battery::ConstDevicePowerSinkPtr ambient_sink) -> Configuration&
 {
   if (ambient_sink)
-    _pimpl->ambient_sink = ambient_sink;
+    _pimpl->ambient_sink = std::move(ambient_sink);
   return *this;
 }
 
 //==============================================================================
-const std::shared_ptr<rmf_traffic::agv::Planner>&
+const std::shared_ptr<const rmf_traffic::agv::Planner>&
 TaskPlanner::Configuration::planner() const
 {
   return _pimpl->planner;
@@ -114,15 +114,15 @@ TaskPlanner::Configuration::planner() const
 
 //==============================================================================
 auto TaskPlanner::Configuration::planner(
-  std::shared_ptr<rmf_traffic::agv::Planner> planner) -> Configuration&
+  std::shared_ptr<const rmf_traffic::agv::Planner> planner) -> Configuration&
 {
   if (planner)
-    _pimpl->planner = planner;
+    _pimpl->planner = std::move(planner);
   return *this;
 }
 
 //==============================================================================
-const std::shared_ptr<rmf_task::CostCalculator>&
+const ConstCostCalculatorPtr&
 TaskPlanner::Configuration::cost_calculator() const
 {
   return _pimpl->cost_calculator;
@@ -130,9 +130,9 @@ TaskPlanner::Configuration::cost_calculator() const
 
 //==============================================================================
 auto TaskPlanner::Configuration::cost_calculator(
-  std::shared_ptr<rmf_task::CostCalculator> cost_calculator) -> Configuration&
+  ConstCostCalculatorPtr cost_calculator) -> Configuration&
 {
-  _pimpl->cost_calculator = cost_calculator;
+  _pimpl->cost_calculator = std::move(cost_calculator);
   return *this;
 }
 
@@ -342,18 +342,18 @@ class TaskPlanner::Implementation
 {
 public:
 
-  std::shared_ptr<Configuration> config;
+  Configuration config;
   std::shared_ptr<EstimateCache> estimate_cache;
   bool check_priority = false;
-  std::shared_ptr<rmf_task::CostCalculator> cost_calculator = nullptr;
+  ConstCostCalculatorPtr cost_calculator = nullptr;
 
   ConstRequestPtr make_charging_request(rmf_traffic::Time start_time)
   {
     return rmf_task::requests::ChargeBattery::make(
-      config->battery_system(),
-      config->motion_sink(),
-      config->ambient_sink(),
-      config->planner(),
+      config.battery_system(),
+      config.motion_sink(),
+      config.ambient_sink(),
+      config.planner(),
       start_time,
       true);
   }
@@ -405,7 +405,7 @@ public:
   {
     assert(initial_states.size() == constraints_set.size());
 
-    cost_calculator = config->cost_calculator() ? config->cost_calculator() :
+    cost_calculator = config.cost_calculator() ? config.cost_calculator() :
       rmf_task::BinaryPriorityScheme::make_cost_calculator();
 
     // Check if a high priority task exists among the requests.
@@ -512,7 +512,7 @@ public:
           charge_battery->description(),
           estimate_cache,
           error);
-      
+
       if (!pending_task)
         return nullptr;
 
@@ -957,12 +957,13 @@ public:
 };
 
 // ============================================================================
-TaskPlanner::TaskPlanner(std::shared_ptr<Configuration> config)
+TaskPlanner::TaskPlanner(
+  const rmf_task::agv::TaskPlanner::Configuration& config)
 : _pimpl(rmf_utils::make_impl<Implementation>(
       Implementation{
         config,
         std::make_shared<EstimateCache>(
-          config->planner()->get_configuration().graph().num_waypoints())
+          config.planner()->get_configuration().graph().num_waypoints())
       }))
 {
   // Do nothing
@@ -1004,8 +1005,8 @@ auto TaskPlanner::optimal_plan(
 // ============================================================================
 auto TaskPlanner::compute_cost(const Assignments& assignments) const -> double
 {
-  if (_pimpl->config->cost_calculator())
-    return _pimpl->config->cost_calculator()->compute_cost(assignments);
+  if (_pimpl->config.cost_calculator())
+    return _pimpl->config.cost_calculator()->compute_cost(assignments);
 
   const auto cost_calculator =
     rmf_task::BinaryPriorityScheme::make_cost_calculator();
@@ -1020,7 +1021,7 @@ const std::shared_ptr<EstimateCache>& TaskPlanner::estimate_cache() const
 }
 
 // ============================================================================
-const std::shared_ptr<TaskPlanner::Configuration>& TaskPlanner::config() const
+const rmf_task::agv::TaskPlanner::Configuration& TaskPlanner::config() const
 {
   return _pimpl->config;
 }
