@@ -37,7 +37,7 @@ public:
   {
     if (_battery_soc < 0.0 || _battery_soc > 1.0)
       throw std::invalid_argument(
-        "Battery State of Charge needs to be between 0.0 and 1.0.");
+              "Battery State of Charge needs to be between 0.0 and 1.0.");
   }
 
   rmf_traffic::agv::Plan::Start _location;
@@ -51,8 +51,9 @@ State::State(
   std::size_t charging_waypoint,
   double battery_soc)
 : _pimpl(rmf_utils::make_impl<Implementation>(
-    Implementation(std::move(location), charging_waypoint, battery_soc)))
-{}
+      Implementation(std::move(location), charging_waypoint, battery_soc)))
+{
+}
 
 //==============================================================================
 rmf_traffic::agv::Plan::Start State::location() const
@@ -91,7 +92,7 @@ State& State::battery_soc(double new_battery_soc)
 {
   if (new_battery_soc < 0.0 || new_battery_soc > 1.0)
     throw std::invalid_argument(
-      "Battery State of Charge needs be between 0.0 and 1.0.");
+            "Battery State of Charge needs be between 0.0 and 1.0.");
 
   _pimpl->_battery_soc = new_battery_soc;
   return *this;

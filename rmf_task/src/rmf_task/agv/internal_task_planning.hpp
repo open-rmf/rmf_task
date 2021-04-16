@@ -28,7 +28,7 @@
 #include <limits>
 
 namespace rmf_task {
-namespace agv{
+namespace agv {
 
 // ============================================================================
 struct Invariant
@@ -137,7 +137,7 @@ private:
   std::vector<Map::iterator> _candidate_map;
 
   Candidates(Map candidate_values)
-    : _value_map(std::move(candidate_values))
+  : _value_map(std::move(candidate_values))
   {
     _update_map();
   }
@@ -161,22 +161,22 @@ class PendingTask
 public:
 
   static std::shared_ptr<PendingTask> make(
-      std::vector<rmf_task::agv::State>& initial_states,
-      std::vector<rmf_task::agv::Constraints>& constraints_set,
-      rmf_task::ConstRequestPtr request_,
-      rmf_task::Request::DescriptionPtr charge_battery_desc,
-      std::shared_ptr<EstimateCache> estimate_cache,
-      TaskPlanner::TaskPlannerError& error);
+    std::vector<rmf_task::agv::State>& initial_states,
+    std::vector<rmf_task::agv::Constraints>& constraints_set,
+    rmf_task::ConstRequestPtr request_,
+    rmf_task::Request::DescriptionPtr charge_battery_desc,
+    std::shared_ptr<EstimateCache> estimate_cache,
+    TaskPlanner::TaskPlannerError& error);
 
   rmf_task::ConstRequestPtr request;
   Candidates candidates;
 
 private:
   PendingTask(
-      rmf_task::ConstRequestPtr request_,
-      Candidates candidates_)
-    : request(std::move(request_)),
-      candidates(candidates_)
+    rmf_task::ConstRequestPtr request_,
+    Candidates candidates_)
+  : request(std::move(request_)),
+    candidates(candidates_)
   {
     // Do nothing
   }
@@ -217,7 +217,8 @@ struct Node
       double earliest_start_time = rmf_traffic::time::to_seconds(
         u.second.request->earliest_start_time().time_since_epoch());
       double earliest_finish_time = earliest_start_time
-        + rmf_traffic::time::to_seconds(u.second.request->description()->invariant_duration());
+        + rmf_traffic::time::to_seconds(
+        u.second.request->description()->invariant_duration());
 
       unassigned_invariants.insert(
         Invariant{

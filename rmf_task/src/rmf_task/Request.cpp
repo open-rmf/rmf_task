@@ -37,13 +37,13 @@ Request::Request(
   DescriptionPtr description)
 : _pimpl(rmf_utils::make_impl<Implementation>(
       Implementation {
-          id,
-          earliest_start_time,
-          std::move(priority),
-          std::move(description)
+        id,
+        earliest_start_time,
+        std::move(priority),
+        std::move(description)
       }))
 {
-    // Do nothing
+  // Do nothing
 }
 
 //==============================================================================
