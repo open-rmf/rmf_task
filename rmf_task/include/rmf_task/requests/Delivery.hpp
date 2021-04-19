@@ -81,7 +81,7 @@ public:
 
   /// Get the Start when the robot reaches the pickup_waypoint from an initial
   /// start
-  Start dropoff_start(const Start& start) const;  
+  Start dropoff_start(const Start& start) const;
 
   class Implementation;
 private:

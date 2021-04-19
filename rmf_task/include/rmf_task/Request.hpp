@@ -44,7 +44,7 @@ public:
       const agv::State& initial_state,
       const agv::Constraints& task_planning_constraints,
       const std::shared_ptr<EstimateCache> estimate_cache) const = 0;
-    
+
     /// Estimate the invariant component of the request's duration
     virtual rmf_traffic::Duration invariant_duration() const = 0;
 

@@ -38,7 +38,8 @@ void InvariantHeuristicQueue::add(
   const double earliest_start_time, const double earliest_finish_time)
 {
   double prev_end_value = _stacks[0].back().end;
-  double new_end_value = prev_end_value + (earliest_finish_time - earliest_start_time);
+  double new_end_value = prev_end_value +
+    (earliest_finish_time - earliest_start_time);
   _stacks[0].push_back({earliest_start_time, new_end_value});
 
   // Find the largest stack that is still smaller than the current front

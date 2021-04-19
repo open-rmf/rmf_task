@@ -31,14 +31,18 @@ public:
 
 Constraints::Constraints(double threshold_soc)
 : _pimpl(rmf_utils::make_impl<Implementation>(
-    Implementation
-    {
-      threshold_soc
-    }))
+      Implementation
+      {
+        threshold_soc
+      }))
 {
   if (threshold_soc < 0.0 || threshold_soc > 1.0)
+  {
+    // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
     throw std::invalid_argument(
       "Battery State of Charge threshold needs be between 0.0 and 1.0.");
+    // *INDENT-ON*
+  }
 }
 
 double Constraints::threshold_soc() const
@@ -49,8 +53,12 @@ double Constraints::threshold_soc() const
 auto Constraints::threshold_soc(double threshold_soc) -> Constraints&
 {
   if (threshold_soc < 0.0 || threshold_soc > 1.0)
+  {
+    // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
     throw std::invalid_argument(
       "Battery State of Charge threshold needs be between 0.0 and 1.0.");
+    // *INDENT-ON*
+  }
 
   _pimpl->threshold_soc = threshold_soc;
   return *this;

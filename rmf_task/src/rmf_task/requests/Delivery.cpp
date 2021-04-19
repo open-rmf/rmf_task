@@ -98,8 +98,8 @@ rmf_task::DescriptionPtr DeliveryDescription::make(
           delivery->_pimpl->motion_sink->compute_change_in_charge(trajectory);
         const double dSOC_device =
           delivery->_pimpl->device_sink->compute_change_in_charge(
-            rmf_traffic::time::to_seconds(itinerary_duration));
-        delivery->_pimpl->invariant_battery_drain += dSOC_motion + dSOC_device;  
+          rmf_traffic::time::to_seconds(itinerary_duration));
+        delivery->_pimpl->invariant_battery_drain += dSOC_motion + dSOC_device;
       }
 
       delivery->_pimpl->invariant_duration += itinerary_duration;
@@ -143,7 +143,7 @@ rmf_utils::optional<rmf_task::Estimate> DeliveryDescription::estimate_finish(
   if (initial_state.waypoint() != _pimpl->pickup_waypoint)
   {
     const auto endpoints = std::make_pair(initial_state.waypoint(),
-      _pimpl->pickup_waypoint);
+        _pimpl->pickup_waypoint);
     const auto& cache_result = estimate_cache->get(endpoints);
     // Use previously memoized values if possible
     if (cache_result)
@@ -162,7 +162,7 @@ rmf_utils::optional<rmf_task::Estimate> DeliveryDescription::estimate_finish(
       auto itinerary_start_time = start_time;
       double variant_battery_drain = 0.0;
       for (const auto& itinerary : result_to_pickup->get_itinerary())
-      {  
+      {
         const auto& trajectory = itinerary.trajectory();
         const auto& finish_time = *trajectory.finish_time();
         const rmf_traffic::Duration itinerary_duration =
@@ -175,7 +175,7 @@ rmf_utils::optional<rmf_task::Estimate> DeliveryDescription::estimate_finish(
             trajectory);
           dSOC_device =
             _pimpl->device_sink->compute_change_in_charge(
-              rmf_traffic::time::to_seconds(itinerary_duration));
+            rmf_traffic::time::to_seconds(itinerary_duration));
           battery_soc = battery_soc - dSOC_motion - dSOC_device;
           variant_battery_drain += dSOC_device + dSOC_motion;
         }
@@ -200,7 +200,8 @@ rmf_utils::optional<rmf_task::Estimate> DeliveryDescription::estimate_finish(
   if (_pimpl->drain_battery && wait_until > initial_state.finish_time() &&
     initial_state.waypoint() != initial_state.charging_waypoint())
   {
-    rmf_traffic::Duration wait_duration(wait_until - initial_state.finish_time());
+    rmf_traffic::Duration wait_duration(
+      wait_until - initial_state.finish_time());
     dSOC_device = _pimpl->device_sink->compute_change_in_charge(
       rmf_traffic::time::to_seconds(wait_duration));
     battery_soc = battery_soc - dSOC_device;
@@ -223,10 +224,10 @@ rmf_utils::optional<rmf_task::Estimate> DeliveryDescription::estimate_finish(
 
     // Check if the robot has enough charge to head back to nearest charger
     double retreat_battery_drain = 0.0;
-    if ( _pimpl->dropoff_waypoint != state.charging_waypoint())
+    if (_pimpl->dropoff_waypoint != state.charging_waypoint())
     {
       const auto endpoints = std::make_pair(_pimpl->dropoff_waypoint,
-        state.charging_waypoint());
+          state.charging_waypoint());
       const auto& cache_result = estimate_cache->get(endpoints);
       if (cache_result)
       {
@@ -252,9 +253,10 @@ rmf_utils::optional<rmf_task::Estimate> DeliveryDescription::estimate_finish(
           const rmf_traffic::Duration itinerary_duration =
             finish_time - itinerary_start_time;
 
-          dSOC_motion = _pimpl->motion_sink->compute_change_in_charge(trajectory);
+          dSOC_motion =
+            _pimpl->motion_sink->compute_change_in_charge(trajectory);
           dSOC_device = _pimpl->device_sink->compute_change_in_charge(
-              rmf_traffic::time::to_seconds(itinerary_duration));
+            rmf_traffic::time::to_seconds(itinerary_duration));
           retreat_battery_drain += dSOC_motion + dSOC_device;
 
           itinerary_start_time = finish_time;
@@ -265,9 +267,10 @@ rmf_utils::optional<rmf_task::Estimate> DeliveryDescription::estimate_finish(
       }
     }
 
-    if (battery_soc - retreat_battery_drain <= task_planning_constraints.threshold_soc())
+    if (battery_soc - retreat_battery_drain <=
+      task_planning_constraints.threshold_soc())
       return rmf_utils::nullopt;
-    
+
     state.battery_soc(battery_soc);
   }
 
@@ -323,7 +326,7 @@ DeliveryDescription::Start DeliveryDescription::dropoff_start(
   const auto result = _pimpl->planner->plan(start, goal);
   // We assume we can always compute a plan
   const auto& trajectory =
-      result->get_itinerary().back().trajectory();
+    result->get_itinerary().back().trajectory();
   const auto& finish_time = *trajectory.finish_time();
   const double orientation = trajectory.back().position()[2];
 

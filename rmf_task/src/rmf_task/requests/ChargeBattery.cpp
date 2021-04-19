@@ -129,7 +129,7 @@ ChargeBatteryDescription::estimate_finish(
   if (initial_state.waypoint() != initial_state.charging_waypoint())
   {
     const auto endpoints = std::make_pair(initial_state.waypoint(),
-      initial_state.charging_waypoint());
+        initial_state.charging_waypoint());
     const auto& cache_result = estimate_cache->get(endpoints);
     // Use memoized values if possible
     if (cache_result)
@@ -196,7 +196,8 @@ rmf_traffic::Duration ChargeBatteryDescription::invariant_duration() const
 }
 
 //==============================================================================
-const rmf_battery::agv::BatterySystem& ChargeBatteryDescription::battery_system() const
+const rmf_battery::agv::BatterySystem& ChargeBatteryDescription::battery_system()
+const
 {
   return *_pimpl->battery_system;
 }

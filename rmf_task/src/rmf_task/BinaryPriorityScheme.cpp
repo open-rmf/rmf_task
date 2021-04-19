@@ -31,7 +31,7 @@ std::shared_ptr<Priority> BinaryPriorityScheme::make_low_priority()
 //==============================================================================
 std::shared_ptr<Priority> BinaryPriorityScheme::make_high_priority()
 {
- return std::make_shared<BinaryPriority>(1);
+  return std::make_shared<BinaryPriority>(1);
 }
 
 //==============================================================================

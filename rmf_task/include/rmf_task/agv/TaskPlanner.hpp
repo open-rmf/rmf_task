@@ -41,7 +41,7 @@ namespace agv {
 class TaskPlanner
 {
 public:
- 
+
   /// The Configuration class contains planning parameters that are immutable
   /// for each TaskPlanner instance and should not change in between plans.
   class Configuration
@@ -143,21 +143,21 @@ public:
     const rmf_traffic::Time deployment_time() const;
 
     class Implementation;
-  
+
   private:
     rmf_utils::impl_ptr<Implementation> _pimpl;
   };
 
   enum class TaskPlannerError
   {
-    /// None of the agents in the initial states have sufficient initial charge 
+    /// None of the agents in the initial states have sufficient initial charge
     /// to even head back to their charging stations. Manual intervention is
     /// needed to recharge one or more agents.
     low_battery,
 
     /// None of the agents in the initial states have sufficient battery
     /// capacity to accommodate one or more requests. This may be remedied by
-    /// increasing the battery capacity or by lowering the threshold_soc in the 
+    /// increasing the battery capacity or by lowering the threshold_soc in the
     /// state configs of the agents or by modifying the original request.
     limited_capacity
   };
@@ -175,7 +175,7 @@ public:
   /// Get a shared pointer to the configuration of this task planner
   const Configuration& config() const;
 
-  /// Get the greedy planner based assignments for a set of initial states and 
+  /// Get the greedy planner based assignments for a set of initial states and
   /// requests
   Result greedy_plan(
     rmf_traffic::Time time_now,
@@ -183,7 +183,7 @@ public:
     std::vector<Constraints> constraints_set,
     std::vector<ConstRequestPtr> requests);
 
-  /// Get the optimal planner based assignments for a set of initial states and 
+  /// Get the optimal planner based assignments for a set of initial states and
   /// requests
   /// \note When the number of requests exceed 10 for the same start time
   /// segment, this plan may take a while to be generated. Hence, it is
@@ -205,7 +205,7 @@ public:
   class Implementation;
 
 private:
-  rmf_utils::impl_ptr<Implementation> _pimpl; 
+  rmf_utils::impl_ptr<Implementation> _pimpl;
 
 };
 
