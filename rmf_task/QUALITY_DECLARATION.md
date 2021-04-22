@@ -48,7 +48,7 @@ All launch files in the installed `launch` directory are considered part of the 
 
 ### Contributor Origin [2.ii]
 
-`rmf_task` does not require a confirmation of contributor origin.
+`rmf_task` uses DCO as its confirmation of contributor origin policy. More information can be found in [CONTRIBUTING](../CONTRIBUTING.md).
 
 ### Peer Review Policy [2.iii]
 
@@ -94,18 +94,19 @@ This quality declaration has not been externally peer-reviewed and is not regist
 ### Feature Testing [4.i]
 
 Each feature in `rmf_task` has corresponding tests which simulate typical usage.
-They are located in the [`test`](https://github.com/open-rmf/rmf_task/tree/master/rmf_task/test) directory.
+They are located in the [`test`](https://github.com/open-rmf/rmf_task/tree/main/rmf_task/test) directory.
 New features are required to have tests before being added.
 
 ### Public API Testing [4.ii]
 
 Each part of the public API has tests, and new additions or changes to the public API require tests before being added.
-The tests are not run automatically.
-They are located in the [`test`](https://github.com/open-rmf/rmf_task/tree/master/rmf_task/test) directory.
+They are located in the [`test`](https://github.com/open-rmf/rmf_task/tree/main/rmf_task/test) directory.
 
 ### Coverage [4.iii]
 
-`rmf_task` does not track coverage statistics.
+`rmf_task` tracks code coverage statistics. There is no coverage target currently, but new changes are required to make a best effort to keep or increase coverage before being accepted. Decreases are allowed if properly justified and accepted by reviewers. Code coverage will be improved in the future as time allows.
+
+Current coverage statistics can be viewed [here](https://codecov.io/gh/open-rmf/rmf_task).
 
 ### Performance [4.iv]
 
@@ -125,15 +126,15 @@ Below are the required direct runtime ROS dependencies of `rmf_task` and their e
 
 #### rmf\_battery
 
-`rmf_battery` is [**Quality Level 4**](https://github.com/open-rmf/rmf_battery/blob/master/rmf_battery/QUALITY_DECLARATION.md).
+`rmf_battery` is [**Quality Level 4**](https://github.com/open-rmf/rmf_battery/blob/main/rmf_battery/QUALITY_DECLARATION.md).
 
 #### rmf\_utils
 
-`rmf_utils` is [**Quality Level 4**](https://github.com/open-rmf/rmf_utils/blob/master/rmf_core_utils/QUALITY_DECLARATION.md).
+`rmf_utils` is [**Quality Level 4**](https://github.com/open-rmf/rmf_utils/blob/main/rmf_utils/QUALITY_DECLARATION.md).
 
 #### rmf\_dispenser_msgs
 
-`rmf_dispenser_msgs` is [**Quality Level 3**](https://github.com/open-rmf/rmf_core_msgs/blob/master/rmf_dispenser_msgs/QUALITY_DECLARATION.md).
+`rmf_dispenser_msgs` is [**Quality Level 3**](https://github.com/open-rmf/rmf_internal_msgs/blob/main/rmf_dispenser_msgs/QUALITY_DECLARATION.md).
 
 ### Optional Direct Runtime ROS Dependencies [5.ii]
 
