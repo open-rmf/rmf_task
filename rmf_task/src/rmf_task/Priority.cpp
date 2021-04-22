@@ -19,6 +19,8 @@
 
 namespace rmf_task {
 
-Priority::~Priority() {}
+Priority::~Priority()
+{
+}
 
 } // namespace rmf_task

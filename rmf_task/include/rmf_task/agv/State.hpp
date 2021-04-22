@@ -51,7 +51,7 @@ public:
     rmf_traffic::agv::Plan::Start location,
     std::size_t charging_waypoint,
     double battery_soc);
-  
+
   /// The current state's location.
   rmf_traffic::agv::Plan::Start location() const;
 

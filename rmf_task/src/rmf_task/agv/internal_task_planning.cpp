@@ -39,19 +39,19 @@ std::shared_ptr<Candidates> Candidates::make(
     if (finish.has_value())
     {
       initial_map.insert({
-        finish.value().finish_state().finish_time(),
-        Entry{
-          i,
-          finish.value().finish_state(),
-          finish.value().wait_until(),
-          state,
-          false}});
+          finish.value().finish_state().finish_time(),
+          Entry{
+            i,
+            finish.value().finish_state(),
+            finish.value().wait_until(),
+            state,
+            false}});
     }
     else
     {
       auto battery_estimate =
         charge_battery_desc.estimate_finish(
-          state, constraints, estimate_cache);
+        state, constraints, estimate_cache);
       if (battery_estimate.has_value())
       {
         auto new_finish = request.description()->estimate_finish(
@@ -60,18 +60,18 @@ std::shared_ptr<Candidates> Candidates::make(
         {
           initial_map.insert(
             {new_finish.value().finish_state().finish_time(),
-            Entry{
-              i,
-              new_finish.value().finish_state(),
-              new_finish.value().wait_until(),
-              state,
-              true}});
+              Entry{
+                i,
+                new_finish.value().finish_state(),
+                new_finish.value().wait_until(),
+                state,
+                true}});
         }
         else
         {
           error = TaskPlanner::TaskPlannerError::limited_capacity;
         }
-        
+
       }
       else
       {
@@ -79,8 +79,8 @@ std::shared_ptr<Candidates> Candidates::make(
         // called on initial state with full battery or low battery such that
         // agent is unable to make it back to the charger
         if (abs(
-          state.battery_soc() - charge_battery_desc.max_charge_soc()) < 1e-3) 
-            error = TaskPlanner::TaskPlannerError::limited_capacity;
+            state.battery_soc() - charge_battery_desc.max_charge_soc()) < 1e-3)
+          error = TaskPlanner::TaskPlannerError::limited_capacity;
         else
           error = TaskPlanner::TaskPlannerError::low_battery;
       }
@@ -99,19 +99,19 @@ std::shared_ptr<Candidates> Candidates::make(
 
 // ============================================================================
 std::shared_ptr<PendingTask> PendingTask::make(
-    std::vector<rmf_task::agv::State>& initial_states,
-    std::vector<rmf_task::agv::Constraints>& constraints_set,
-    rmf_task::ConstRequestPtr request_,
-    rmf_task::Request::DescriptionPtr charge_battery_desc,
-    std::shared_ptr<EstimateCache> estimate_cache,
-    TaskPlanner::TaskPlannerError& error)
+  std::vector<rmf_task::agv::State>& initial_states,
+  std::vector<rmf_task::agv::Constraints>& constraints_set,
+  rmf_task::ConstRequestPtr request_,
+  rmf_task::Request::DescriptionPtr charge_battery_desc,
+  std::shared_ptr<EstimateCache> estimate_cache,
+  TaskPlanner::TaskPlannerError& error)
 {
 
   auto battery_desc = std::dynamic_pointer_cast<
     const rmf_task::requests::ChargeBatteryDescription>(charge_battery_desc);
 
   const auto candidates = Candidates::make(initial_states, constraints_set,
-        *request_, *battery_desc, estimate_cache, error);
+      *request_, *battery_desc, estimate_cache, error);
 
   if (!candidates)
     return nullptr;

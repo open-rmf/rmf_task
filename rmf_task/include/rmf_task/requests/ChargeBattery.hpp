@@ -42,9 +42,9 @@ public:
 
   static DescriptionPtr make(
     rmf_battery::agv::BatterySystem battery_system,
-    std::shared_ptr<rmf_battery::MotionPowerSink> motion_sink,
-    std::shared_ptr<rmf_battery::DevicePowerSink> device_sink,
-    std::shared_ptr<rmf_traffic::agv::Planner> planner,
+    rmf_battery::ConstMotionPowerSinkPtr motion_sink,
+    rmf_battery::ConstDevicePowerSinkPtr device_sink,
+    std::shared_ptr<const rmf_traffic::agv::Planner> planner,
     rmf_traffic::Time start_time,
     bool drain_battery = true);
 
@@ -75,9 +75,9 @@ public:
 
   static ConstRequestPtr make(
     rmf_battery::agv::BatterySystem battery_system,
-    std::shared_ptr<rmf_battery::MotionPowerSink> motion_sink,
-    std::shared_ptr<rmf_battery::DevicePowerSink> device_sink,
-    std::shared_ptr<rmf_traffic::agv::Planner> planner,
+    rmf_battery::ConstMotionPowerSinkPtr motion_sink,
+    rmf_battery::ConstDevicePowerSinkPtr device_sink,
+    std::shared_ptr<const rmf_traffic::agv::Planner> planner,
     rmf_traffic::Time start_time,
     bool drain_battery = true,
     ConstPriorityPtr priority = nullptr);

@@ -51,9 +51,9 @@ public:
     std::size_t dropoff_waypoint,
     std::string dropoff_ingestor,
     std::vector<DispenserRequestItem> items,
-    std::shared_ptr<rmf_battery::MotionPowerSink> motion_sink,
-    std::shared_ptr<rmf_battery::DevicePowerSink> device_sink,
-    std::shared_ptr<rmf_traffic::agv::Planner> planner,
+    rmf_battery::ConstMotionPowerSinkPtr motion_sink,
+    rmf_battery::ConstDevicePowerSinkPtr device_sink,
+    std::shared_ptr<const rmf_traffic::agv::Planner> planner,
     rmf_traffic::Time start_time,
     bool drain_battery = true);
 
@@ -81,7 +81,7 @@ public:
 
   /// Get the Start when the robot reaches the pickup_waypoint from an initial
   /// start
-  Start dropoff_start(const Start& start) const;  
+  Start dropoff_start(const Start& start) const;
 
   class Implementation;
 private:
@@ -104,9 +104,9 @@ public:
     std::size_t dropoff_waypoint,
     std::string dropoff_ingestor,
     std::vector<DispenserRequestItem> items,
-    std::shared_ptr<rmf_battery::MotionPowerSink> motion_sink,
-    std::shared_ptr<rmf_battery::DevicePowerSink> device_sink,
-    std::shared_ptr<rmf_traffic::agv::Planner> planner,
+    rmf_battery::ConstMotionPowerSinkPtr motion_sink,
+    rmf_battery::ConstDevicePowerSinkPtr device_sink,
+    std::shared_ptr<const rmf_traffic::agv::Planner> planner,
     rmf_traffic::Time start_time,
     bool drain_battery = true,
     ConstPriorityPtr priority = nullptr);

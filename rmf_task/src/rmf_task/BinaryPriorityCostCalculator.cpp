@@ -25,14 +25,14 @@ auto BinaryPriorityCostCalculator::compute_g_assignment(
   const TaskPlanner::Assignment& assignment) const -> double
 {
   if (std::dynamic_pointer_cast<
-    const rmf_task::requests::ChargeBatteryDescription>(
+      const rmf_task::requests::ChargeBatteryDescription>(
       assignment.request()->description()))
   {
     return 0.0; // Ignore charging tasks in cost
   }
 
   return rmf_traffic::time::to_seconds(assignment.state().finish_time()
-    - assignment.request()->earliest_start_time());
+      - assignment.request()->earliest_start_time());
 }
 
 //==============================================================================
@@ -78,11 +78,11 @@ auto BinaryPriorityCostCalculator::compute_h(
   for (const auto& u : node.unassigned_tasks)
   {
     const rmf_traffic::Time earliest_deployment_time =
-        u.second.candidates.best_finish_time()
-        - u.second.request->description()->invariant_duration();
+      u.second.candidates.best_finish_time()
+      - u.second.request->description()->invariant_duration();
     const double earliest_deployment_time_s =
       rmf_traffic::time::to_seconds(
-        earliest_deployment_time.time_since_epoch());
+      earliest_deployment_time.time_since_epoch());
 
     const auto& range = u.second.candidates.best_candidates();
     for (auto it = range.begin; it != range.end; ++it)
@@ -158,24 +158,24 @@ bool BinaryPriorityCostCalculator::valid_assignment_priority(
   {
     if (agent.empty())
       continue;
-    
+
     auto it = agent.begin();
     // We update the iterator such that the first assignment is a non-charging task
     while (std::dynamic_pointer_cast<
-      const rmf_task::requests::ChargeBatteryDescription>(
+        const rmf_task::requests::ChargeBatteryDescription>(
         it->assignment.request()->description()))
     {
       ++it;
       if (it == agent.end())
         return true;
-    } 
+    }
 
     auto prev_priority = it->assignment.request()->priority();
     ++it;
     for (; it != agent.end(); ++it)
     {
       if (std::dynamic_pointer_cast<
-        const rmf_task::requests::ChargeBatteryDescription>(
+          const rmf_task::requests::ChargeBatteryDescription>(
           it->assignment.request()->description()))
         continue;
       auto curr_priority = it->assignment.request()->priority();
@@ -186,7 +186,7 @@ bool BinaryPriorityCostCalculator::valid_assignment_priority(
     }
   }
 
-  return true; 
+  return true;
 }
 
 //==============================================================================
@@ -212,7 +212,7 @@ double BinaryPriorityCostCalculator::compute_cost(
       return _priority_penalty * (g + h);
   }
 
-  return g + h; 
+  return g + h;
 }
 
 //==============================================================================

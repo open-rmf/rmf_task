@@ -60,8 +60,8 @@ inline bool check_implicit_charging_task_start(
     const auto& s = agent[0].state();
     auto is_charge_request =
       std::dynamic_pointer_cast<
-        const rmf_task::requests::ChargeBatteryDescription>(
-          agent[0].request()->description());
+      const rmf_task::requests::ChargeBatteryDescription>(
+      agent[0].request()->description());
 
     // No task should consume more charge than (1.0 - initial_soc)
     // in the current test, so we are guaranted to find any occurrence
@@ -86,17 +86,19 @@ inline void display_solution(
   std::cout << parent << " assignments:" << std::endl;
   for (std::size_t i = 0; i < assignments.size(); ++i)
   {
-    std:: cout << "--Agent: " << i << std::endl;
+    std::cout << "--Agent: " << i << std::endl;
     for (const auto& a : assignments[i])
     {
       const auto& s = a.state();
-      const double request_seconds = a.request()->earliest_start_time().time_since_epoch().count()/1e9;
-      const double start_seconds = a.deployment_time().time_since_epoch().count()/1e9;
+      const double request_seconds =
+        a.request()->earliest_start_time().time_since_epoch().count()/1e9;
+      const double start_seconds =
+        a.deployment_time().time_since_epoch().count()/1e9;
       const rmf_traffic::Time finish_time = s.finish_time();
       const double finish_seconds = finish_time.time_since_epoch().count()/1e9;
       std::cout << "    <" << a.request()->id() << ": " << request_seconds
-                << ", " << start_seconds 
-                << ", "<< finish_seconds << ", " << 100* s.battery_soc() 
+                << ", " << start_seconds
+                << ", "<< finish_seconds << ", " << 100* s.battery_soc()
                 << "%>" << std::endl;
     }
   }
@@ -119,10 +121,10 @@ SCENARIO("Grid World")
 
   rmf_traffic::agv::Graph graph;
   auto add_bidir_lane = [&](const std::size_t w0, const std::size_t w1)
-  {
+    {
       graph.add_lane(w0, w1);
       graph.add_lane(w1, w0);
-  };
+    };
 
   const std::string map_name = "test_map";
 
@@ -132,8 +134,8 @@ SCENARIO("Grid World")
     {
       // const auto random = (double) rand() / RAND_MAX;
       const double random = 1.0;
-      graph.add_waypoint(map_name, 
-        {j*edge_length*random, -i*edge_length*random});
+      graph.add_waypoint(map_name,
+        {j* edge_length* random, -i* edge_length* random});
     }
   }
 
@@ -153,10 +155,10 @@ SCENARIO("Grid World")
   rmf_traffic::schedule::Database database;
   const auto default_options = rmf_traffic::agv::Planner::Options{
     nullptr};
-    
+
   auto planner = std::make_shared<rmf_traffic::agv::Planner>(
-      rmf_traffic::agv::Planner::Configuration{graph, traits},
-      default_options);
+    rmf_traffic::agv::Planner::Configuration{graph, traits},
+    default_options);
 
   auto battery_system_optional = BatterySystem::make(24.0, 40.0, 8.8);
   REQUIRE(battery_system_optional);
@@ -171,18 +173,19 @@ SCENARIO("Grid World")
   std::shared_ptr<SimpleMotionPowerSink> motion_sink =
     std::make_shared<SimpleMotionPowerSink>(battery_system, mechanical_system);
   std::shared_ptr<SimpleDevicePowerSink> device_sink =
-    std::make_shared<SimpleDevicePowerSink>(battery_system, power_system_processor);
+    std::make_shared<SimpleDevicePowerSink>(battery_system,
+      power_system_processor);
 
   const auto cost_calculator =
     rmf_task::BinaryPriorityScheme::make_cost_calculator();
 
-  std::shared_ptr<TaskPlanner::Configuration> task_config =
-    std::make_shared<TaskPlanner::Configuration>(
-      battery_system,
-      motion_sink,
-      device_sink,
-      planner,
-      cost_calculator);
+  TaskPlanner::Configuration task_config =
+    TaskPlanner::Configuration(
+    battery_system,
+    motion_sink,
+    device_sink,
+    planner,
+    cost_calculator);
 
   WHEN("Planning for 3 requests and 2 agents")
   {
@@ -257,13 +260,13 @@ SCENARIO("Grid World")
     REQUIRE(greedy_assignments);
     const double greedy_cost = task_planner.compute_cost(*greedy_assignments);
     auto finish_time = std::chrono::steady_clock::now();
-    
+
     if (display_solutions)
     {
       std::cout << "Greedy solution found in: "
                 << (finish_time - start_time).count() / 1e9 << std::endl;
       display_solution("Greedy", *greedy_assignments, greedy_cost);
-    }  
+    }
 
     // Create new TaskPlanner to reset cache so that measured run times
     // remain independent of one another
@@ -466,7 +469,7 @@ SCENARIO("Grid World")
     if (display_solutions)
     {
       std::cout << "Greedy solution found in: "
-              << (finish_time - start_time).count() / 1e9 << std::endl;
+                << (finish_time - start_time).count() / 1e9 << std::endl;
       display_solution("Greedy", *greedy_assignments, greedy_cost);
     }
 
@@ -484,7 +487,7 @@ SCENARIO("Grid World")
     if (display_solutions)
     {
       std::cout << "Optimal solution found in: "
-              << (finish_time - start_time).count() / 1e9 << std::endl;
+                << (finish_time - start_time).count() / 1e9 << std::endl;
       display_solution("Optimal", *optimal_assignments, optimal_cost);
     }
 
@@ -581,7 +584,7 @@ SCENARIO("Grid World")
     if (display_solutions)
     {
       std::cout << "Greedy solution found in: "
-              << (finish_time - start_time).count() / 1e9 << std::endl;
+                << (finish_time - start_time).count() / 1e9 << std::endl;
       display_solution("Greedy", *greedy_assignments, greedy_cost);
     }
 
@@ -599,7 +602,7 @@ SCENARIO("Grid World")
     if (display_solutions)
     {
       std::cout << "Optimal solution found in: "
-              << (finish_time - start_time).count() / 1e9 << std::endl;
+                << (finish_time - start_time).count() / 1e9 << std::endl;
       display_solution("Optimal", *optimal_assignments, optimal_cost);
     }
 
@@ -796,7 +799,7 @@ SCENARIO("Grid World")
     if (display_solutions)
     {
       std::cout << "Greedy solution found in: "
-              << (finish_time - start_time).count() / 1e9 << std::endl;
+                << (finish_time - start_time).count() / 1e9 << std::endl;
       display_solution("Greedy", *greedy_assignments, greedy_cost);
     }
 
@@ -814,7 +817,7 @@ SCENARIO("Grid World")
     if (display_solutions)
     {
       std::cout << "Optimal solution found in: "
-              << (finish_time - start_time).count() / 1e9 << std::endl;
+                << (finish_time - start_time).count() / 1e9 << std::endl;
       display_solution("Optimal", *optimal_assignments, optimal_cost);
     }
 
@@ -862,7 +865,7 @@ SCENARIO("Grid World")
     auto error = std::get_if<
       TaskPlanner::TaskPlannerError>(&greedy_result);
     CHECK(*error == TaskPlanner::TaskPlannerError::limited_capacity);
-    
+
     // Create new TaskPlanner to reset cache so that measured run times
     // remain independent of one another
     task_planner = TaskPlanner(task_config);
@@ -917,7 +920,7 @@ SCENARIO("Grid World")
     auto error = std::get_if<
       TaskPlanner::TaskPlannerError>(&greedy_result);
     CHECK(*error == TaskPlanner::TaskPlannerError::low_battery);
-    
+
     // Create new TaskPlanner to reset cache so that measured run times
     // remain independent of one another
     task_planner = TaskPlanner(task_config);
@@ -1006,7 +1009,7 @@ SCENARIO("Grid World")
     if (display_solutions)
     {
       std::cout << "Optimal solution found in: "
-              << (finish_time - start_time).count() / 1e9 << std::endl;
+                << (finish_time - start_time).count() / 1e9 << std::endl;
       display_solution("Optimal", optimal_assignments, optimal_cost);
     }
 
@@ -1046,7 +1049,7 @@ SCENARIO("Grid World")
     if (display_solutions)
     {
       std::cout << "Optimal solution found in: "
-              << (finish_time - start_time).count() / 1e9 << std::endl;
+                << (finish_time - start_time).count() / 1e9 << std::endl;
       display_solution("Optimal", new_optimal_assignments, new_optimal_cost);
     }
 
@@ -1131,7 +1134,7 @@ SCENARIO("Grid World")
     if (display_solutions)
     {
       std::cout << "Optimal solution found in: "
-              << (finish_time - start_time).count() / 1e9 << std::endl;
+                << (finish_time - start_time).count() / 1e9 << std::endl;
       display_solution("Optimal", optimal_assignments, optimal_cost);
     }
 
@@ -1210,7 +1213,7 @@ SCENARIO("Grid World")
         planner,
         now + rmf_traffic::time::from_seconds(0),
         drain_battery,
-        rmf_task::BinaryPriorityScheme::make_high_priority())  
+        rmf_task::BinaryPriorityScheme::make_high_priority())
     };
 
     TaskPlanner task_planner(task_config);
@@ -1228,7 +1231,7 @@ SCENARIO("Grid World")
     if (display_solutions)
     {
       std::cout << "Optimal solution found in: "
-              << (finish_time - start_time).count() / 1e9 << std::endl;
+                << (finish_time - start_time).count() / 1e9 << std::endl;
       display_solution("Optimal", optimal_assignments, optimal_cost);
     }
 
@@ -1244,7 +1247,8 @@ SCENARIO("Grid World")
     CHECK(index_map["4"] < index_map["3"]);
   }
 
-  WHEN("Planning for 1 robot and 2 tasks per time segment with one priority task per segment")
+  WHEN(
+    "Planning for 1 robot and 2 tasks per time segment with one priority task per segment")
   {
     const auto now = std::chrono::steady_clock::now();
     const double default_orientation = 0.0;
@@ -1315,7 +1319,7 @@ SCENARIO("Grid World")
         planner,
         now + rmf_traffic::time::from_seconds(100000),
         drain_battery,
-        rmf_task::BinaryPriorityScheme::make_high_priority())  
+        rmf_task::BinaryPriorityScheme::make_high_priority())
     };
 
     TaskPlanner task_planner(task_config);
@@ -1333,7 +1337,7 @@ SCENARIO("Grid World")
     if (display_solutions)
     {
       std::cout << "Optimal solution found in: "
-              << (finish_time - start_time).count() / 1e9 << std::endl;
+                << (finish_time - start_time).count() / 1e9 << std::endl;
       display_solution("Optimal", optimal_assignments, optimal_cost);
     }
 
@@ -1422,7 +1426,7 @@ SCENARIO("Grid World")
         device_sink,
         planner,
         now + rmf_traffic::time::from_seconds(0),
-        drain_battery)  
+        drain_battery)
     };
 
     TaskPlanner task_planner(task_config);
@@ -1440,7 +1444,7 @@ SCENARIO("Grid World")
     if (display_solutions)
     {
       std::cout << "Optimal solution found in: "
-              << (finish_time - start_time).count() / 1e9 << std::endl;
+                << (finish_time - start_time).count() / 1e9 << std::endl;
       display_solution("Optimal", optimal_assignments, optimal_cost);
     }
 
@@ -1507,7 +1511,7 @@ SCENARIO("Grid World")
           planner,
           now + rmf_traffic::time::from_seconds(0),
           drain_battery,
-          rmf_task::BinaryPriorityScheme::make_high_priority())  
+          rmf_task::BinaryPriorityScheme::make_high_priority())
       };
 
       auto start_time = std::chrono::steady_clock::now();
@@ -1517,13 +1521,14 @@ SCENARIO("Grid World")
         TaskPlanner::Assignments>(&optimal_result);
       REQUIRE(optimal_assignments_ptr);
       const auto& optimal_assignments = *optimal_assignments_ptr;
-      const double optimal_cost = task_planner.compute_cost(optimal_assignments);
+      const double optimal_cost =
+        task_planner.compute_cost(optimal_assignments);
       auto finish_time = std::chrono::steady_clock::now();
 
       if (display_solutions)
       {
         std::cout << "Optimal solution found in: "
-                << (finish_time - start_time).count() / 1e9 << std::endl;
+                  << (finish_time - start_time).count() / 1e9 << std::endl;
         display_solution("Optimal", optimal_assignments, optimal_cost);
       }
 
@@ -1613,7 +1618,7 @@ SCENARIO("Grid World")
         device_sink,
         planner,
         now + rmf_traffic::time::from_seconds(0),
-        drain_battery)  
+        drain_battery)
     };
 
     TaskPlanner task_planner(task_config);
@@ -1631,7 +1636,7 @@ SCENARIO("Grid World")
     if (display_solutions)
     {
       std::cout << "Optimal solution found in: "
-              << (finish_time - start_time).count() / 1e9 << std::endl;
+                << (finish_time - start_time).count() / 1e9 << std::endl;
       display_solution("Optimal", optimal_assignments, optimal_cost);
     }
 
@@ -1707,7 +1712,7 @@ SCENARIO("Grid World")
           device_sink,
           planner,
           now + rmf_traffic::time::from_seconds(0),
-          drain_battery)  
+          drain_battery)
       };
 
       auto start_time = std::chrono::steady_clock::now();
@@ -1717,13 +1722,14 @@ SCENARIO("Grid World")
         TaskPlanner::Assignments>(&optimal_result);
       REQUIRE(optimal_assignments_ptr);
       const auto& optimal_assignments = *optimal_assignments_ptr;
-      const double optimal_cost = task_planner.compute_cost(optimal_assignments);
+      const double optimal_cost =
+        task_planner.compute_cost(optimal_assignments);
       auto finish_time = std::chrono::steady_clock::now();
 
       if (display_solutions)
       {
         std::cout << "Optimal solution found in: "
-                << (finish_time - start_time).count() / 1e9 << std::endl;
+                  << (finish_time - start_time).count() / 1e9 << std::endl;
         display_solution("Optimal", optimal_assignments, optimal_cost);
       }
 

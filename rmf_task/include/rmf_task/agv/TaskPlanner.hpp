@@ -41,7 +41,7 @@ namespace agv {
 class TaskPlanner
 {
 public:
- 
+
   /// The Configuration class contains planning parameters that are immutable
   /// for each TaskPlanner instance and should not change in between plans.
   class Configuration
@@ -53,57 +53,59 @@ public:
     ///   The battery system of the robot
     ///
     /// \param[in] motion_sink
-    ///   The motion sink of the robot
+    ///   The motion sink of the robot. This describes how power gets drained
+    ///   while the robot is moving.
     ///
-    /// \param[in] device_sink
-    ///   The ambient device sink of the robot
+    /// \param[in] ambient_sink
+    ///   The ambient device sink of the robot. This describes how power gets
+    ///   drained at all times from passive use of the robot's electronics.
     ///
     /// \param[in] planner
     ///   The planner for a robot in this fleet
     ///
-    /// \param[in] filter_type
-    ///   The type of filter used for planning
+    /// \param[in] cost_calculator
+    ///   An object that tells the planner how to calculate cost
     Configuration(
       rmf_battery::agv::BatterySystem battery_system,
-      std::shared_ptr<rmf_battery::MotionPowerSink> motion_sink,
-      std::shared_ptr<rmf_battery::DevicePowerSink> ambient_sink,
-      std::shared_ptr<rmf_traffic::agv::Planner> planner,
-      std::shared_ptr<rmf_task::CostCalculator> cost_calculator);
+      rmf_battery::ConstMotionPowerSinkPtr motion_sink,
+      rmf_battery::ConstDevicePowerSinkPtr ambient_sink,
+      std::shared_ptr<const rmf_traffic::agv::Planner> planner,
+      ConstCostCalculatorPtr cost_calculator);
 
     /// Get the battery system
-    const rmf_battery::agv::BatterySystem& battery_system();
+    const rmf_battery::agv::BatterySystem& battery_system() const;
 
     /// Set the battery_system
     Configuration& battery_system(
       rmf_battery::agv::BatterySystem battery_system);
 
     /// Get the motion sink
-    const std::shared_ptr<rmf_battery::MotionPowerSink>& motion_sink() const;
+    const rmf_battery::ConstMotionPowerSinkPtr& motion_sink() const;
 
     /// Set the motion_sink
     Configuration& motion_sink(
-      std::shared_ptr<rmf_battery::MotionPowerSink> motion_sink);
+      rmf_battery::ConstMotionPowerSinkPtr motion_sink);
 
     /// Get the ambient device sink
-    const std::shared_ptr<rmf_battery::DevicePowerSink>& ambient_sink() const;
+    const rmf_battery::ConstDevicePowerSinkPtr& ambient_sink() const;
 
     /// Set the ambient device sink
     Configuration& ambient_sink(
-      std::shared_ptr<rmf_battery::DevicePowerSink> ambient_sink);
+      rmf_battery::ConstDevicePowerSinkPtr ambient_sink);
 
     /// Get the planner
-    const std::shared_ptr<rmf_traffic::agv::Planner>& planner() const;
+    const std::shared_ptr<const rmf_traffic::agv::Planner>& planner() const;
 
     /// Set the planner
-    Configuration& planner(std::shared_ptr<rmf_traffic::agv::Planner> planner);
+    Configuration& planner(
+      std::shared_ptr<const rmf_traffic::agv::Planner> planner);
 
     /// Get the CostCalculator
-    const std::shared_ptr<rmf_task::CostCalculator>& cost_calculator() const;
+    const ConstCostCalculatorPtr& cost_calculator() const;
 
     /// Set the CostCalculator. If a nullptr is passed, the
     /// BinaryPriorityCostCalculator is used by the planner.
-    Configuration& cost_calculator(
-      std::shared_ptr<rmf_task::CostCalculator> cost_calculator);
+    Configuration& cost_calculator(ConstCostCalculatorPtr cost_calculator);
 
     class Implementation;
 
@@ -141,21 +143,21 @@ public:
     const rmf_traffic::Time deployment_time() const;
 
     class Implementation;
-  
+
   private:
     rmf_utils::impl_ptr<Implementation> _pimpl;
   };
 
   enum class TaskPlannerError
   {
-    /// None of the agents in the initial states have sufficient initial charge 
+    /// None of the agents in the initial states have sufficient initial charge
     /// to even head back to their charging stations. Manual intervention is
     /// needed to recharge one or more agents.
     low_battery,
 
     /// None of the agents in the initial states have sufficient battery
     /// capacity to accommodate one or more requests. This may be remedied by
-    /// increasing the battery capacity or by lowering the threshold_soc in the 
+    /// increasing the battery capacity or by lowering the threshold_soc in the
     /// state configs of the agents or by modifying the original request.
     limited_capacity
   };
@@ -168,12 +170,12 @@ public:
   ///
   /// \param[in] config
   /// The configuration for the planner
-  TaskPlanner(std::shared_ptr<Configuration> config);
+  TaskPlanner(const Configuration& config);
 
   /// Get a shared pointer to the configuration of this task planner
-  const std::shared_ptr<Configuration>& config() const;
+  const Configuration& config() const;
 
-  /// Get the greedy planner based assignments for a set of initial states and 
+  /// Get the greedy planner based assignments for a set of initial states and
   /// requests
   Result greedy_plan(
     rmf_traffic::Time time_now,
@@ -181,7 +183,7 @@ public:
     std::vector<Constraints> constraints_set,
     std::vector<ConstRequestPtr> requests);
 
-  /// Get the optimal planner based assignments for a set of initial states and 
+  /// Get the optimal planner based assignments for a set of initial states and
   /// requests
   /// \note When the number of requests exceed 10 for the same start time
   /// segment, this plan may take a while to be generated. Hence, it is
@@ -203,7 +205,7 @@ public:
   class Implementation;
 
 private:
-  rmf_utils::impl_ptr<Implementation> _pimpl; 
+  rmf_utils::impl_ptr<Implementation> _pimpl;
 
 };
 

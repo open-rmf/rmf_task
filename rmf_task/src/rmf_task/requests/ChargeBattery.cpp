@@ -49,10 +49,10 @@ std::string generate_uuid(const std::size_t length = 3)
 class ChargeBatteryDescription::Implementation
 {
 public:
-  rmf_battery::agv::BatterySystemPtr battery_system;
-  std::shared_ptr<rmf_battery::MotionPowerSink> motion_sink;
-  std::shared_ptr<rmf_battery::DevicePowerSink> device_sink;
-  std::shared_ptr<rmf_traffic::agv::Planner> planner;
+  rmf_battery::agv::ConstBatterySystemPtr battery_system;
+  rmf_battery::ConstMotionPowerSinkPtr motion_sink;
+  rmf_battery::ConstDevicePowerSinkPtr device_sink;
+  std::shared_ptr<const rmf_traffic::agv::Planner> planner;
   rmf_traffic::Time start_time;
   bool drain_battery;
 
@@ -64,9 +64,9 @@ public:
 //==============================================================================
 rmf_task::DescriptionPtr ChargeBatteryDescription::make(
   rmf_battery::agv::BatterySystem battery_system,
-  std::shared_ptr<rmf_battery::MotionPowerSink> motion_sink,
-  std::shared_ptr<rmf_battery::DevicePowerSink> device_sink,
-  std::shared_ptr<rmf_traffic::agv::Planner> planner,
+  rmf_battery::ConstMotionPowerSinkPtr motion_sink,
+  rmf_battery::ConstDevicePowerSinkPtr device_sink,
+  std::shared_ptr<const rmf_traffic::agv::Planner> planner,
   rmf_traffic::Time start_time,
   bool drain_battery)
 {
@@ -129,7 +129,7 @@ ChargeBatteryDescription::estimate_finish(
   if (initial_state.waypoint() != initial_state.charging_waypoint())
   {
     const auto endpoints = std::make_pair(initial_state.waypoint(),
-      initial_state.charging_waypoint());
+        initial_state.charging_waypoint());
     const auto& cache_result = estimate_cache->get(endpoints);
     // Use memoized values if possible
     if (cache_result)
@@ -196,7 +196,8 @@ rmf_traffic::Duration ChargeBatteryDescription::invariant_duration() const
 }
 
 //==============================================================================
-const rmf_battery::agv::BatterySystem& ChargeBatteryDescription::battery_system() const
+const rmf_battery::agv::BatterySystem& ChargeBatteryDescription::battery_system()
+const
 {
   return *_pimpl->battery_system;
 }
@@ -210,9 +211,9 @@ double ChargeBatteryDescription::max_charge_soc() const
 //==============================================================================
 ConstRequestPtr ChargeBattery::make(
   rmf_battery::agv::BatterySystem battery_system,
-  std::shared_ptr<rmf_battery::MotionPowerSink> motion_sink,
-  std::shared_ptr<rmf_battery::DevicePowerSink> device_sink,
-  std::shared_ptr<rmf_traffic::agv::Planner> planner,
+  rmf_battery::ConstMotionPowerSinkPtr motion_sink,
+  rmf_battery::ConstDevicePowerSinkPtr device_sink,
+  std::shared_ptr<const rmf_traffic::agv::Planner> planner,
   rmf_traffic::Time start_time,
   bool drain_battery,
   ConstPriorityPtr priority)

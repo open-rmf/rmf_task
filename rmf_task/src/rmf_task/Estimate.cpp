@@ -39,8 +39,9 @@ public:
 //==============================================================================
 Estimate::Estimate(agv::State finish_state, rmf_traffic::Time wait_until)
 : _pimpl(rmf_utils::make_impl<Implementation>(
-    std::move(finish_state), std::move(wait_until)))
-{}
+      std::move(finish_state), std::move(wait_until)))
+{
+}
 
 //==============================================================================
 agv::State Estimate::finish_state() const
@@ -86,7 +87,7 @@ public:
       _shift = std::ceil(std::log2(N));
     }
 
-    size_t operator()(const std::pair<size_t,size_t>& p) const
+    size_t operator()(const std::pair<size_t, size_t>& p) const
     {
       return p.first + (p.second << _shift);
     }
@@ -94,8 +95,8 @@ public:
     std::size_t _shift;
   };
 
-  using Cache = std::unordered_map<std::pair<size_t,size_t>,
-    CacheElement, PairHash>;
+  using Cache = std::unordered_map<std::pair<size_t, size_t>,
+      CacheElement, PairHash>;
 
   Cache _cache;
   mutable std::mutex _mutex;
@@ -103,8 +104,9 @@ public:
 
 //==============================================================================
 EstimateCache::EstimateCache(std::size_t N)
-  : _pimpl(rmf_utils::make_unique_impl<Implementation>(N))
-{}
+: _pimpl(rmf_utils::make_unique_impl<Implementation>(N))
+{
+}
 
 //==============================================================================
 std::optional<EstimateCache::CacheElement> EstimateCache::get(
