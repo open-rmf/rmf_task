@@ -105,7 +105,10 @@ They are located in the [`test`](https://github.com/open-rmf/rmf_task/tree/main/
 
 ### Coverage [4.iii]
 
-`rmf_task` tracks code coverage statistics. There is no coverage target currently, but new changes are required to make a best effort to keep or increase coverage before being accepted. Decreases are allowed if properly justified and accepted by reviewers. Code coverage will be improved in the future as time allows.
+`rmf_task` tracks code coverage statistics.
+There is no coverage target currently, but new changes are required to make a best effort to keep or increase coverage before being accepted.
+Decreases are allowed if properly justified and accepted by reviewers.
+Code coverage will be improved in the future as time allows.
 
 Current coverage statistics can be viewed [here](https://codecov.io/gh/open-rmf/rmf_task).
 
