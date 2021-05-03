@@ -1,6 +1,6 @@
 ## Changelog for package rmf_task
 
-1.0.0 (2021-XX-XX)
+0.1.0 (2021-XX-XX)
 ------------------
 * Provides `rmf_task::requests` to describe various task requests which may be used for allocation planning
 * Provides `rmf_task::agv::TaskPlanner` object that can generate task allocation plans where a set of `rmf_task::requests` are optimally distributed across a set of agents
