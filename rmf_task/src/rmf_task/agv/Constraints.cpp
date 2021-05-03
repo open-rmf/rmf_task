@@ -22,45 +22,82 @@
 namespace rmf_task {
 namespace agv {
 
+//==============================================================================
 class Constraints::Implementation
 {
 public:
   double threshold_soc;
+  double recharge_soc;
 
 };
 
-Constraints::Constraints(double threshold_soc)
+//==============================================================================
+Constraints::Constraints(
+  double threshold_soc,
+  double recharge_soc)
 : _pimpl(rmf_utils::make_impl<Implementation>(
       Implementation
       {
-        threshold_soc
+        threshold_soc,
+        recharge_soc
       }))
 {
   if (threshold_soc < 0.0 || threshold_soc > 1.0)
   {
     // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
     throw std::invalid_argument(
-      "Battery State of Charge threshold needs be between 0.0 and 1.0.");
+      "Battery State of Charge threshold needs to be between 0.0 and 1.0.");
+    // *INDENT-ON*
+  }
+
+  if (recharge_soc < 0.0 || recharge_soc > 1.0)
+  {
+    // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
+    throw std::invalid_argument(
+      "Recharge State of Charge needs to be between 0.0 and 1.0.");
     // *INDENT-ON*
   }
 }
 
+//==============================================================================
 double Constraints::threshold_soc() const
 {
   return _pimpl->threshold_soc;
 }
 
+//==============================================================================
 auto Constraints::threshold_soc(double threshold_soc) -> Constraints&
 {
   if (threshold_soc < 0.0 || threshold_soc > 1.0)
   {
     // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
     throw std::invalid_argument(
-      "Battery State of Charge threshold needs be between 0.0 and 1.0.");
+      "Battery State of Charge threshold needs to be between 0.0 and 1.0.");
     // *INDENT-ON*
   }
 
   _pimpl->threshold_soc = threshold_soc;
+  return *this;
+}
+
+//==============================================================================
+double Constraints::recharge_soc() const
+{
+  return _pimpl->recharge_soc;
+}
+
+//==============================================================================
+auto Constraints::recharge_soc(double recharge_soc) -> Constraints&
+{
+  if (recharge_soc < 0.0 || recharge_soc > 1.0)
+  {
+    // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
+    throw std::invalid_argument(
+      "Recharge State of Charge needs to be between 0.0 and 1.0.");
+    // *INDENT-ON*
+  }
+
+  _pimpl->recharge_soc = recharge_soc;
   return *this;
 }
 

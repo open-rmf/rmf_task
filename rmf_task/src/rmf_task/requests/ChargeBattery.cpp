@@ -54,10 +54,8 @@ public:
   rmf_battery::ConstDevicePowerSinkPtr device_sink;
   std::shared_ptr<const rmf_traffic::agv::Planner> planner;
   rmf_traffic::Time start_time;
+  double max_charge_soc;
   bool drain_battery;
-
-  // soc to always charge the battery up to
-  double charge_soc = 1.0;
   rmf_traffic::Duration invariant_duration;
 };
 
@@ -68,8 +66,17 @@ rmf_task::DescriptionPtr ChargeBatteryDescription::make(
   rmf_battery::ConstDevicePowerSinkPtr device_sink,
   std::shared_ptr<const rmf_traffic::agv::Planner> planner,
   rmf_traffic::Time start_time,
+  double max_charge_soc,
   bool drain_battery)
 {
+  if (max_charge_soc < 0.0 || max_charge_soc > 1.0)
+  {
+    // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
+    throw std::invalid_argument(
+      "Recharge State of Charge needs to be between 0.0 and 1.0.");
+    // *INDENT-ON*
+  }
+
   std::shared_ptr<ChargeBatteryDescription> description(
     new ChargeBatteryDescription());
   description->_pimpl->battery_system = std::make_shared<
@@ -78,6 +85,7 @@ rmf_task::DescriptionPtr ChargeBatteryDescription::make(
   description->_pimpl->device_sink = std::move(device_sink);
   description->_pimpl->planner = std::move(planner);
   description->_pimpl->start_time = start_time;
+  description->_pimpl->max_charge_soc = max_charge_soc;
   description->_pimpl->drain_battery = drain_battery;
   description->_pimpl->invariant_duration =
     rmf_traffic::time::from_seconds(0.0);
@@ -92,7 +100,7 @@ ChargeBatteryDescription::ChargeBatteryDescription()
 }
 
 //==============================================================================
-rmf_utils::optional<rmf_task::Estimate>
+std::optional<rmf_task::Estimate>
 ChargeBatteryDescription::estimate_finish(
   const agv::State& initial_state,
   const agv::Constraints& task_planning_constraints,
@@ -104,9 +112,12 @@ ChargeBatteryDescription::estimate_finish(
   // segmentation threshold, causing `solve` to return. This may cause an infinite
   // loop as a new identical charging task is added in each call to `solve` before
   // returning.
-  if ((abs(initial_state.battery_soc() - _pimpl->charge_soc) < 1e-3)
+  if (initial_state.battery_soc() >= _pimpl->max_charge_soc)
+    return std::nullopt;
+
+  if ((abs(initial_state.battery_soc() - _pimpl->max_charge_soc) < 1e-3)
     && initial_state.waypoint() == initial_state.charging_waypoint())
-    return rmf_utils::nullopt;
+    return std::nullopt;
 
   // Compute time taken to reach charging waypoint from current location
   rmf_traffic::agv::Plan::Start final_plan_start{
@@ -169,11 +180,10 @@ ChargeBatteryDescription::estimate_finish(
 
     // If a robot cannot reach its charging dock given its initial battery soc
     if (battery_soc <= task_planning_constraints.threshold_soc())
-      return rmf_utils::nullopt;
+      return std::nullopt;
   }
 
-  // Default _charge_soc = 1.0
-  double delta_soc = _pimpl->charge_soc - battery_soc;
+  double delta_soc = _pimpl->max_charge_soc - battery_soc;
   assert(delta_soc >= 0.0);
   double time_to_charge =
     (3600 * delta_soc * _pimpl->battery_system->capacity()) /
@@ -184,7 +194,7 @@ ChargeBatteryDescription::estimate_finish(
     wait_until + variant_duration +
     rmf_traffic::time::from_seconds(time_to_charge));
 
-  state.battery_soc(_pimpl->charge_soc);
+  state.battery_soc(_pimpl->max_charge_soc);
 
   return Estimate(state, wait_until);
 }
@@ -205,7 +215,7 @@ const
 //==============================================================================
 double ChargeBatteryDescription::max_charge_soc() const
 {
-  return _pimpl->charge_soc;
+  return _pimpl->max_charge_soc;
 }
 
 //==============================================================================
@@ -215,6 +225,7 @@ ConstRequestPtr ChargeBattery::make(
   rmf_battery::ConstDevicePowerSinkPtr device_sink,
   std::shared_ptr<const rmf_traffic::agv::Planner> planner,
   rmf_traffic::Time start_time,
+  double max_charge_soc,
   bool drain_battery,
   ConstPriorityPtr priority)
 {

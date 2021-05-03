@@ -19,6 +19,7 @@
 #define RMF_TASK__REQUESTS__LOOP_HPP
 
 #include <chrono>
+#include <optional>
 #include <string>
 
 #include <rmf_traffic/Time.hpp>
@@ -28,7 +29,6 @@
 #include <rmf_battery/DevicePowerSink.hpp>
 
 #include <rmf_utils/impl_ptr.hpp>
-#include <rmf_utils/optional.hpp>
 
 #include <rmf_task/agv/State.hpp>
 #include <rmf_task/Request.hpp>
@@ -53,7 +53,7 @@ public:
     rmf_traffic::Time start_time,
     bool drain_battery = true);
 
-  rmf_utils::optional<rmf_task::Estimate> estimate_finish(
+  std::optional<rmf_task::Estimate> estimate_finish(
     const agv::State& initial_state,
     const agv::Constraints& task_planning_constraints,
     const std::shared_ptr<EstimateCache> estimate_cache) const final;

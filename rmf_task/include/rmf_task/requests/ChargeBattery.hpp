@@ -19,6 +19,7 @@
 #define RMF_TASK__REQUESTS__CHARGEBATTERY_HPP
 
 #include <string>
+#include <optional>
 
 #include <rmf_traffic/Time.hpp>
 #include <rmf_traffic/agv/Planner.hpp>
@@ -26,8 +27,6 @@
 #include <rmf_battery/agv/BatterySystem.hpp>
 #include <rmf_battery/MotionPowerSink.hpp>
 #include <rmf_battery/DevicePowerSink.hpp>
-
-#include <rmf_utils/optional.hpp>
 
 #include <rmf_task/agv/State.hpp>
 #include <rmf_task/Request.hpp>
@@ -46,9 +45,10 @@ public:
     rmf_battery::ConstDevicePowerSinkPtr device_sink,
     std::shared_ptr<const rmf_traffic::agv::Planner> planner,
     rmf_traffic::Time start_time,
+    double max_charge_soc = 1.0,
     bool drain_battery = true);
 
-  rmf_utils::optional<rmf_task::Estimate> estimate_finish(
+  std::optional<rmf_task::Estimate> estimate_finish(
     const agv::State& initial_state,
     const agv::Constraints& task_planning_constraints,
     const std::shared_ptr<EstimateCache> estimate_cache) const final;
@@ -58,7 +58,7 @@ public:
   /// Get the battery system in this request
   const rmf_battery::agv::BatterySystem& battery_system() const;
 
-  /// Retrieve the charge soc which the battery will be charged upto
+  /// Retrieve the state of charge to which the battery will be recharged
   double max_charge_soc() const;
 
   class Implementation;
@@ -79,6 +79,7 @@ public:
     rmf_battery::ConstDevicePowerSinkPtr device_sink,
     std::shared_ptr<const rmf_traffic::agv::Planner> planner,
     rmf_traffic::Time start_time,
+    double max_charge_soc = 1.0,
     bool drain_battery = true,
     ConstPriorityPtr priority = nullptr);
 };
