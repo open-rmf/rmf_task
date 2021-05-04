@@ -37,6 +37,7 @@
 namespace rmf_task {
 namespace requests {
 
+//==============================================================================
 class LoopDescription : public rmf_task::Request::Description
 {
 public:

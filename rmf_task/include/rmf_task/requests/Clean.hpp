@@ -36,6 +36,7 @@
 namespace rmf_task {
 namespace requests {
 
+//==============================================================================
 class CleanDescription : public rmf_task::Request::Description
 {
 public:

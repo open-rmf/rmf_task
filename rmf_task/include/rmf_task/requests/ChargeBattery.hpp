@@ -35,6 +35,7 @@
 namespace rmf_task {
 namespace requests {
 
+//==============================================================================
 class ChargeBatteryDescription : public rmf_task::Request::Description
 {
 public:

@@ -27,6 +27,7 @@
 
 namespace rmf_task {
 
+//==============================================================================
 /// Estimates for requests
 class Estimate
 {
@@ -58,6 +59,7 @@ private:
   rmf_utils::impl_ptr<Implementation> _pimpl;
 };
 
+//==============================================================================
 /// Stores computed estimates between pairs of waypoints
 class EstimateCache
 {

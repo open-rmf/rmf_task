@@ -22,6 +22,7 @@
 
 namespace rmf_task {
 
+//==============================================================================
 // Forward declare abstract interface. The definition will remain as internal detail.
 class Priority;
 using PriorityPtr = std::shared_ptr<Priority>;

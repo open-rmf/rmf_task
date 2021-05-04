@@ -64,30 +64,6 @@ public:
   // Map finish time to Entry
   using Map = std::multimap<rmf_traffic::Time, Entry>;
 
-  static std::shared_ptr<Candidates> make(
-    const std::vector<State>& initial_states,
-    const std::vector<Constraints>& constraints_set,
-    const rmf_task::Request& request,
-    const rmf_task::requests::ChargeBatteryDescription& charge_battery_desc,
-    const std::shared_ptr<EstimateCache> estimate_cache,
-    TaskPlanner::TaskPlannerError& error);
-
-  Candidates(const Candidates& other)
-  {
-    _value_map = other._value_map;
-    _update_map();
-  }
-
-  Candidates& operator=(const Candidates& other)
-  {
-    _value_map = other._value_map;
-    _update_map();
-    return *this;
-  }
-
-  Candidates(Candidates&&) = default;
-  Candidates& operator=(Candidates&&) = default;
-
   // We may have more than one best candidate so we store their iterators in
   // a Range
   struct Range
@@ -96,63 +72,38 @@ public:
     Map::const_iterator end;
   };
 
-  Range best_candidates() const
-  {
-    assert(!_value_map.empty());
+  static std::shared_ptr<Candidates> make(
+    const std::vector<State>& initial_states,
+    const Constraints& constraints,
+    const rmf_task::Request& request,
+    const rmf_task::requests::ChargeBatteryDescription& charge_battery_desc,
+    const std::shared_ptr<EstimateCache> estimate_cache,
+    TaskPlanner::TaskPlannerError& error);
 
-    Range range;
-    range.begin = _value_map.begin();
-    auto it = range.begin;
-    while (it->first == range.begin->first)
-      ++it;
+  Candidates(const Candidates& other);
+  Candidates& operator=(const Candidates& other);
+  Candidates(Candidates&&) = default;
+  Candidates& operator=(Candidates&&) = default;
 
-    range.end = it;
-    return range;
-  }
+  Range best_candidates() const;
 
-  rmf_traffic::Time best_finish_time() const
-  {
-    assert(!_value_map.empty());
-    return _value_map.begin()->first;
-  }
+  rmf_traffic::Time best_finish_time() const;
 
   void update_candidate(
     std::size_t candidate,
     State state,
     rmf_traffic::Time wait_until,
     State previous_state,
-    bool require_charge_battery)
-  {
-    const auto it = _candidate_map.at(candidate);
-    _value_map.erase(it);
-    _candidate_map[candidate] = _value_map.insert(
-      {
-        state.finish_time(),
-        Entry{candidate, state, wait_until, previous_state, require_charge_battery}
-      });
-  }
+    bool require_charge_battery);
 
 private:
   Map _value_map;
   std::vector<Map::iterator> _candidate_map;
 
-  Candidates(Map candidate_values)
-  : _value_map(std::move(candidate_values))
-  {
-    _update_map();
-  }
+  Candidates(Map candidate_values);
 
-  void _update_map()
-  {
-    for (auto it = _value_map.begin(); it != _value_map.end(); ++it)
-    {
-      const auto c = it->second.candidate;
-      if (_candidate_map.size() <= c)
-        _candidate_map.resize(c+1);
+  void update_map();
 
-      _candidate_map[c] = it;
-    }
-  }
 };
 
 // ============================================================================
@@ -161,11 +112,11 @@ class PendingTask
 public:
 
   static std::shared_ptr<PendingTask> make(
-    std::vector<rmf_task::agv::State>& initial_states,
-    std::vector<rmf_task::agv::Constraints>& constraints_set,
-    rmf_task::ConstRequestPtr request_,
-    rmf_task::Request::DescriptionPtr charge_battery_desc,
-    std::shared_ptr<EstimateCache> estimate_cache,
+    const std::vector<rmf_task::agv::State>& initial_states,
+    const rmf_task::agv::Constraints& constraints,
+    const rmf_task::ConstRequestPtr request_,
+    const rmf_task::Request::DescriptionPtr charge_battery_desc,
+    const std::shared_ptr<EstimateCache> estimate_cache,
     TaskPlanner::TaskPlannerError& error);
 
   rmf_task::ConstRequestPtr request;
@@ -173,13 +124,8 @@ public:
 
 private:
   PendingTask(
-    rmf_task::ConstRequestPtr request_,
-    Candidates candidates_)
-  : request(std::move(request_)),
-    candidates(candidates_)
-  {
-    // Do nothing
-  }
+    ConstRequestPtr request_,
+    Candidates candidates_);
 };
 
 // ============================================================================

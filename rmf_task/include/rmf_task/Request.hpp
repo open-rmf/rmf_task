@@ -30,10 +30,11 @@
 
 namespace rmf_task {
 
-/// Implement this for new type of requests.
+//==============================================================================
 class Request
 {
 public:
+  /// Implement this for new type of requests.
   class Description
   {
   public:
