@@ -78,6 +78,7 @@ public:
     const rmf_task::Request& request,
     const rmf_task::requests::ChargeBatteryDescription& charge_battery_desc,
     const std::shared_ptr<EstimateCache> estimate_cache,
+    bool drain_battery,
     TaskPlanner::TaskPlannerError& error);
 
   Candidates(const Candidates& other);
@@ -117,6 +118,7 @@ public:
     const rmf_task::ConstRequestPtr request_,
     const rmf_task::Request::DescriptionPtr charge_battery_desc,
     const std::shared_ptr<EstimateCache> estimate_cache,
+    bool drain_battery,
     TaskPlanner::TaskPlannerError& error);
 
   rmf_task::ConstRequestPtr request;

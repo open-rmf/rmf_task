@@ -46,13 +46,13 @@ public:
     rmf_battery::ConstDevicePowerSinkPtr device_sink,
     std::shared_ptr<const rmf_traffic::agv::Planner> planner,
     rmf_traffic::Time start_time,
-    double max_charge_soc = 1.0,
-    bool drain_battery = true);
+    double max_charge_soc = 1.0);
 
   std::optional<rmf_task::Estimate> estimate_finish(
     const agv::State& initial_state,
     const agv::Constraints& task_planning_constraints,
-    const std::shared_ptr<EstimateCache> estimate_cache) const final;
+    const std::shared_ptr<EstimateCache> estimate_cache,
+    bool drain_battery) const final;
 
   rmf_traffic::Duration invariant_duration() const final;
 
@@ -81,7 +81,6 @@ public:
     std::shared_ptr<const rmf_traffic::agv::Planner> planner,
     rmf_traffic::Time start_time,
     double max_charge_soc = 1.0,
-    bool drain_battery = true,
     ConstPriorityPtr priority = nullptr);
 };
 

@@ -37,18 +37,21 @@ public:
   Parameters parameters;
   Constraints constraints;
   ConstCostCalculatorPtr cost_calculator;
+  bool drain_battery;
 };
 
 //==============================================================================
 TaskPlanner::Configuration::Configuration(
   Parameters parameters,
   Constraints constraints,
-  ConstCostCalculatorPtr cost_calculator)
+  ConstCostCalculatorPtr cost_calculator,
+  bool drain_battery)
 : _pimpl(rmf_utils::make_impl<Implementation>(
       Implementation{
         std::move(parameters),
         std::move(constraints),
-        std::move(cost_calculator)
+        std::move(cost_calculator),
+        drain_battery
       }))
 {
   // Do nothing
@@ -94,6 +97,20 @@ auto TaskPlanner::Configuration::cost_calculator(
   ConstCostCalculatorPtr cost_calculator) -> Configuration&
 {
   _pimpl->cost_calculator = std::move(cost_calculator);
+  return *this;
+}
+
+//==============================================================================
+bool TaskPlanner::Configuration::drain_battery() const
+{
+  return _pimpl->drain_battery;
+}
+
+//==============================================================================
+auto TaskPlanner::Configuration::drain_battery(
+  bool drain_battery) -> Configuration&
+{
+  _pimpl->drain_battery = drain_battery;
   return *this;
 }
 
@@ -318,8 +335,7 @@ public:
       parameters.ambient_sink(),
       parameters.planner(),
       start_time,
-      config.constraints().recharge_soc(),
-      true);
+      config.constraints().recharge_soc());
   }
 
   TaskPlanner::Assignments prune_assignments(
@@ -473,6 +489,7 @@ public:
         request,
         charge_battery->description(),
         estimate_cache,
+        config.drain_battery(),
         error);
 
       if (!pending_task)
@@ -568,7 +585,10 @@ public:
         auto charge_battery = make_charging_request(
           entry.previous_state.finish_time());
         auto battery_estimate = charge_battery->description()->estimate_finish(
-          entry.previous_state, constraints, estimate_cache);
+          entry.previous_state,
+          constraints,
+          estimate_cache,
+          config.drain_battery());
         if (battery_estimate.has_value())
         {
           assignments.push_back(
@@ -598,7 +618,7 @@ public:
     {
       const auto finish =
         new_u.second.request->description()->estimate_finish(
-        entry.state, constraints, estimate_cache);
+        entry.state, constraints, estimate_cache, config.drain_battery());
 
       if (finish.has_value())
       {
@@ -641,7 +661,7 @@ public:
     {
       auto charge_battery = make_charging_request(entry.state.finish_time());
       auto battery_estimate = charge_battery->description()->estimate_finish(
-        entry.state, constraints, estimate_cache);
+        entry.state, constraints, estimate_cache, config.drain_battery());
       if (battery_estimate.has_value())
       {
         new_node->assigned_tasks[entry.candidate].push_back(
@@ -657,7 +677,7 @@ public:
           const auto finish =
             new_u.second.request->description()->estimate_finish(
             battery_estimate.value().finish_state(),
-            constraints, estimate_cache);
+            constraints, estimate_cache, config.drain_battery());
           if (finish.has_value())
           {
             new_u.second.candidates.update_candidate(
@@ -723,7 +743,7 @@ public:
 
     auto charge_battery = make_charging_request(state.finish_time());
     auto estimate = charge_battery->description()->estimate_finish(
-      state, config.constraints(), estimate_cache);
+      state, config.constraints(), estimate_cache, config.drain_battery());
     if (estimate.has_value())
     {
       new_node->assigned_tasks[agent].push_back(
@@ -742,7 +762,7 @@ public:
         const auto finish =
           new_u.second.request->description()->estimate_finish(
           estimate.value().finish_state(),
-          config.constraints(), estimate_cache);
+          config.constraints(), estimate_cache, config.drain_battery());
         if (finish.has_value())
         {
           new_u.second.candidates.update_candidate(

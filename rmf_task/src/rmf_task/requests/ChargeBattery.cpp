@@ -55,7 +55,6 @@ public:
   std::shared_ptr<const rmf_traffic::agv::Planner> planner;
   rmf_traffic::Time start_time;
   double max_charge_soc;
-  bool drain_battery;
   rmf_traffic::Duration invariant_duration;
 };
 
@@ -66,8 +65,7 @@ rmf_task::DescriptionPtr ChargeBatteryDescription::make(
   rmf_battery::ConstDevicePowerSinkPtr device_sink,
   std::shared_ptr<const rmf_traffic::agv::Planner> planner,
   rmf_traffic::Time start_time,
-  double max_charge_soc,
-  bool drain_battery)
+  double max_charge_soc)
 {
   if (max_charge_soc < 0.0 || max_charge_soc > 1.0)
   {
@@ -86,7 +84,6 @@ rmf_task::DescriptionPtr ChargeBatteryDescription::make(
   description->_pimpl->planner = std::move(planner);
   description->_pimpl->start_time = start_time;
   description->_pimpl->max_charge_soc = max_charge_soc;
-  description->_pimpl->drain_battery = drain_battery;
   description->_pimpl->invariant_duration =
     rmf_traffic::time::from_seconds(0.0);
   return description;
@@ -104,7 +101,8 @@ std::optional<rmf_task::Estimate>
 ChargeBatteryDescription::estimate_finish(
   const agv::State& initial_state,
   const agv::Constraints& task_planning_constraints,
-  const std::shared_ptr<EstimateCache> estimate_cache) const
+  const std::shared_ptr<EstimateCache> estimate_cache,
+  bool drain_battery) const
 {
   // Important to return nullopt if a charging task is not needed. In the task
   // planner, if a charging task is added, the node's latest time may be set to
@@ -161,7 +159,7 @@ ChargeBatteryDescription::estimate_finish(
         const rmf_traffic::Duration itinerary_duration =
           finish_time - itinerary_start_time;
 
-        if (_pimpl->drain_battery)
+        if (drain_battery)
         {
           dSOC_motion = _pimpl->motion_sink->compute_change_in_charge(
             trajectory);
@@ -225,7 +223,6 @@ ConstRequestPtr ChargeBattery::make(
   std::shared_ptr<const rmf_traffic::agv::Planner> planner,
   rmf_traffic::Time start_time,
   double max_charge_soc,
-  bool drain_battery,
   ConstPriorityPtr priority)
 {
 
@@ -236,8 +233,7 @@ ConstRequestPtr ChargeBattery::make(
     device_sink,
     planner,
     start_time,
-    max_charge_soc,
-    drain_battery);
+    max_charge_soc);
 
   return std::make_shared<Request>(id, start_time, priority, description);
 

@@ -45,12 +45,23 @@ public:
   public:
     /// Constructor
     ///
+    /// \param[in] parameters
+    ///   The parameters that describe the agents
+    ///
+    /// \param[in] constraints
+    ///   The constraints that apply to the agents
+    ///
     /// \param[in] cost_calculator
     ///   An object that tells the planner how to calculate cost
+    ///
+    /// \param[in] drain_battery
+    /// If true, battery drain will be considered during task allocation and
+    /// ChargeBattery tasks will automatically be included if necessary.
     Configuration(
       Parameters parameters,
       Constraints constraints,
-      ConstCostCalculatorPtr cost_calculator);
+      ConstCostCalculatorPtr cost_calculator,
+      bool drain_battery);
 
     /// Get the parameters that describe the agents
     const Parameters& parameters() const;
@@ -70,6 +81,12 @@ public:
     /// Set the CostCalculator. If a nullptr is passed, the
     /// BinaryPriorityCostCalculator is used by the planner.
     Configuration& cost_calculator(ConstCostCalculatorPtr cost_calculator);
+
+    /// Get the value of drain_battery
+    bool drain_battery() const;
+
+    /// Set the value of drain_battery
+    Configuration& drain_battery(bool drain_battery);
 
     class Implementation;
 

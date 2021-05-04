@@ -109,7 +109,7 @@ inline void display_solution(
 //==============================================================================
 SCENARIO("Grid World")
 {
-  const bool display_solutions = false;
+  const bool display_solutions = true;
   const int grid_size = 4;
   const double edge_length = 1000;
   const bool drain_battery = true;
@@ -190,7 +190,8 @@ SCENARIO("Grid World")
   const TaskPlanner::Configuration task_config{
     parameters,
     constraints,
-    cost_calculator};
+    cost_calculator,
+    drain_battery};
 
   WHEN("Planning for 3 requests and 2 agents")
   {
@@ -218,8 +219,7 @@ SCENARIO("Grid World")
         motion_sink,
         device_sink,
         planner,
-        now + rmf_traffic::time::from_seconds(0),
-        drain_battery),
+        now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
         "2",
@@ -231,8 +231,7 @@ SCENARIO("Grid World")
         motion_sink,
         device_sink,
         planner,
-        now + rmf_traffic::time::from_seconds(0),
-        drain_battery),
+        now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
         "3",
@@ -244,8 +243,7 @@ SCENARIO("Grid World")
         motion_sink,
         device_sink,
         planner,
-        now + rmf_traffic::time::from_seconds(0),
-        drain_battery)
+        now + rmf_traffic::time::from_seconds(0))
     };
 
 
@@ -314,8 +312,7 @@ SCENARIO("Grid World")
         motion_sink,
         device_sink,
         planner,
-        now + rmf_traffic::time::from_seconds(0),
-        drain_battery),
+        now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
         "2",
@@ -327,8 +324,7 @@ SCENARIO("Grid World")
         motion_sink,
         device_sink,
         planner,
-        now + rmf_traffic::time::from_seconds(0),
-        drain_battery),
+        now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
         "3",
@@ -340,8 +336,7 @@ SCENARIO("Grid World")
         motion_sink,
         device_sink,
         planner,
-        now + rmf_traffic::time::from_seconds(0),
-        drain_battery),
+        now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
         "4",
@@ -353,8 +348,7 @@ SCENARIO("Grid World")
         motion_sink,
         device_sink,
         planner,
-        now + rmf_traffic::time::from_seconds(50000),
-        drain_battery),
+        now + rmf_traffic::time::from_seconds(50000)),
 
       rmf_task::requests::Delivery::make(
         "5",
@@ -366,8 +360,7 @@ SCENARIO("Grid World")
         motion_sink,
         device_sink,
         planner,
-        now + rmf_traffic::time::from_seconds(50000),
-        drain_battery),
+        now + rmf_traffic::time::from_seconds(50000)),
 
       rmf_task::requests::Delivery::make(
         "6",
@@ -379,8 +372,7 @@ SCENARIO("Grid World")
         motion_sink,
         device_sink,
         planner,
-        now + rmf_traffic::time::from_seconds(60000),
-        drain_battery),
+        now + rmf_traffic::time::from_seconds(60000)),
 
       rmf_task::requests::Delivery::make(
         "7",
@@ -392,8 +384,7 @@ SCENARIO("Grid World")
         motion_sink,
         device_sink,
         planner,
-        now + rmf_traffic::time::from_seconds(60000),
-        drain_battery),
+        now + rmf_traffic::time::from_seconds(60000)),
 
       rmf_task::requests::Delivery::make(
         "8",
@@ -405,8 +396,7 @@ SCENARIO("Grid World")
         motion_sink,
         device_sink,
         planner,
-        now + rmf_traffic::time::from_seconds(60000),
-        drain_battery),
+        now + rmf_traffic::time::from_seconds(60000)),
 
       rmf_task::requests::Delivery::make(
         "9",
@@ -418,8 +408,7 @@ SCENARIO("Grid World")
         motion_sink,
         device_sink,
         planner,
-        now + rmf_traffic::time::from_seconds(60000),
-        drain_battery),
+        now + rmf_traffic::time::from_seconds(60000)),
 
       rmf_task::requests::Delivery::make(
         "10",
@@ -431,8 +420,7 @@ SCENARIO("Grid World")
         motion_sink,
         device_sink,
         planner,
-        now + rmf_traffic::time::from_seconds(60000),
-        drain_battery),
+        now + rmf_traffic::time::from_seconds(60000)),
 
       rmf_task::requests::Delivery::make(
         "11",
@@ -444,8 +432,7 @@ SCENARIO("Grid World")
         motion_sink,
         device_sink,
         planner,
-        now + rmf_traffic::time::from_seconds(60000),
-        drain_battery)
+        now + rmf_traffic::time::from_seconds(60000))
     };
 
     TaskPlanner task_planner(task_config);
@@ -514,8 +501,7 @@ SCENARIO("Grid World")
         motion_sink,
         device_sink,
         planner,
-        now + rmf_traffic::time::from_seconds(0),
-        drain_battery),
+        now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
         "2",
@@ -527,8 +513,7 @@ SCENARIO("Grid World")
         motion_sink,
         device_sink,
         planner,
-        now + rmf_traffic::time::from_seconds(0),
-        drain_battery),
+        now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
         "3",
@@ -540,8 +525,7 @@ SCENARIO("Grid World")
         motion_sink,
         device_sink,
         planner,
-        now + rmf_traffic::time::from_seconds(0),
-        drain_battery),
+        now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
         "4",
@@ -553,8 +537,7 @@ SCENARIO("Grid World")
         motion_sink,
         device_sink,
         planner,
-        now + rmf_traffic::time::from_seconds(50000),
-        drain_battery)
+        now + rmf_traffic::time::from_seconds(50000))
     };
 
     TaskPlanner task_planner(task_config);
@@ -632,8 +615,7 @@ SCENARIO("Grid World")
         motion_sink,
         device_sink,
         planner,
-        now + rmf_traffic::time::from_seconds(0),
-        drain_battery),
+        now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
         "2",
@@ -645,8 +627,7 @@ SCENARIO("Grid World")
         motion_sink,
         device_sink,
         planner,
-        now + rmf_traffic::time::from_seconds(0),
-        drain_battery),
+        now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
         "3",
@@ -658,8 +639,7 @@ SCENARIO("Grid World")
         motion_sink,
         device_sink,
         planner,
-        now + rmf_traffic::time::from_seconds(0),
-        drain_battery),
+        now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
         "4",
@@ -671,8 +651,7 @@ SCENARIO("Grid World")
         motion_sink,
         device_sink,
         planner,
-        now + rmf_traffic::time::from_seconds(50000),
-        drain_battery),
+        now + rmf_traffic::time::from_seconds(50000)),
 
       rmf_task::requests::Delivery::make(
         "5",
@@ -684,8 +663,7 @@ SCENARIO("Grid World")
         motion_sink,
         device_sink,
         planner,
-        now + rmf_traffic::time::from_seconds(50000),
-        drain_battery),
+        now + rmf_traffic::time::from_seconds(50000)),
 
       rmf_task::requests::Delivery::make(
         "6",
@@ -697,8 +675,7 @@ SCENARIO("Grid World")
         motion_sink,
         device_sink,
         planner,
-        now + rmf_traffic::time::from_seconds(70000),
-        drain_battery),
+        now + rmf_traffic::time::from_seconds(70000)),
 
       rmf_task::requests::Delivery::make(
         "7",
@@ -710,8 +687,7 @@ SCENARIO("Grid World")
         motion_sink,
         device_sink,
         planner,
-        now + rmf_traffic::time::from_seconds(70000),
-        drain_battery),
+        now + rmf_traffic::time::from_seconds(70000)),
 
       rmf_task::requests::Delivery::make(
         "8",
@@ -723,8 +699,7 @@ SCENARIO("Grid World")
         motion_sink,
         device_sink,
         planner,
-        now + rmf_traffic::time::from_seconds(70000),
-        drain_battery),
+        now + rmf_traffic::time::from_seconds(70000)),
 
       rmf_task::requests::Delivery::make(
         "9",
@@ -736,8 +711,7 @@ SCENARIO("Grid World")
         motion_sink,
         device_sink,
         planner,
-        now + rmf_traffic::time::from_seconds(70000),
-        drain_battery),
+        now + rmf_traffic::time::from_seconds(70000)),
 
       rmf_task::requests::Delivery::make(
         "10",
@@ -749,8 +723,7 @@ SCENARIO("Grid World")
         motion_sink,
         device_sink,
         planner,
-        now + rmf_traffic::time::from_seconds(70000),
-        drain_battery),
+        now + rmf_traffic::time::from_seconds(70000)),
 
       rmf_task::requests::Delivery::make(
         "11",
@@ -762,8 +735,7 @@ SCENARIO("Grid World")
         motion_sink,
         device_sink,
         planner,
-        now + rmf_traffic::time::from_seconds(70000),
-        drain_battery)
+        now + rmf_traffic::time::from_seconds(70000))
     };
 
     TaskPlanner task_planner(task_config);
@@ -827,8 +799,7 @@ SCENARIO("Grid World")
         motion_sink,
         device_sink,
         planner,
-        now,
-        true)
+        now)
     };
 
     TaskPlanner task_planner(task_config);
@@ -877,8 +848,7 @@ SCENARIO("Grid World")
         motion_sink,
         device_sink,
         planner,
-        now,
-        true)
+        now)
     };
 
     TaskPlanner task_planner(task_config);
@@ -930,8 +900,7 @@ SCENARIO("Grid World")
         motion_sink,
         device_sink,
         planner,
-        now + rmf_traffic::time::from_seconds(0),
-        drain_battery),
+        now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
         "2",
@@ -943,8 +912,7 @@ SCENARIO("Grid World")
         motion_sink,
         device_sink,
         planner,
-        now + rmf_traffic::time::from_seconds(0),
-        drain_battery),
+        now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
         "3",
@@ -956,8 +924,7 @@ SCENARIO("Grid World")
         motion_sink,
         device_sink,
         planner,
-        now + rmf_traffic::time::from_seconds(0),
-        drain_battery)
+        now + rmf_traffic::time::from_seconds(0))
     };
 
     TaskPlanner task_planner(task_config);
@@ -995,7 +962,6 @@ SCENARIO("Grid World")
         device_sink,
         planner,
         now + rmf_traffic::time::from_seconds(0),
-        drain_battery,
         rmf_task::BinaryPriorityScheme::make_high_priority());
     }
 
@@ -1048,7 +1014,6 @@ SCENARIO("Grid World")
         device_sink,
         planner,
         now + rmf_traffic::time::from_seconds(0),
-        drain_battery,
         rmf_task::BinaryPriorityScheme::make_high_priority()),
 
       rmf_task::requests::Delivery::make(
@@ -1062,7 +1027,6 @@ SCENARIO("Grid World")
         device_sink,
         planner,
         now + rmf_traffic::time::from_seconds(0),
-        drain_battery,
         rmf_task::BinaryPriorityScheme::make_high_priority()),
 
       rmf_task::requests::Delivery::make(
@@ -1076,7 +1040,6 @@ SCENARIO("Grid World")
         device_sink,
         planner,
         now + rmf_traffic::time::from_seconds(0),
-        drain_battery,
         rmf_task::BinaryPriorityScheme::make_high_priority())
     };
 
@@ -1128,7 +1091,6 @@ SCENARIO("Grid World")
         device_sink,
         planner,
         now + rmf_traffic::time::from_seconds(0),
-        drain_battery,
         rmf_task::BinaryPriorityScheme::make_high_priority()),
 
       rmf_task::requests::Delivery::make(
@@ -1141,8 +1103,7 @@ SCENARIO("Grid World")
         motion_sink,
         device_sink,
         planner,
-        now + rmf_traffic::time::from_seconds(0),
-        drain_battery),
+        now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
         "3",
@@ -1154,8 +1115,7 @@ SCENARIO("Grid World")
         motion_sink,
         device_sink,
         planner,
-        now + rmf_traffic::time::from_seconds(0),
-        drain_battery),
+        now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
         "4",
@@ -1168,7 +1128,6 @@ SCENARIO("Grid World")
         device_sink,
         planner,
         now + rmf_traffic::time::from_seconds(0),
-        drain_battery,
         rmf_task::BinaryPriorityScheme::make_high_priority())
     };
 
@@ -1229,7 +1188,6 @@ SCENARIO("Grid World")
         device_sink,
         planner,
         now + rmf_traffic::time::from_seconds(0),
-        drain_battery,
         rmf_task::BinaryPriorityScheme::make_high_priority()),
 
       rmf_task::requests::Delivery::make(
@@ -1242,8 +1200,7 @@ SCENARIO("Grid World")
         motion_sink,
         device_sink,
         planner,
-        now + rmf_traffic::time::from_seconds(0),
-        drain_battery),
+        now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
         "3",
@@ -1255,8 +1212,7 @@ SCENARIO("Grid World")
         motion_sink,
         device_sink,
         planner,
-        now + rmf_traffic::time::from_seconds(100000),
-        drain_battery),
+        now + rmf_traffic::time::from_seconds(100000)),
 
       rmf_task::requests::Delivery::make(
         "4",
@@ -1269,7 +1225,6 @@ SCENARIO("Grid World")
         device_sink,
         planner,
         now + rmf_traffic::time::from_seconds(100000),
-        drain_battery,
         rmf_task::BinaryPriorityScheme::make_high_priority())
     };
 
@@ -1331,8 +1286,7 @@ SCENARIO("Grid World")
         motion_sink,
         device_sink,
         planner,
-        now + rmf_traffic::time::from_seconds(0),
-        drain_battery),
+        now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
         "2",
@@ -1344,8 +1298,7 @@ SCENARIO("Grid World")
         motion_sink,
         device_sink,
         planner,
-        now + rmf_traffic::time::from_seconds(0),
-        drain_battery),
+        now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
         "3",
@@ -1357,8 +1310,7 @@ SCENARIO("Grid World")
         motion_sink,
         device_sink,
         planner,
-        now + rmf_traffic::time::from_seconds(0),
-        drain_battery),
+        now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
         "4",
@@ -1370,8 +1322,7 @@ SCENARIO("Grid World")
         motion_sink,
         device_sink,
         planner,
-        now + rmf_traffic::time::from_seconds(0),
-        drain_battery)
+        now + rmf_traffic::time::from_seconds(0))
     };
 
     TaskPlanner task_planner(task_config);
@@ -1414,8 +1365,7 @@ SCENARIO("Grid World")
           motion_sink,
           device_sink,
           planner,
-          now + rmf_traffic::time::from_seconds(0),
-          drain_battery),
+          now + rmf_traffic::time::from_seconds(0)),
 
         rmf_task::requests::Delivery::make(
           "2",
@@ -1427,8 +1377,7 @@ SCENARIO("Grid World")
           motion_sink,
           device_sink,
           planner,
-          now + rmf_traffic::time::from_seconds(0),
-          drain_battery),
+          now + rmf_traffic::time::from_seconds(0)),
 
         rmf_task::requests::Delivery::make(
           "3",
@@ -1441,7 +1390,6 @@ SCENARIO("Grid World")
           device_sink,
           planner,
           now + rmf_traffic::time::from_seconds(0),
-          drain_battery,
           rmf_task::BinaryPriorityScheme::make_high_priority()),
 
         rmf_task::requests::Delivery::make(
@@ -1455,7 +1403,6 @@ SCENARIO("Grid World")
           device_sink,
           planner,
           now + rmf_traffic::time::from_seconds(0),
-          drain_battery,
           rmf_task::BinaryPriorityScheme::make_high_priority())
       };
 
@@ -1516,8 +1463,7 @@ SCENARIO("Grid World")
         motion_sink,
         device_sink,
         planner,
-        now + rmf_traffic::time::from_seconds(0),
-        drain_battery),
+        now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
         "2",
@@ -1529,8 +1475,7 @@ SCENARIO("Grid World")
         motion_sink,
         device_sink,
         planner,
-        now + rmf_traffic::time::from_seconds(0),
-        drain_battery),
+        now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
         "3",
@@ -1542,8 +1487,7 @@ SCENARIO("Grid World")
         motion_sink,
         device_sink,
         planner,
-        now + rmf_traffic::time::from_seconds(0),
-        drain_battery),
+        now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
         "4",
@@ -1555,8 +1499,7 @@ SCENARIO("Grid World")
         motion_sink,
         device_sink,
         planner,
-        now + rmf_traffic::time::from_seconds(0),
-        drain_battery)
+        now + rmf_traffic::time::from_seconds(0))
     };
 
     TaskPlanner task_planner(task_config);
@@ -1608,7 +1551,6 @@ SCENARIO("Grid World")
           device_sink,
           planner,
           now + rmf_traffic::time::from_seconds(0),
-          drain_battery,
           rmf_task::BinaryPriorityScheme::make_high_priority()),
 
         rmf_task::requests::Delivery::make(
@@ -1622,7 +1564,6 @@ SCENARIO("Grid World")
           device_sink,
           planner,
           now + rmf_traffic::time::from_seconds(0),
-          drain_battery,
           rmf_task::BinaryPriorityScheme::make_high_priority()),
 
         rmf_task::requests::Delivery::make(
@@ -1636,7 +1577,6 @@ SCENARIO("Grid World")
           device_sink,
           planner,
           now + rmf_traffic::time::from_seconds(0),
-          drain_battery,
           rmf_task::BinaryPriorityScheme::make_high_priority()),
 
         rmf_task::requests::Delivery::make(
@@ -1649,8 +1589,7 @@ SCENARIO("Grid World")
           motion_sink,
           device_sink,
           planner,
-          now + rmf_traffic::time::from_seconds(0),
-          drain_battery)
+          now + rmf_traffic::time::from_seconds(0))
       };
 
       auto start_time = std::chrono::steady_clock::now();
@@ -1698,7 +1637,8 @@ SCENARIO("Grid World")
     rmf_task::agv::TaskPlanner::Configuration new_task_config{
       parameters,
       new_constraints,
-      cost_calculator};
+      cost_calculator,
+      drain_battery};
 
     rmf_traffic::agv::Plan::Start first_location{now, 13, default_orientation};
     rmf_traffic::agv::Plan::Start second_location{now, 2, default_orientation};
@@ -1721,8 +1661,7 @@ SCENARIO("Grid World")
         motion_sink,
         device_sink,
         planner,
-        now + rmf_traffic::time::from_seconds(0),
-        drain_battery),
+        now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
         "2",
@@ -1734,8 +1673,7 @@ SCENARIO("Grid World")
         motion_sink,
         device_sink,
         planner,
-        now + rmf_traffic::time::from_seconds(0),
-        drain_battery),
+        now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
         "3",
@@ -1747,8 +1685,7 @@ SCENARIO("Grid World")
         motion_sink,
         device_sink,
         planner,
-        now + rmf_traffic::time::from_seconds(0),
-        drain_battery),
+        now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
         "4",
@@ -1760,8 +1697,7 @@ SCENARIO("Grid World")
         motion_sink,
         device_sink,
         planner,
-        now + rmf_traffic::time::from_seconds(50000),
-        drain_battery)
+        now + rmf_traffic::time::from_seconds(50000))
     };
 
     TaskPlanner task_planner(new_task_config);

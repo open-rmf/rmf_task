@@ -44,7 +44,8 @@ public:
     virtual std::optional<Estimate> estimate_finish(
       const agv::State& initial_state,
       const agv::Constraints& task_planning_constraints,
-      const std::shared_ptr<EstimateCache> estimate_cache) const = 0;
+      const std::shared_ptr<EstimateCache> estimate_cache,
+      bool drain_battery) const = 0;
 
     /// Estimate the invariant component of the request's duration
     virtual rmf_traffic::Duration invariant_duration() const = 0;

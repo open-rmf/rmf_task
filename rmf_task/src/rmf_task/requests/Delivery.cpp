@@ -39,7 +39,6 @@ public:
   rmf_battery::ConstDevicePowerSinkPtr device_sink;
   std::shared_ptr<const rmf_traffic::agv::Planner> planner;
   rmf_traffic::Time start_time;
-  bool drain_battery;
 
   rmf_traffic::Duration invariant_duration;
   double invariant_battery_drain;
@@ -55,8 +54,7 @@ rmf_task::DescriptionPtr DeliveryDescription::make(
   rmf_battery::ConstMotionPowerSinkPtr motion_sink,
   rmf_battery::ConstDevicePowerSinkPtr device_sink,
   std::shared_ptr<const rmf_traffic::agv::Planner> planner,
-  rmf_traffic::Time start_time,
-  bool drain_battery)
+  rmf_traffic::Time start_time)
 {
   std::shared_ptr<DeliveryDescription> delivery(new DeliveryDescription());
   delivery->_pimpl->pickup_waypoint = pickup_waypoint;
@@ -68,7 +66,6 @@ rmf_task::DescriptionPtr DeliveryDescription::make(
   delivery->_pimpl->device_sink = std::move(device_sink);
   delivery->_pimpl->planner = std::move(planner);
   delivery->_pimpl->start_time = start_time;
-  delivery->_pimpl->drain_battery = drain_battery;
 
   // Calculate duration of invariant component of task
   delivery->_pimpl->invariant_duration = rmf_traffic::Duration{0};
@@ -91,16 +88,13 @@ rmf_task::DescriptionPtr DeliveryDescription::make(
       const auto& finish_time = *trajectory.finish_time();
       const auto itinerary_duration = finish_time - itinerary_start_time;
 
-      if (delivery->_pimpl->drain_battery)
-      {
-        // Compute battery drain
-        const double dSOC_motion =
-          delivery->_pimpl->motion_sink->compute_change_in_charge(trajectory);
-        const double dSOC_device =
-          delivery->_pimpl->device_sink->compute_change_in_charge(
-          rmf_traffic::time::to_seconds(itinerary_duration));
-        delivery->_pimpl->invariant_battery_drain += dSOC_motion + dSOC_device;
-      }
+      // Compute the invariant battery drain
+      const double dSOC_motion =
+        delivery->_pimpl->motion_sink->compute_change_in_charge(trajectory);
+      const double dSOC_device =
+        delivery->_pimpl->device_sink->compute_change_in_charge(
+        rmf_traffic::time::to_seconds(itinerary_duration));
+      delivery->_pimpl->invariant_battery_drain += dSOC_motion + dSOC_device;
 
       delivery->_pimpl->invariant_duration += itinerary_duration;
       itinerary_start_time = finish_time;
@@ -121,7 +115,8 @@ DeliveryDescription::DeliveryDescription()
 std::optional<rmf_task::Estimate> DeliveryDescription::estimate_finish(
   const agv::State& initial_state,
   const agv::Constraints& task_planning_constraints,
-  const std::shared_ptr<EstimateCache> estimate_cache) const
+  const std::shared_ptr<EstimateCache> estimate_cache,
+  bool drain_battery) const
 {
   rmf_traffic::agv::Plan::Start final_plan_start{
     initial_state.finish_time(),
@@ -149,7 +144,7 @@ std::optional<rmf_task::Estimate> DeliveryDescription::estimate_finish(
     if (cache_result)
     {
       variant_duration = cache_result->duration;
-      if (_pimpl->drain_battery)
+      if (drain_battery)
         battery_soc = battery_soc - cache_result->dsoc;
     }
     else
@@ -168,7 +163,7 @@ std::optional<rmf_task::Estimate> DeliveryDescription::estimate_finish(
         const rmf_traffic::Duration itinerary_duration =
           finish_time - itinerary_start_time;
 
-        if (_pimpl->drain_battery)
+        if (drain_battery)
         {
           // Compute battery drain
           dSOC_motion = _pimpl->motion_sink->compute_change_in_charge(
@@ -197,7 +192,7 @@ std::optional<rmf_task::Estimate> DeliveryDescription::estimate_finish(
 
   // Factor in battery drain while waiting to move to start waypoint. If a robot
   // is initially at a charging waypoint, it is assumed to be continually charging
-  if (_pimpl->drain_battery && wait_until > initial_state.finish_time() &&
+  if (drain_battery && wait_until > initial_state.finish_time() &&
     initial_state.waypoint() != initial_state.charging_waypoint())
   {
     rmf_traffic::Duration wait_duration(
@@ -216,7 +211,7 @@ std::optional<rmf_task::Estimate> DeliveryDescription::estimate_finish(
   state.finish_time(
     wait_until + variant_duration + _pimpl->invariant_duration);
 
-  if (_pimpl->drain_battery)
+  if (drain_battery)
   {
     battery_soc -= _pimpl->invariant_battery_drain;
     if (battery_soc <= task_planning_constraints.threshold_soc())
@@ -350,7 +345,6 @@ ConstRequestPtr Delivery::make(const std::string& id,
   rmf_battery::ConstDevicePowerSinkPtr device_sink,
   std::shared_ptr<const rmf_traffic::agv::Planner> planner,
   rmf_traffic::Time start_time,
-  bool drain_battery,
   ConstPriorityPtr priority)
 {
   const auto description = DeliveryDescription::make(
@@ -362,8 +356,7 @@ ConstRequestPtr Delivery::make(const std::string& id,
     std::move(motion_sink),
     std::move(device_sink),
     std::move(planner),
-    start_time,
-    drain_battery);
+    start_time);
 
   return std::make_shared<Request>(
     id, start_time, std::move(priority), description);

@@ -35,7 +35,6 @@ public:
   rmf_battery::ConstDevicePowerSinkPtr ambient_sink;
   std::shared_ptr<const rmf_traffic::agv::Planner> planner;
   rmf_traffic::Time start_time;
-  bool drain_battery;
 
   rmf_traffic::Duration invariant_duration;
   double invariant_battery_drain;
@@ -49,8 +48,7 @@ DescriptionPtr LoopDescription::make(
   rmf_battery::ConstMotionPowerSinkPtr motion_sink,
   rmf_battery::ConstDevicePowerSinkPtr ambient_sink,
   std::shared_ptr<const rmf_traffic::agv::Planner> planner,
-  rmf_traffic::Time start_time,
-  bool drain_battery)
+  rmf_traffic::Time start_time)
 {
   std::shared_ptr<LoopDescription> loop(new LoopDescription());
   loop->_pimpl->start_waypoint = start_waypoint;
@@ -60,7 +58,6 @@ DescriptionPtr LoopDescription::make(
   loop->_pimpl->ambient_sink = std::move(ambient_sink);
   loop->_pimpl->planner = std::move(planner);
   loop->_pimpl->start_time = start_time;
-  loop->_pimpl->drain_battery = drain_battery;
 
   // Calculate the invariant duration and battery drain for this task
   loop->_pimpl->invariant_duration = rmf_traffic::Duration{0};
@@ -87,16 +84,13 @@ DescriptionPtr LoopDescription::make(
       const auto& finish_time = *trajectory.finish_time();
       const auto itinerary_duration = finish_time - itinerary_start_time;
 
-      if (loop->_pimpl->drain_battery)
-      {
-        // Compute battery drain
-        const double dSOC_motion =
-          loop->_pimpl->motion_sink->compute_change_in_charge(trajectory);
-        const double dSOC_device =
-          loop->_pimpl->ambient_sink->compute_change_in_charge(
-          rmf_traffic::time::to_seconds(itinerary_duration));
-        forward_battery_drain += dSOC_motion + dSOC_device;
-      }
+      // Compute the invariant battery drain
+      const double dSOC_motion =
+        loop->_pimpl->motion_sink->compute_change_in_charge(trajectory);
+      const double dSOC_device =
+        loop->_pimpl->ambient_sink->compute_change_in_charge(
+        rmf_traffic::time::to_seconds(itinerary_duration));
+      forward_battery_drain += dSOC_motion + dSOC_device;
 
       forward_duration += itinerary_duration;
       itinerary_start_time = finish_time;
@@ -122,7 +116,8 @@ LoopDescription::LoopDescription()
 std::optional<rmf_task::Estimate> LoopDescription::estimate_finish(
   const agv::State& initial_state,
   const agv::Constraints& task_planning_constraints,
-  const std::shared_ptr<EstimateCache> estimate_cache) const
+  const std::shared_ptr<EstimateCache> estimate_cache,
+  bool drain_battery) const
 {
 
   rmf_traffic::Duration variant_duration(0);
@@ -142,7 +137,7 @@ std::optional<rmf_task::Estimate> LoopDescription::estimate_finish(
     if (cache_result)
     {
       variant_duration = cache_result->duration;
-      if (_pimpl->drain_battery)
+      if (drain_battery)
         battery_soc = battery_soc - cache_result->dsoc;
     }
     else
@@ -161,7 +156,7 @@ std::optional<rmf_task::Estimate> LoopDescription::estimate_finish(
         const rmf_traffic::Duration itinerary_duration =
           finish_time - itinerary_start_time;
 
-        if (_pimpl->drain_battery)
+        if (drain_battery)
         {
           // Compute battery drain
           dSOC_motion =
@@ -191,7 +186,7 @@ std::optional<rmf_task::Estimate> LoopDescription::estimate_finish(
 
   // Factor in battery drain while waiting to move to start waypoint. If a robot
   // is initially at a charging waypoint, it is assumed to be continually charging
-  if (_pimpl->drain_battery && wait_until > initial_state.finish_time() &&
+  if (drain_battery && wait_until > initial_state.finish_time() &&
     initial_state.waypoint() != initial_state.charging_waypoint())
   {
     rmf_traffic::Duration wait_duration(
@@ -212,7 +207,7 @@ std::optional<rmf_task::Estimate> LoopDescription::estimate_finish(
 
   // Subtract invariant battery drain and check if robot can return to its charger
   double retreat_battery_drain = 0.0;
-  if (_pimpl->drain_battery)
+  if (drain_battery)
   {
     battery_soc -= _pimpl->invariant_battery_drain;
     if (battery_soc <= task_planning_constraints.threshold_soc())
@@ -363,7 +358,6 @@ ConstRequestPtr Loop::make(
   rmf_battery::ConstDevicePowerSinkPtr ambient_sink,
   std::shared_ptr<const rmf_traffic::agv::Planner> planner,
   rmf_traffic::Time start_time,
-  bool drain_battery,
   ConstPriorityPtr priority)
 {
   const auto description = LoopDescription::make(
@@ -373,8 +367,7 @@ ConstRequestPtr Loop::make(
     std::move(motion_sink),
     std::move(ambient_sink),
     std::move(planner),
-    start_time,
-    drain_battery);
+    start_time);
 
   return std::make_shared<Request>(
     id, start_time, std::move(priority), description);
