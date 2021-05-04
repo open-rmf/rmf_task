@@ -112,10 +112,9 @@ ChargeBatteryDescription::estimate_finish(
   // segmentation threshold, causing `solve` to return. This may cause an infinite
   // loop as a new identical charging task is added in each call to `solve` before
   // returning.
-  if (initial_state.battery_soc() >= _pimpl->max_charge_soc)
-    return std::nullopt;
 
-  if ((abs(initial_state.battery_soc() - _pimpl->max_charge_soc) < 1e-3)
+  if ((initial_state.battery_soc() >= _pimpl->max_charge_soc
+    || abs(initial_state.battery_soc() - _pimpl->max_charge_soc) < 1e-3)
     && initial_state.waypoint() == initial_state.charging_waypoint())
     return std::nullopt;
 
@@ -237,6 +236,7 @@ ConstRequestPtr ChargeBattery::make(
     device_sink,
     planner,
     start_time,
+    max_charge_soc,
     drain_battery);
 
   return std::make_shared<Request>(id, start_time, priority, description);

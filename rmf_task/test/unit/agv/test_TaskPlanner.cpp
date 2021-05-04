@@ -108,7 +108,7 @@ inline void display_solution(
 //==============================================================================
 SCENARIO("Grid World")
 {
-  const bool display_solutions = true;
+  const bool display_solutions = false;
   const int grid_size = 4;
   const double edge_length = 1000;
   const bool drain_battery = true;
