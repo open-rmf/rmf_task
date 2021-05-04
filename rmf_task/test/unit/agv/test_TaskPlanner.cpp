@@ -1688,4 +1688,133 @@ SCENARIO("Grid World")
     }
   }
 
+  WHEN("Initial charge is low and battery recharge soc is constrained")
+  {
+    const auto now = std::chrono::steady_clock::now();
+    const double default_orientation = 0.0;
+    const double initial_soc = 0.3;
+    const double recharge_soc = 0.9;
+    rmf_task::agv::Constraints new_constraints{0.2, recharge_soc};
+    rmf_task::agv::TaskPlanner::Configuration new_task_config{
+      parameters,
+      new_constraints,
+      cost_calculator};
+
+    rmf_traffic::agv::Plan::Start first_location{now, 13, default_orientation};
+    rmf_traffic::agv::Plan::Start second_location{now, 2, default_orientation};
+
+    std::vector<rmf_task::agv::State> initial_states =
+    {
+      rmf_task::agv::State{first_location, 13, initial_soc},
+      rmf_task::agv::State{second_location, 2, initial_soc}
+    };
+
+    std::vector<rmf_task::ConstRequestPtr> requests =
+    {
+      rmf_task::requests::Delivery::make(
+        "1",
+        0,
+        "dispenser",
+        3,
+        "ingestor",
+        {},
+        motion_sink,
+        device_sink,
+        planner,
+        now + rmf_traffic::time::from_seconds(0),
+        drain_battery),
+
+      rmf_task::requests::Delivery::make(
+        "2",
+        15,
+        "dispenser",
+        2,
+        "ingestor",
+        {},
+        motion_sink,
+        device_sink,
+        planner,
+        now + rmf_traffic::time::from_seconds(0),
+        drain_battery),
+
+      rmf_task::requests::Delivery::make(
+        "3",
+        9,
+        "dispenser",
+        4,
+        "ingestor",
+        {},
+        motion_sink,
+        device_sink,
+        planner,
+        now + rmf_traffic::time::from_seconds(0),
+        drain_battery),
+
+      rmf_task::requests::Delivery::make(
+        "4",
+        8,
+        "dispenser",
+        11,
+        "ingestor",
+        {},
+        motion_sink,
+        device_sink,
+        planner,
+        now + rmf_traffic::time::from_seconds(50000),
+        drain_battery)
+    };
+
+    TaskPlanner task_planner(new_task_config);
+
+    auto start_time = std::chrono::steady_clock::now();
+    const auto greedy_result = task_planner.greedy_plan(
+      now, initial_states, requests);
+    const auto greedy_assignments = std::get_if<
+      TaskPlanner::Assignments>(&greedy_result);
+    REQUIRE(greedy_assignments);
+    const double greedy_cost = task_planner.compute_cost(*greedy_assignments);
+    auto finish_time = std::chrono::steady_clock::now();
+
+    if (display_solutions)
+    {
+      std::cout << "Greedy solution found in: "
+                << (finish_time - start_time).count() / 1e9 << std::endl;
+      display_solution("Greedy", *greedy_assignments, greedy_cost);
+    }
+
+    // Create new TaskPlanner to reset cache so that measured run times
+    // remain independent of one another
+    task_planner = TaskPlanner(new_task_config);
+    start_time = std::chrono::steady_clock::now();
+    const auto optimal_result = task_planner.optimal_plan(
+      now, initial_states, requests, nullptr);
+    const auto optimal_assignments = std::get_if<
+      TaskPlanner::Assignments>(&optimal_result);
+    const double optimal_cost = task_planner.compute_cost(*optimal_assignments);
+    finish_time = std::chrono::steady_clock::now();
+
+    if (display_solutions)
+    {
+      std::cout << "Optimal solution found in: "
+                << (finish_time - start_time).count() / 1e9 << std::endl;
+      display_solution("Optimal", *optimal_assignments, optimal_cost);
+    }
+
+    REQUIRE(optimal_cost <= greedy_cost);
+    // Here we check that the battery was charged only up to recharge_soc
+    for (const auto& agent : *optimal_assignments)
+    {
+      for (const auto& assignment : agent)
+      {
+        if (std::dynamic_pointer_cast<
+        const rmf_task::requests::ChargeBatteryDescription>(
+        assignment.request()->description()))
+        {
+          CHECK(assignment.state().battery_soc() == recharge_soc);
+        }
+      }
+    }
+    
+  }
+
 }

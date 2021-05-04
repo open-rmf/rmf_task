@@ -136,7 +136,7 @@ public:
   /// The configuration for the planner
   TaskPlanner(const Configuration& configuration);
 
-  /// Get a shared pointer to the configuration of this task planner
+  /// Get the configuration of this task planner
   const Configuration& configuration() const;
 
   /// Get the greedy planner based assignments for a set of initial states and
