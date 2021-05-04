@@ -998,7 +998,8 @@ const std::shared_ptr<EstimateCache>& TaskPlanner::estimate_cache() const
 }
 
 // ============================================================================
-const rmf_task::agv::TaskPlanner::Configuration& TaskPlanner::configuration() const
+const rmf_task::agv::TaskPlanner::Configuration& TaskPlanner::configuration()
+const
 {
   return _pimpl->config;
 }

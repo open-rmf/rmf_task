@@ -109,7 +109,7 @@ inline void display_solution(
 //==============================================================================
 SCENARIO("Grid World")
 {
-  const bool display_solutions = true;
+  const bool display_solutions = false;
   const int grid_size = 4;
   const double edge_length = 1000;
   const bool drain_battery = true;
@@ -1743,14 +1743,14 @@ SCENARIO("Grid World")
       for (const auto& assignment : agent)
       {
         if (std::dynamic_pointer_cast<
-        const rmf_task::requests::ChargeBatteryDescription>(
-        assignment.request()->description()))
+            const rmf_task::requests::ChargeBatteryDescription>(
+            assignment.request()->description()))
         {
           CHECK(assignment.state().battery_soc() == recharge_soc);
         }
       }
     }
-    
+
   }
 
 }

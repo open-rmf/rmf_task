@@ -22,23 +22,23 @@ namespace agv {
 
 // ============================================================================
 void Candidates::update_map()
+{
+  for (auto it = _value_map.begin(); it != _value_map.end(); ++it)
   {
-    for (auto it = _value_map.begin(); it != _value_map.end(); ++it)
-    {
-      const auto c = it->second.candidate;
-      if (_candidate_map.size() <= c)
-        _candidate_map.resize(c+1);
+    const auto c = it->second.candidate;
+    if (_candidate_map.size() <= c)
+      _candidate_map.resize(c+1);
 
-      _candidate_map[c] = it;
-    }
+    _candidate_map[c] = it;
   }
+}
 
 // ============================================================================
 Candidates::Candidates(Candidates::Map candidate_values)
-  : _value_map(std::move(candidate_values))
-  {
-    update_map();
-  }
+: _value_map(std::move(candidate_values))
+{
+  update_map();
+}
 
 // ============================================================================
 void Candidates::update_candidate(
