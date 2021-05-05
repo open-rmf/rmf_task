@@ -59,7 +59,7 @@ public:
     rmf_battery::ConstDevicePowerSinkPtr ambient_sink,
     rmf_battery::ConstDevicePowerSinkPtr tool_sink = nullptr);
 
-    /// Get the planner
+  /// Get the planner
   const std::shared_ptr<const rmf_traffic::agv::Planner>& planner() const;
 
   /// Set the planner

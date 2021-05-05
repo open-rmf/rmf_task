@@ -63,7 +63,7 @@ Loop::Model::Model(
   _finish_waypoint(finish_waypoint),
   _num_loops(num_loops)
 {
-    // Calculate the invariant duration and battery drain for this task
+  // Calculate the invariant duration and battery drain for this task
   _invariant_duration = rmf_traffic::Duration{0};
   _invariant_battery_drain = 0.0;
   if (_start_waypoint != _finish_waypoint)

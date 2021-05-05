@@ -1446,7 +1446,8 @@ SCENARIO("Grid World")
     const double default_orientation = 0.0;
     const double initial_soc = 0.3;
     const double recharge_soc = 0.9;
-    rmf_task::agv::Constraints new_constraints{0.2, recharge_soc, drain_battery};
+    rmf_task::agv::Constraints new_constraints{0.2, recharge_soc,
+      drain_battery};
     rmf_task::agv::TaskPlanner::Configuration new_task_config{
       parameters,
       new_constraints,

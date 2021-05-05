@@ -60,7 +60,7 @@ public:
     virtual std::shared_ptr<Model> make_model(
       rmf_traffic::Time earliest_start_time,
       const agv::Parameters& parameters) const = 0;
-    
+
     virtual ~Description() = default;
   };
 

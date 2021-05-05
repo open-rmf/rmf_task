@@ -205,7 +205,8 @@ std::shared_ptr<PendingTask> PendingTask::make(
   TaskPlanner::TaskPlannerError& error)
 {
   const auto candidates = Candidates::make(start_time, initial_states,
-      constraints, parameters, *request_, request_models, estimate_cache, error);
+      constraints, parameters, *request_, request_models, estimate_cache,
+      error);
 
   if (!candidates)
     return nullptr;

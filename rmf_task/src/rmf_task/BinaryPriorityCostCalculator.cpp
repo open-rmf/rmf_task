@@ -18,7 +18,7 @@
 #include "BinaryPriorityCostCalculator.hpp"
 #include "InvariantHeuristicQueue.hpp"
 
-#include<rmf_task/requests/ChargeBattery.hpp>
+#include <rmf_task/requests/ChargeBattery.hpp>
 
 namespace rmf_task {
 

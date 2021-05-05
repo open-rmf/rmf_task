@@ -40,8 +40,8 @@ namespace requests {
 //==============================================================================
 class Delivery
 {
- public:
-  
+public:
+
   class Model;
 
   class Description : public Request::Description

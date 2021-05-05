@@ -576,8 +576,8 @@ public:
           entry.previous_state.finish_time());
         const auto charge_battery_model =
           charge_battery->description()->make_model(
-            charge_battery->earliest_start_time(),
-            config.parameters());
+          charge_battery->earliest_start_time(),
+          config.parameters());
         auto battery_estimate = charge_battery_model->estimate_finish(
           entry.previous_state, constraints, estimate_cache);
         if (battery_estimate.has_value())
