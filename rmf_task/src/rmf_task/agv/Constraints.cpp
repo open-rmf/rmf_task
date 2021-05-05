@@ -28,18 +28,20 @@ class Constraints::Implementation
 public:
   double threshold_soc;
   double recharge_soc;
-
+  bool drain_battery;
 };
 
 //==============================================================================
 Constraints::Constraints(
   double threshold_soc,
-  double recharge_soc)
+  double recharge_soc,
+  bool drain_battery)
 : _pimpl(rmf_utils::make_impl<Implementation>(
       Implementation
       {
         threshold_soc,
-        recharge_soc
+        recharge_soc,
+        drain_battery
       }))
 {
   if (threshold_soc < 0.0 || threshold_soc > 1.0)
@@ -101,6 +103,19 @@ auto Constraints::recharge_soc(double recharge_soc) -> Constraints&
   return *this;
 }
 
+//==============================================================================
+bool Constraints::drain_battery() const
+{
+  return _pimpl->drain_battery;
+}
+
+//==============================================================================
+auto Constraints::drain_battery(
+  bool drain_battery) -> Constraints&
+{
+  _pimpl->drain_battery = drain_battery;
+  return *this;
+}
 
 } // namespace agv
 } // namespace rmf_task

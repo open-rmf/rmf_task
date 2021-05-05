@@ -116,8 +116,7 @@ LoopDescription::LoopDescription()
 std::optional<rmf_task::Estimate> LoopDescription::estimate_finish(
   const agv::State& initial_state,
   const agv::Constraints& task_planning_constraints,
-  const std::shared_ptr<EstimateCache> estimate_cache,
-  bool drain_battery) const
+  const std::shared_ptr<EstimateCache> estimate_cache) const
 {
 
   rmf_traffic::Duration variant_duration(0);
@@ -126,6 +125,7 @@ std::optional<rmf_task::Estimate> LoopDescription::estimate_finish(
   double battery_soc = initial_state.battery_soc();
   double dSOC_motion = 0.0;
   double dSOC_device = 0.0;
+  const bool drain_battery = task_planning_constraints.drain_battery();
 
   // Check if a plan has to be generated from finish location to start_waypoint
   if (initial_state.waypoint() != _pimpl->start_waypoint)

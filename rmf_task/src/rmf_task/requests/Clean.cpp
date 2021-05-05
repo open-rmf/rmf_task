@@ -97,8 +97,7 @@ CleanDescription::CleanDescription()
 std::optional<rmf_task::Estimate> CleanDescription::estimate_finish(
   const agv::State& initial_state,
   const agv::Constraints& task_planning_constraints,
-  const std::shared_ptr<EstimateCache> estimate_cache,
-  bool drain_battery) const
+  const std::shared_ptr<EstimateCache> estimate_cache) const
 {
   rmf_traffic::agv::Plan::Start final_plan_start{
     initial_state.finish_time(),
@@ -116,6 +115,7 @@ std::optional<rmf_task::Estimate> CleanDescription::estimate_finish(
   double battery_soc = initial_state.battery_soc();
   double dSOC_motion = 0.0;
   double dSOC_ambient = 0.0;
+  const bool drain_battery = task_planning_constraints.drain_battery();
 
   if (initial_state.waypoint() != _pimpl->start_waypoint)
   {

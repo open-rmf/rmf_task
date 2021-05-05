@@ -101,8 +101,7 @@ std::optional<rmf_task::Estimate>
 ChargeBatteryDescription::estimate_finish(
   const agv::State& initial_state,
   const agv::Constraints& task_planning_constraints,
-  const std::shared_ptr<EstimateCache> estimate_cache,
-  bool drain_battery) const
+  const std::shared_ptr<EstimateCache> estimate_cache) const
 {
   // Important to return nullopt if a charging task is not needed. In the task
   // planner, if a charging task is added, the node's latest time may be set to
@@ -133,6 +132,7 @@ ChargeBatteryDescription::estimate_finish(
   double dSOC_device = 0.0;
   double variant_battery_drain = 0.0;
   rmf_traffic::Duration variant_duration(0);
+  const bool drain_battery = task_planning_constraints.drain_battery();
 
   if (initial_state.waypoint() != initial_state.charging_waypoint())
   {

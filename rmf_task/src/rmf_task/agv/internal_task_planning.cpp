@@ -101,7 +101,6 @@ std::shared_ptr<Candidates> Candidates::make(
   const rmf_task::Request& request,
   const rmf_task::requests::ChargeBatteryDescription& charge_battery_desc,
   const std::shared_ptr<EstimateCache> estimate_cache,
-  bool drain_battery,
   TaskPlanner::TaskPlannerError& error)
 {
   Map initial_map;
@@ -109,7 +108,7 @@ std::shared_ptr<Candidates> Candidates::make(
   {
     const auto& state = initial_states[i];
     const auto finish = request.description()->estimate_finish(
-      state, constraints, estimate_cache, drain_battery);
+      state, constraints, estimate_cache);
     if (finish.has_value())
     {
       initial_map.insert({
@@ -125,14 +124,13 @@ std::shared_ptr<Candidates> Candidates::make(
     {
       auto battery_estimate =
         charge_battery_desc.estimate_finish(
-        state, constraints, estimate_cache, drain_battery);
+        state, constraints, estimate_cache);
       if (battery_estimate.has_value())
       {
         auto new_finish = request.description()->estimate_finish(
           battery_estimate.value().finish_state(),
           constraints,
-          estimate_cache,
-          drain_battery);
+          estimate_cache);
         if (new_finish.has_value())
         {
           initial_map.insert(
@@ -191,7 +189,6 @@ std::shared_ptr<PendingTask> PendingTask::make(
   const rmf_task::ConstRequestPtr request_,
   const rmf_task::Request::DescriptionPtr charge_battery_desc,
   const std::shared_ptr<EstimateCache> estimate_cache,
-  bool drain_battery,
   TaskPlanner::TaskPlannerError& error)
 {
 
@@ -199,7 +196,7 @@ std::shared_ptr<PendingTask> PendingTask::make(
     const rmf_task::requests::ChargeBatteryDescription>(charge_battery_desc);
 
   const auto candidates = Candidates::make(initial_states, constraints,
-      *request_, *battery_desc, estimate_cache, drain_battery, error);
+      *request_, *battery_desc, estimate_cache, error);
 
   if (!candidates)
     return nullptr;

@@ -180,7 +180,7 @@ SCENARIO("Grid World")
   const auto cost_calculator =
     rmf_task::BinaryPriorityScheme::make_cost_calculator();
 
-  const rmf_task::agv::Constraints constraints{0.2, 1.0};
+  const rmf_task::agv::Constraints constraints{0.2, 1.0, drain_battery};
   const rmf_task::agv::Parameters parameters{
     battery_system,
     motion_sink,
@@ -190,8 +190,7 @@ SCENARIO("Grid World")
   const TaskPlanner::Configuration task_config{
     parameters,
     constraints,
-    cost_calculator,
-    drain_battery};
+    cost_calculator};
 
   WHEN("Planning for 3 requests and 2 agents")
   {
@@ -1633,12 +1632,11 @@ SCENARIO("Grid World")
     const double default_orientation = 0.0;
     const double initial_soc = 0.3;
     const double recharge_soc = 0.9;
-    rmf_task::agv::Constraints new_constraints{0.2, recharge_soc};
+    rmf_task::agv::Constraints new_constraints{0.2, recharge_soc, drain_battery};
     rmf_task::agv::TaskPlanner::Configuration new_task_config{
       parameters,
       new_constraints,
-      cost_calculator,
-      drain_battery};
+      cost_calculator};
 
     rmf_traffic::agv::Plan::Start first_location{now, 13, default_orientation};
     rmf_traffic::agv::Plan::Start second_location{now, 2, default_orientation};
