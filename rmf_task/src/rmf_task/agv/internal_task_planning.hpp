@@ -19,7 +19,6 @@
 #define SRC__RMF_TASK__AGV__INTERNAL_TASK_PLANNING_HPP
 
 #include <rmf_task/agv/TaskPlanner.hpp>
-#include <rmf_task/requests/ChargeBattery.hpp>
 
 #include <map>
 #include <set>
@@ -29,6 +28,9 @@
 
 namespace rmf_task {
 namespace agv {
+
+using RequestModels =
+  std::unordered_map<std::string, std::shared_ptr<Request::Model>>;
 
 // ============================================================================
 struct Invariant
@@ -73,10 +75,12 @@ public:
   };
 
   static std::shared_ptr<Candidates> make(
+    const rmf_traffic::Time start_time,
     const std::vector<State>& initial_states,
     const Constraints& constraints,
+    const Parameters& parameters,
     const rmf_task::Request& request,
-    const rmf_task::requests::ChargeBatteryDescription& charge_battery_desc,
+    const RequestModels& request_models,
     const std::shared_ptr<EstimateCache> estimate_cache,
     TaskPlanner::TaskPlannerError& error);
 
@@ -112,10 +116,12 @@ class PendingTask
 public:
 
   static std::shared_ptr<PendingTask> make(
+    const rmf_traffic::Time start_time,
     const std::vector<rmf_task::agv::State>& initial_states,
-    const rmf_task::agv::Constraints& constraints,
-    const rmf_task::ConstRequestPtr request_,
-    const rmf_task::Request::DescriptionPtr charge_battery_desc,
+    const Constraints& constraints,
+    const Parameters& parameters,
+    const ConstRequestPtr request_,
+    const RequestModels& request_models,
     const std::shared_ptr<EstimateCache> estimate_cache,
     TaskPlanner::TaskPlannerError& error);
 
@@ -149,6 +155,8 @@ struct Node
   InvariantSet unassigned_invariants;
   std::size_t next_available_internal_id = 1;
 
+  RequestModels request_models;
+
   // ID 0 is reserved for charging tasks
   std::size_t get_available_internal_id(bool charging_task = false)
   {
@@ -162,9 +170,10 @@ struct Node
     {
       double earliest_start_time = rmf_traffic::time::to_seconds(
         u.second.request->earliest_start_time().time_since_epoch());
+      const auto invariant_duration =
+        request_models[u.second.request->id()]->invariant_duration();
       double earliest_finish_time = earliest_start_time
-        + rmf_traffic::time::to_seconds(
-        u.second.request->description()->invariant_duration());
+        + rmf_traffic::time::to_seconds(invariant_duration);
 
       unassigned_invariants.insert(
         Invariant{

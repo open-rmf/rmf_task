@@ -18,6 +18,7 @@
 #include <rmf_task/Estimate.hpp>
 #include <rmf_task/agv/State.hpp>
 #include <rmf_task/BinaryPriorityScheme.hpp>
+#include <rmf_task/requests/ChargeBattery.hpp>
 
 #include "../BinaryPriorityCostCalculator.hpp"
 
@@ -308,15 +309,13 @@ public:
   std::shared_ptr<EstimateCache> estimate_cache;
   bool check_priority = false;
   ConstCostCalculatorPtr cost_calculator = nullptr;
+  std::unordered_map<std::string, std::shared_ptr<Request::Model>>
+  request_models = {};
 
   ConstRequestPtr make_charging_request(rmf_traffic::Time start_time)
   {
     const auto parameters = config.parameters();
     return rmf_task::requests::ChargeBattery::make(
-      parameters.battery_system(),
-      parameters.motion_sink(),
-      parameters.ambient_sink(),
-      parameters.planner(),
       start_time,
       config.constraints().recharge_soc());
   }
@@ -332,7 +331,7 @@ public:
       // Remove charging task at end of assignments if any
       // TODO(YV): Remove this after fixing the planner
       if (std::dynamic_pointer_cast<
-          const rmf_task::requests::ChargeBatteryDescription>(
+          const rmf_task::requests::ChargeBattery::Description>(
           assignments[a].back().request()->description()))
         assignments[a].pop_back();
     }
@@ -350,7 +349,7 @@ public:
         continue;
 
       if (std::dynamic_pointer_cast<
-          const rmf_task::requests::ChargeBatteryDescription>(
+          const rmf_task::requests::ChargeBattery::Description>(
           agent.back().assignment.request()->description()))
         agent.pop_back();
     }
@@ -369,14 +368,20 @@ public:
     cost_calculator = config.cost_calculator() ? config.cost_calculator() :
       rmf_task::BinaryPriorityScheme::make_cost_calculator();
 
-    // Check if a high priority task exists among the requests.
+    // Derive the Request::Model for each request to be used in estimating
+    // the finish for a request.
+    // Also check if a high priority task exists among the requests.
     // If so the cost function for a node will be modified accordingly.
     for (const auto& request : requests)
     {
+      const auto request_model = request->description()->make_model(
+        request->earliest_start_time(),
+        config.parameters());
+      assert(request_model != nullptr);
+      request_models.insert({request->id(), request_model});
       if (request->priority())
       {
         check_priority = true;
-        break;
       }
     }
 
@@ -457,6 +462,7 @@ public:
   {
     auto initial_node = std::make_shared<Node>();
 
+    initial_node->request_models = request_models;
     initial_node->assigned_tasks.resize(initial_states.size());
 
     // TODO(YV): Come up with a better solution for charge_battery_request
@@ -467,10 +473,12 @@ public:
       // requests with the same string id will be assigned different internal ids
       std::size_t internal_id = initial_node->get_available_internal_id();
       const auto pending_task = PendingTask::make(
+        time_now,
         initial_states,
         config.constraints(),
+        config.parameters(),
         request,
-        charge_battery->description(),
+        request_models,
         estimate_cache,
         error);
 
@@ -561,12 +569,16 @@ public:
       // Check if a battery task already precedes the latest assignment
       auto& assignments = new_node->assigned_tasks[entry.candidate];
       if (assignments.empty() || !std::dynamic_pointer_cast<
-          const rmf_task::requests::ChargeBatteryDescription>(
+          const rmf_task::requests::ChargeBattery::Description>(
           assignments.back().assignment.request()->description()))
       {
         auto charge_battery = make_charging_request(
           entry.previous_state.finish_time());
-        auto battery_estimate = charge_battery->description()->estimate_finish(
+        const auto charge_battery_model =
+          charge_battery->description()->make_model(
+            charge_battery->earliest_start_time(),
+            config.parameters());
+        auto battery_estimate = charge_battery_model->estimate_finish(
           entry.previous_state, constraints, estimate_cache);
         if (battery_estimate.has_value())
         {
@@ -596,7 +608,7 @@ public:
     for (auto& new_u : new_node->unassigned_tasks)
     {
       const auto finish =
-        new_u.second.request->description()->estimate_finish(
+        request_models[new_u.second.request->id()]->estimate_finish(
         entry.state, constraints, estimate_cache);
 
       if (finish.has_value())
@@ -639,7 +651,11 @@ public:
     if (add_charger)
     {
       auto charge_battery = make_charging_request(entry.state.finish_time());
-      auto battery_estimate = charge_battery->description()->estimate_finish(
+      const auto charge_battery_model =
+        charge_battery->description()->make_model(
+        charge_battery->earliest_start_time(),
+        config.parameters());
+      auto battery_estimate = charge_battery_model->estimate_finish(
         entry.state, constraints, estimate_cache);
       if (battery_estimate.has_value())
       {
@@ -654,7 +670,7 @@ public:
         for (auto& new_u : new_node->unassigned_tasks)
         {
           const auto finish =
-            new_u.second.request->description()->estimate_finish(
+            request_models[new_u.second.request->id()]->estimate_finish(
             battery_estimate.value().finish_state(),
             constraints, estimate_cache);
           if (finish.has_value())
@@ -714,14 +730,18 @@ public:
     if (!assignments.empty())
     {
       if (std::dynamic_pointer_cast<
-          const rmf_task::requests::ChargeBatteryDescription>(
+          const rmf_task::requests::ChargeBattery::Description>(
           assignments.back().assignment.request()->description()))
         return nullptr;
       state = assignments.back().assignment.state();
     }
 
     auto charge_battery = make_charging_request(state.finish_time());
-    auto estimate = charge_battery->description()->estimate_finish(
+    const auto charge_battery_model =
+      charge_battery->description()->make_model(
+      charge_battery->earliest_start_time(),
+      config.parameters());
+    auto estimate = charge_battery_model->estimate_finish(
       state, config.constraints(), estimate_cache);
     if (estimate.has_value())
     {
@@ -739,7 +759,7 @@ public:
       for (auto& new_u : new_node->unassigned_tasks)
       {
         const auto finish =
-          new_u.second.request->description()->estimate_finish(
+          request_models[new_u.second.request->id()]->estimate_finish(
           estimate.value().finish_state(),
           config.constraints(), estimate_cache);
         if (finish.has_value())

@@ -61,7 +61,7 @@ inline bool check_implicit_charging_task_start(
     const auto& s = agent[0].state();
     auto is_charge_request =
       std::dynamic_pointer_cast<
-      const rmf_task::requests::ChargeBatteryDescription>(
+      const rmf_task::requests::ChargeBattery::Description>(
       agent[0].request()->description());
 
     // No task should consume more charge than (1.0 - initial_soc)
@@ -182,10 +182,10 @@ SCENARIO("Grid World")
 
   const rmf_task::agv::Constraints constraints{0.2, 1.0, drain_battery};
   const rmf_task::agv::Parameters parameters{
+    planner,
     battery_system,
     motion_sink,
-    device_sink,
-    planner};
+    device_sink};
 
   const TaskPlanner::Configuration task_config{
     parameters,
@@ -215,9 +215,6 @@ SCENARIO("Grid World")
         3,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
@@ -227,9 +224,6 @@ SCENARIO("Grid World")
         2,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
@@ -239,9 +233,6 @@ SCENARIO("Grid World")
         9,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
         now + rmf_traffic::time::from_seconds(0))
     };
 
@@ -308,9 +299,6 @@ SCENARIO("Grid World")
         3,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
@@ -320,9 +308,6 @@ SCENARIO("Grid World")
         2,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
@@ -332,9 +317,6 @@ SCENARIO("Grid World")
         9,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
@@ -344,9 +326,6 @@ SCENARIO("Grid World")
         11,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
         now + rmf_traffic::time::from_seconds(50000)),
 
       rmf_task::requests::Delivery::make(
@@ -356,9 +335,6 @@ SCENARIO("Grid World")
         0,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
         now + rmf_traffic::time::from_seconds(50000)),
 
       rmf_task::requests::Delivery::make(
@@ -368,9 +344,6 @@ SCENARIO("Grid World")
         8,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
         now + rmf_traffic::time::from_seconds(60000)),
 
       rmf_task::requests::Delivery::make(
@@ -380,9 +353,6 @@ SCENARIO("Grid World")
         14,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
         now + rmf_traffic::time::from_seconds(60000)),
 
       rmf_task::requests::Delivery::make(
@@ -392,9 +362,6 @@ SCENARIO("Grid World")
         11,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
         now + rmf_traffic::time::from_seconds(60000)),
 
       rmf_task::requests::Delivery::make(
@@ -404,9 +371,6 @@ SCENARIO("Grid World")
         0,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
         now + rmf_traffic::time::from_seconds(60000)),
 
       rmf_task::requests::Delivery::make(
@@ -416,9 +380,6 @@ SCENARIO("Grid World")
         3,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
         now + rmf_traffic::time::from_seconds(60000)),
 
       rmf_task::requests::Delivery::make(
@@ -428,9 +389,6 @@ SCENARIO("Grid World")
         12,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
         now + rmf_traffic::time::from_seconds(60000))
     };
 
@@ -497,9 +455,6 @@ SCENARIO("Grid World")
         3,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
@@ -509,9 +464,6 @@ SCENARIO("Grid World")
         2,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
@@ -521,9 +473,6 @@ SCENARIO("Grid World")
         4,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
@@ -533,9 +482,6 @@ SCENARIO("Grid World")
         11,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
         now + rmf_traffic::time::from_seconds(50000))
     };
 
@@ -611,9 +557,6 @@ SCENARIO("Grid World")
         3,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
@@ -623,9 +566,6 @@ SCENARIO("Grid World")
         7,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
@@ -635,9 +575,6 @@ SCENARIO("Grid World")
         12,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
@@ -647,9 +584,6 @@ SCENARIO("Grid World")
         11,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
         now + rmf_traffic::time::from_seconds(50000)),
 
       rmf_task::requests::Delivery::make(
@@ -659,9 +593,6 @@ SCENARIO("Grid World")
         6,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
         now + rmf_traffic::time::from_seconds(50000)),
 
       rmf_task::requests::Delivery::make(
@@ -671,9 +602,6 @@ SCENARIO("Grid World")
         9,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
         now + rmf_traffic::time::from_seconds(70000)),
 
       rmf_task::requests::Delivery::make(
@@ -683,9 +611,6 @@ SCENARIO("Grid World")
         4,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
         now + rmf_traffic::time::from_seconds(70000)),
 
       rmf_task::requests::Delivery::make(
@@ -695,9 +620,6 @@ SCENARIO("Grid World")
         11,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
         now + rmf_traffic::time::from_seconds(70000)),
 
       rmf_task::requests::Delivery::make(
@@ -707,9 +629,6 @@ SCENARIO("Grid World")
         1,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
         now + rmf_traffic::time::from_seconds(70000)),
 
       rmf_task::requests::Delivery::make(
@@ -719,9 +638,6 @@ SCENARIO("Grid World")
         5,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
         now + rmf_traffic::time::from_seconds(70000)),
 
       rmf_task::requests::Delivery::make(
@@ -731,9 +647,6 @@ SCENARIO("Grid World")
         10,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
         now + rmf_traffic::time::from_seconds(70000))
     };
 
@@ -795,9 +708,6 @@ SCENARIO("Grid World")
         0,
         15,
         1000,
-        motion_sink,
-        device_sink,
-        planner,
         now)
     };
 
@@ -844,9 +754,6 @@ SCENARIO("Grid World")
         0,
         15,
         1000,
-        motion_sink,
-        device_sink,
-        planner,
         now)
     };
 
@@ -896,9 +803,6 @@ SCENARIO("Grid World")
         3,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
@@ -908,9 +812,6 @@ SCENARIO("Grid World")
         2,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
@@ -920,9 +821,6 @@ SCENARIO("Grid World")
         9,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
         now + rmf_traffic::time::from_seconds(0))
     };
 
@@ -957,9 +855,6 @@ SCENARIO("Grid World")
         9,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
         now + rmf_traffic::time::from_seconds(0),
         rmf_task::BinaryPriorityScheme::make_high_priority());
     }
@@ -1009,9 +904,6 @@ SCENARIO("Grid World")
         3,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
         now + rmf_traffic::time::from_seconds(0),
         rmf_task::BinaryPriorityScheme::make_high_priority()),
 
@@ -1022,9 +914,6 @@ SCENARIO("Grid World")
         2,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
         now + rmf_traffic::time::from_seconds(0),
         rmf_task::BinaryPriorityScheme::make_high_priority()),
 
@@ -1035,9 +924,6 @@ SCENARIO("Grid World")
         9,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
         now + rmf_traffic::time::from_seconds(0),
         rmf_task::BinaryPriorityScheme::make_high_priority())
     };
@@ -1086,9 +972,6 @@ SCENARIO("Grid World")
         3,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
         now + rmf_traffic::time::from_seconds(0),
         rmf_task::BinaryPriorityScheme::make_high_priority()),
 
@@ -1099,9 +982,6 @@ SCENARIO("Grid World")
         2,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
@@ -1111,9 +991,6 @@ SCENARIO("Grid World")
         9,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
@@ -1123,9 +1000,6 @@ SCENARIO("Grid World")
         7,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
         now + rmf_traffic::time::from_seconds(0),
         rmf_task::BinaryPriorityScheme::make_high_priority())
     };
@@ -1183,9 +1057,6 @@ SCENARIO("Grid World")
         3,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
         now + rmf_traffic::time::from_seconds(0),
         rmf_task::BinaryPriorityScheme::make_high_priority()),
 
@@ -1196,9 +1067,6 @@ SCENARIO("Grid World")
         2,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
@@ -1208,9 +1076,6 @@ SCENARIO("Grid World")
         9,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
         now + rmf_traffic::time::from_seconds(100000)),
 
       rmf_task::requests::Delivery::make(
@@ -1220,9 +1085,6 @@ SCENARIO("Grid World")
         6,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
         now + rmf_traffic::time::from_seconds(100000),
         rmf_task::BinaryPriorityScheme::make_high_priority())
     };
@@ -1282,9 +1144,6 @@ SCENARIO("Grid World")
         3,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
@@ -1294,9 +1153,6 @@ SCENARIO("Grid World")
         2,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
@@ -1306,9 +1162,6 @@ SCENARIO("Grid World")
         9,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
@@ -1318,9 +1171,6 @@ SCENARIO("Grid World")
         6,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
         now + rmf_traffic::time::from_seconds(0))
     };
 
@@ -1361,9 +1211,6 @@ SCENARIO("Grid World")
           3,
           "ingestor",
           {},
-          motion_sink,
-          device_sink,
-          planner,
           now + rmf_traffic::time::from_seconds(0)),
 
         rmf_task::requests::Delivery::make(
@@ -1373,9 +1220,6 @@ SCENARIO("Grid World")
           2,
           "ingestor",
           {},
-          motion_sink,
-          device_sink,
-          planner,
           now + rmf_traffic::time::from_seconds(0)),
 
         rmf_task::requests::Delivery::make(
@@ -1385,9 +1229,6 @@ SCENARIO("Grid World")
           9,
           "ingestor",
           {},
-          motion_sink,
-          device_sink,
-          planner,
           now + rmf_traffic::time::from_seconds(0),
           rmf_task::BinaryPriorityScheme::make_high_priority()),
 
@@ -1398,9 +1239,6 @@ SCENARIO("Grid World")
           6,
           "ingestor",
           {},
-          motion_sink,
-          device_sink,
-          planner,
           now + rmf_traffic::time::from_seconds(0),
           rmf_task::BinaryPriorityScheme::make_high_priority())
       };
@@ -1459,9 +1297,6 @@ SCENARIO("Grid World")
         3,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
@@ -1471,9 +1306,6 @@ SCENARIO("Grid World")
         2,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
@@ -1483,9 +1315,6 @@ SCENARIO("Grid World")
         9,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
@@ -1495,9 +1324,6 @@ SCENARIO("Grid World")
         6,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
         now + rmf_traffic::time::from_seconds(0))
     };
 
@@ -1546,9 +1372,6 @@ SCENARIO("Grid World")
           3,
           "ingestor",
           {},
-          motion_sink,
-          device_sink,
-          planner,
           now + rmf_traffic::time::from_seconds(0),
           rmf_task::BinaryPriorityScheme::make_high_priority()),
 
@@ -1559,9 +1382,6 @@ SCENARIO("Grid World")
           2,
           "ingestor",
           {},
-          motion_sink,
-          device_sink,
-          planner,
           now + rmf_traffic::time::from_seconds(0),
           rmf_task::BinaryPriorityScheme::make_high_priority()),
 
@@ -1572,9 +1392,6 @@ SCENARIO("Grid World")
           9,
           "ingestor",
           {},
-          motion_sink,
-          device_sink,
-          planner,
           now + rmf_traffic::time::from_seconds(0),
           rmf_task::BinaryPriorityScheme::make_high_priority()),
 
@@ -1585,9 +1402,6 @@ SCENARIO("Grid World")
           6,
           "ingestor",
           {},
-          motion_sink,
-          device_sink,
-          planner,
           now + rmf_traffic::time::from_seconds(0))
       };
 
@@ -1656,9 +1470,6 @@ SCENARIO("Grid World")
         3,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
@@ -1668,9 +1479,6 @@ SCENARIO("Grid World")
         2,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
@@ -1680,9 +1488,6 @@ SCENARIO("Grid World")
         4,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
@@ -1692,9 +1497,6 @@ SCENARIO("Grid World")
         11,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
         now + rmf_traffic::time::from_seconds(50000))
     };
 
@@ -1741,7 +1543,7 @@ SCENARIO("Grid World")
       for (const auto& assignment : agent)
       {
         if (std::dynamic_pointer_cast<
-            const rmf_task::requests::ChargeBatteryDescription>(
+            const rmf_task::requests::ChargeBattery::Description>(
             assignment.request()->description()))
         {
           CHECK(assignment.state().battery_soc() == recharge_soc);

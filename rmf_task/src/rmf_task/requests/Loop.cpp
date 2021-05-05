@@ -21,61 +21,63 @@ namespace rmf_task {
 namespace requests {
 
 //==============================================================================
-class LoopDescription::Implementation
+class Loop::Model : public Request::Model
 {
 public:
 
-  Implementation()
-  {}
+  std::optional<Estimate> estimate_finish(
+    const agv::State& initial_state,
+    const agv::Constraints& task_planning_constraints,
+    const std::shared_ptr<EstimateCache> estimate_cache) const final;
 
-  std::size_t start_waypoint;
-  std::size_t finish_waypoint;
-  std::size_t num_loops;
-  rmf_battery::ConstMotionPowerSinkPtr motion_sink;
-  rmf_battery::ConstDevicePowerSinkPtr ambient_sink;
-  std::shared_ptr<const rmf_traffic::agv::Planner> planner;
-  rmf_traffic::Time start_time;
+  rmf_traffic::Duration invariant_duration() const final;
 
-  rmf_traffic::Duration invariant_duration;
-  double invariant_battery_drain;
+  Model(
+    rmf_traffic::Time earliest_start_time,
+    agv::Parameters parameters,
+    std::size_t start_waypoint,
+    std::size_t finish_waypoint,
+    std::size_t num_loops);
+
+private:
+  rmf_traffic::Time _earliest_start_time;
+  agv::Parameters _parameters;
+  std::size_t _start_waypoint;
+  std::size_t _finish_waypoint;
+  std::size_t _num_loops;
+
+  rmf_traffic::Duration _invariant_duration;
+  double _invariant_battery_drain;
 };
 
 //==============================================================================
-DescriptionPtr LoopDescription::make(
+Loop::Model::Model(
+  rmf_traffic::Time earliest_start_time,
+  agv::Parameters parameters,
   std::size_t start_waypoint,
   std::size_t finish_waypoint,
-  std::size_t num_loops,
-  rmf_battery::ConstMotionPowerSinkPtr motion_sink,
-  rmf_battery::ConstDevicePowerSinkPtr ambient_sink,
-  std::shared_ptr<const rmf_traffic::agv::Planner> planner,
-  rmf_traffic::Time start_time)
+  std::size_t num_loops)
+: _earliest_start_time(earliest_start_time),
+  _parameters(parameters),
+  _start_waypoint(start_waypoint),
+  _finish_waypoint(finish_waypoint),
+  _num_loops(num_loops)
 {
-  std::shared_ptr<LoopDescription> loop(new LoopDescription());
-  loop->_pimpl->start_waypoint = start_waypoint;
-  loop->_pimpl->finish_waypoint = finish_waypoint;
-  loop->_pimpl->num_loops = num_loops;
-  loop->_pimpl->motion_sink = std::move(motion_sink);
-  loop->_pimpl->ambient_sink = std::move(ambient_sink);
-  loop->_pimpl->planner = std::move(planner);
-  loop->_pimpl->start_time = start_time;
-
-  // Calculate the invariant duration and battery drain for this task
-  loop->_pimpl->invariant_duration = rmf_traffic::Duration{0};
-  loop->_pimpl->invariant_battery_drain = 0.0;
-  if (loop->_pimpl->start_waypoint != loop->_pimpl->finish_waypoint)
+    // Calculate the invariant duration and battery drain for this task
+  _invariant_duration = rmf_traffic::Duration{0};
+  _invariant_battery_drain = 0.0;
+  if (_start_waypoint != _finish_waypoint)
   {
-    const auto start_time = std::chrono::steady_clock::now();
     rmf_traffic::agv::Planner::Start loop_start{
-      start_time,
-      loop->_pimpl->start_waypoint,
+      _earliest_start_time,
+      _start_waypoint,
       0.0};
-    rmf_traffic::agv::Planner::Goal loop_end_goal{
-      loop->_pimpl->finish_waypoint};
+    rmf_traffic::agv::Planner::Goal loop_end_goal{_finish_waypoint};
 
-    const auto forward_loop_plan = loop->_pimpl->planner->plan(
+    const auto forward_loop_plan = _parameters.planner()->plan(
       loop_start, loop_end_goal);
 
-    auto itinerary_start_time = start_time;
+    auto itinerary_start_time = _earliest_start_time;
     double forward_battery_drain = 0.0;
     rmf_traffic::Duration forward_duration(0);
     for (const auto& itinerary : forward_loop_plan->get_itinerary())
@@ -86,39 +88,29 @@ DescriptionPtr LoopDescription::make(
 
       // Compute the invariant battery drain
       const double dSOC_motion =
-        loop->_pimpl->motion_sink->compute_change_in_charge(trajectory);
+        _parameters.motion_sink()->compute_change_in_charge(trajectory);
       const double dSOC_device =
-        loop->_pimpl->ambient_sink->compute_change_in_charge(
+        _parameters.ambient_sink()->compute_change_in_charge(
         rmf_traffic::time::to_seconds(itinerary_duration));
       forward_battery_drain += dSOC_motion + dSOC_device;
 
       forward_duration += itinerary_duration;
       itinerary_start_time = finish_time;
     }
-    loop->_pimpl->invariant_duration =
+    _invariant_duration =
       (2 * num_loops - 1) * forward_duration;
-    loop->_pimpl->invariant_battery_drain =
+    _invariant_battery_drain =
       (2 * num_loops - 1) * forward_battery_drain;
   }
 
-  return loop;
-
 }
 
 //==============================================================================
-LoopDescription::LoopDescription()
-: _pimpl(rmf_utils::make_impl<Implementation>(Implementation()))
-{
-  // Do nothing
-}
-
-//==============================================================================
-std::optional<rmf_task::Estimate> LoopDescription::estimate_finish(
+std::optional<rmf_task::Estimate> Loop::Model::estimate_finish(
   const agv::State& initial_state,
   const agv::Constraints& task_planning_constraints,
   const std::shared_ptr<EstimateCache> estimate_cache) const
 {
-
   rmf_traffic::Duration variant_duration(0);
 
   const rmf_traffic::Time start_time = initial_state.finish_time();
@@ -126,12 +118,15 @@ std::optional<rmf_task::Estimate> LoopDescription::estimate_finish(
   double dSOC_motion = 0.0;
   double dSOC_device = 0.0;
   const bool drain_battery = task_planning_constraints.drain_battery();
+  const auto planner = _parameters.planner();
+  const auto motion_sink = _parameters.motion_sink();
+  const auto ambient_sink = _parameters.ambient_sink();
 
   // Check if a plan has to be generated from finish location to start_waypoint
-  if (initial_state.waypoint() != _pimpl->start_waypoint)
+  if (initial_state.waypoint() != _start_waypoint)
   {
     auto endpoints = std::make_pair(initial_state.waypoint(),
-        _pimpl->start_waypoint);
+        _start_waypoint);
     const auto& cache_result = estimate_cache->get(endpoints);
     // Use previously memoized values if possible
     if (cache_result)
@@ -144,7 +139,7 @@ std::optional<rmf_task::Estimate> LoopDescription::estimate_finish(
     {
       // Compute plan to start_waypoint along with battery drain
       rmf_traffic::agv::Planner::Goal loop_start_goal{endpoints.second};
-      const auto plan_to_start = _pimpl->planner->plan(
+      const auto plan_to_start = planner->plan(
         initial_state.location(), loop_start_goal);
       // We assume we can always compute a plan
       auto itinerary_start_time = start_time;
@@ -160,9 +155,9 @@ std::optional<rmf_task::Estimate> LoopDescription::estimate_finish(
         {
           // Compute battery drain
           dSOC_motion =
-            _pimpl->motion_sink->compute_change_in_charge(trajectory);
+            motion_sink->compute_change_in_charge(trajectory);
           dSOC_device =
-            _pimpl->ambient_sink->compute_change_in_charge(
+            ambient_sink->compute_change_in_charge(
             rmf_traffic::time::to_seconds(itinerary_duration));
           battery_soc = battery_soc - dSOC_motion - dSOC_device;
           variant_battery_drain += dSOC_motion + dSOC_device;
@@ -179,7 +174,7 @@ std::optional<rmf_task::Estimate> LoopDescription::estimate_finish(
   }
 
   // Compute wait_until
-  const rmf_traffic::Time ideal_start = _pimpl->start_time - variant_duration;
+  const rmf_traffic::Time ideal_start = _earliest_start_time - variant_duration;
   const rmf_traffic::Time wait_until =
     initial_state.finish_time() > ideal_start ?
     initial_state.finish_time() : ideal_start;
@@ -191,7 +186,7 @@ std::optional<rmf_task::Estimate> LoopDescription::estimate_finish(
   {
     rmf_traffic::Duration wait_duration(
       wait_until - initial_state.finish_time());
-    dSOC_device = _pimpl->ambient_sink->compute_change_in_charge(
+    dSOC_device = ambient_sink->compute_change_in_charge(
       rmf_traffic::time::to_seconds(wait_duration));
     battery_soc = battery_soc - dSOC_device;
 
@@ -203,19 +198,19 @@ std::optional<rmf_task::Estimate> LoopDescription::estimate_finish(
 
   // Compute finish time
   const rmf_traffic::Time state_finish_time =
-    wait_until + variant_duration  + _pimpl->invariant_duration;
+    wait_until + variant_duration  + _invariant_duration;
 
   // Subtract invariant battery drain and check if robot can return to its charger
   double retreat_battery_drain = 0.0;
   if (drain_battery)
   {
-    battery_soc -= _pimpl->invariant_battery_drain;
+    battery_soc -= _invariant_battery_drain;
     if (battery_soc <= task_planning_constraints.threshold_soc())
       return std::nullopt;
 
-    if (_pimpl->finish_waypoint != initial_state.charging_waypoint())
+    if (_finish_waypoint != initial_state.charging_waypoint())
     {
-      const auto endpoints = std::make_pair(_pimpl->finish_waypoint,
+      const auto endpoints = std::make_pair(_finish_waypoint,
           initial_state.charging_waypoint());
       const auto& cache_result = estimate_cache->get(endpoints);
       if (cache_result)
@@ -232,7 +227,7 @@ std::optional<rmf_task::Estimate> LoopDescription::estimate_finish(
         rmf_traffic::agv::Planner::Goal charger_goal{
           endpoints.second};
 
-        const auto result_to_charger = _pimpl->planner->plan(
+        const auto result_to_charger = planner->plan(
           retreat_start, charger_goal);
         // We assume we can always compute a plan
         auto itinerary_start_time = state_finish_time;
@@ -244,9 +239,9 @@ std::optional<rmf_task::Estimate> LoopDescription::estimate_finish(
           const rmf_traffic::Duration itinerary_duration =
             finish_time - itinerary_start_time;
 
-          dSOC_motion = _pimpl->motion_sink->compute_change_in_charge(
+          dSOC_motion = motion_sink->compute_change_in_charge(
             trajectory);
-          dSOC_device = _pimpl->ambient_sink->compute_change_in_charge(
+          dSOC_device = ambient_sink->compute_change_in_charge(
             rmf_traffic::time::to_seconds(itinerary_duration));
           retreat_battery_drain += dSOC_motion + dSOC_device;
 
@@ -266,7 +261,7 @@ std::optional<rmf_task::Estimate> LoopDescription::estimate_finish(
   // Return Estimate
   rmf_traffic::agv::Planner::Start location{
     state_finish_time,
-    _pimpl->finish_waypoint,
+    _finish_waypoint,
     initial_state.location().orientation()};
   agv::State state{
     std::move(location),
@@ -277,75 +272,74 @@ std::optional<rmf_task::Estimate> LoopDescription::estimate_finish(
 }
 
 //==============================================================================
-rmf_traffic::Duration LoopDescription::invariant_duration() const
+rmf_traffic::Duration Loop::Model::invariant_duration() const
 {
-  return _pimpl->invariant_duration;
+  return _invariant_duration;
 }
 
 //==============================================================================
-std::size_t LoopDescription::start_waypoint() const
+class Loop::Description::Implementation
+{
+public:
+
+  Implementation()
+  {}
+
+  std::size_t start_waypoint;
+  std::size_t finish_waypoint;
+  std::size_t num_loops;
+};
+
+//==============================================================================
+DescriptionPtr Loop::Description::make(
+  std::size_t start_waypoint,
+  std::size_t finish_waypoint,
+  std::size_t num_loops)
+{
+  std::shared_ptr<Description> loop(new Description());
+  loop->_pimpl->start_waypoint = start_waypoint;
+  loop->_pimpl->finish_waypoint = finish_waypoint;
+  loop->_pimpl->num_loops = num_loops;
+
+  return loop;
+}
+
+//==============================================================================
+Loop::Description::Description()
+: _pimpl(rmf_utils::make_impl<Implementation>(Implementation()))
+{
+  // Do nothing
+}
+
+//==============================================================================
+std::shared_ptr<Request::Model> Loop::Description::make_model(
+  rmf_traffic::Time earliest_start_time,
+  const agv::Parameters& parameters) const
+{
+  return std::make_shared<Loop::Model>(
+    earliest_start_time,
+    parameters,
+    _pimpl->start_waypoint,
+    _pimpl->finish_waypoint,
+    _pimpl->num_loops);
+}
+
+//==============================================================================
+std::size_t Loop::Description::start_waypoint() const
 {
   return _pimpl->start_waypoint;
 }
 
 //==============================================================================
-std::size_t LoopDescription::finish_waypoint() const
+std::size_t Loop::Description::finish_waypoint() const
 {
   return _pimpl->finish_waypoint;
 }
 
 //==============================================================================
-std::size_t LoopDescription::num_loops() const
+std::size_t Loop::Description::num_loops() const
 {
   return _pimpl->num_loops;
-}
-
-//==============================================================================
-LoopDescription::Start LoopDescription::loop_start(
-  const LoopDescription::Start& start) const
-{
-  if (start.waypoint() == _pimpl->start_waypoint)
-    return start;
-
-  rmf_traffic::agv::Planner::Goal goal{_pimpl->start_waypoint};
-
-  const auto result = _pimpl->planner->plan(start, goal);
-  // We assume we can always compute a plan
-  const auto& trajectory =
-    result->get_itinerary().back().trajectory();
-  const auto& finish_time = *trajectory.finish_time();
-  const double orientation = trajectory.back().position()[2];
-
-  rmf_traffic::agv::Planner::Start loop_start{
-    finish_time,
-    _pimpl->start_waypoint,
-    orientation};
-
-  return loop_start;
-}
-
-//==============================================================================
-LoopDescription::Start LoopDescription::loop_end(
-  const LoopDescription::Start& start) const
-{
-  if (start.waypoint() == _pimpl->finish_waypoint)
-    return start;
-
-  rmf_traffic::agv::Planner::Goal goal{_pimpl->finish_waypoint};
-
-  const auto result = _pimpl->planner->plan(start, goal);
-  // We assume we can always compute a plan
-  const auto& trajectory =
-    result->get_itinerary().back().trajectory();
-  const auto& finish_time = *trajectory.finish_time();
-  const double orientation = trajectory.back().position()[2];
-
-  rmf_traffic::agv::Planner::Start loop_end{
-    finish_time,
-    _pimpl->finish_waypoint,
-    orientation};
-
-  return loop_end;
 }
 
 //==============================================================================
@@ -354,23 +348,16 @@ ConstRequestPtr Loop::make(
   std::size_t start_waypoint,
   std::size_t finish_waypoint,
   std::size_t num_loops,
-  rmf_battery::ConstMotionPowerSinkPtr motion_sink,
-  rmf_battery::ConstDevicePowerSinkPtr ambient_sink,
-  std::shared_ptr<const rmf_traffic::agv::Planner> planner,
-  rmf_traffic::Time start_time,
+  rmf_traffic::Time earliest_start_time,
   ConstPriorityPtr priority)
 {
-  const auto description = LoopDescription::make(
+  const auto description = Description::make(
     start_waypoint,
     finish_waypoint,
-    num_loops,
-    std::move(motion_sink),
-    std::move(ambient_sink),
-    std::move(planner),
-    start_time);
+    num_loops);
 
   return std::make_shared<Request>(
-    id, start_time, std::move(priority), description);
+    id, earliest_start_time, std::move(priority), description);
 
 }
 

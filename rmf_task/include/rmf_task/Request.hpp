@@ -20,12 +20,14 @@
 
 #include <memory>
 
-#include <rmf_task/Estimate.hpp>
-#include <rmf_task/agv/State.hpp>
 #include <rmf_task/agv/Constraints.hpp>
+#include <rmf_task/agv/Parameters.hpp>
+#include <rmf_task/agv/State.hpp>
+#include <rmf_task/Estimate.hpp>
 #include <rmf_task/Priority.hpp>
 
 #include <rmf_traffic/Time.hpp>
+
 #include <rmf_utils/impl_ptr.hpp>
 
 namespace rmf_task {
@@ -34,8 +36,7 @@ namespace rmf_task {
 class Request
 {
 public:
-  /// Implement this for new type of requests.
-  class Description
+  class Model
   {
   public:
 
@@ -49,8 +50,20 @@ public:
     /// Estimate the invariant component of the request's duration
     virtual rmf_traffic::Duration invariant_duration() const = 0;
 
+    virtual ~Model() = default;
+  };
+
+  class Description
+  {
+  public:
+
+    virtual std::shared_ptr<Model> make_model(
+      rmf_traffic::Time earliest_start_time,
+      const agv::Parameters& parameters) const = 0;
+    
     virtual ~Description() = default;
   };
+
   using DescriptionPtr = std::shared_ptr<Description>;
 
   /// Constructor

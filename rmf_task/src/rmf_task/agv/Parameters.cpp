@@ -24,24 +24,27 @@ namespace agv {
 class Parameters::Implementation
 {
 public:
+  std::shared_ptr<const rmf_traffic::agv::Planner> planner;
   rmf_battery::agv::BatterySystem battery_system;
   rmf_battery::ConstMotionPowerSinkPtr motion_sink;
   rmf_battery::ConstDevicePowerSinkPtr ambient_sink;
-  std::shared_ptr<const rmf_traffic::agv::Planner> planner;
+  rmf_battery::ConstDevicePowerSinkPtr tool_sink;
 };
 
 //==============================================================================
 Parameters::Parameters(
+  std::shared_ptr<const rmf_traffic::agv::Planner> planner,
   rmf_battery::agv::BatterySystem battery_system,
   rmf_battery::ConstMotionPowerSinkPtr motion_sink,
   rmf_battery::ConstDevicePowerSinkPtr ambient_sink,
-  std::shared_ptr<const rmf_traffic::agv::Planner> planner)
+  rmf_battery::ConstDevicePowerSinkPtr tool_sink)
 : _pimpl(rmf_utils::make_impl<Implementation>(
       Implementation{
+        std::move(planner),
         battery_system,
         std::move(motion_sink),
         std::move(ambient_sink),
-        std::move(planner)
+        std::move(tool_sink)
       }))
 {
   // Do nothing
@@ -104,6 +107,21 @@ auto Parameters::planner(
   std::shared_ptr<const rmf_traffic::agv::Planner> planner) -> Parameters&
 {
   _pimpl->planner = std::move(planner);
+  return *this;
+}
+
+//==============================================================================
+const rmf_battery::ConstDevicePowerSinkPtr&
+Parameters::tool_sink() const
+{
+  return _pimpl->tool_sink;
+}
+
+//==============================================================================
+auto Parameters::tool_sink(
+  rmf_battery::ConstDevicePowerSinkPtr tool_sink) -> Parameters&
+{
+  _pimpl->tool_sink = std::move(tool_sink);
   return *this;
 }
 

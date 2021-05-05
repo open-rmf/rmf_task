@@ -37,59 +37,43 @@ namespace rmf_task {
 namespace requests {
 
 //==============================================================================
-class CleanDescription : public rmf_task::Request::Description
-{
-public:
-
-  static DescriptionPtr make(
-    std::size_t start_waypoint,
-    std::size_t end_waypoint,
-    const rmf_traffic::Trajectory& cleaning_path,
-    rmf_battery::ConstMotionPowerSinkPtr motion_sink,
-    rmf_battery::ConstDevicePowerSinkPtr ambient_sink,
-    rmf_battery::ConstDevicePowerSinkPtr cleaning_sink,
-    std::shared_ptr<const rmf_traffic::agv::Planner> planner,
-    rmf_traffic::Time start_time);
-
-  std::optional<rmf_task::Estimate> estimate_finish(
-    const agv::State& initial_state,
-    const agv::Constraints& task_planning_constraints,
-    const std::shared_ptr<EstimateCache> estimate_cache) const final;
-
-  rmf_traffic::Duration invariant_duration() const final;
-
-  /// Get the start waypoint in this request
-  std::size_t start_waypoint() const;
-
-  /// Get the end waypoint in this request
-  std::size_t end_waypoint() const;
-
-  /// Get the Start at the end of the cleaning trajectory from an initial Start
-  rmf_traffic::agv::Planner::Start location_after_clean(
-    rmf_traffic::agv::Planner::Start start) const;
-
-  class Implementation;
-private:
-  CleanDescription();
-
-  rmf_utils::impl_ptr<Implementation> _pimpl;
-};
-
-//==============================================================================
 class Clean
 {
 public:
+
+  class Model;
+
+  class Description : public Request::Description
+  {
+  public:
+
+    static DescriptionPtr make(
+      std::size_t start_waypoint,
+      std::size_t end_waypoint,
+      const rmf_traffic::Trajectory& cleaning_path);
+
+    std::shared_ptr<Request::Model> make_model(
+      rmf_traffic::Time earliest_start_time,
+      const agv::Parameters& parameters) const final;
+
+    /// Get the start waypoint in this request
+    std::size_t start_waypoint() const;
+
+    /// Get the end waypoint in this request
+    std::size_t end_waypoint() const;
+
+    class Implementation;
+  private:
+    Description();
+    rmf_utils::impl_ptr<Implementation> _pimpl;
+  };
 
   static ConstRequestPtr make(
     const std::string& id,
     std::size_t start_waypoint,
     std::size_t end_waypoint,
     const rmf_traffic::Trajectory& cleaning_path,
-    rmf_battery::ConstMotionPowerSinkPtr motion_sink,
-    rmf_battery::ConstDevicePowerSinkPtr ambient_sink,
-    rmf_battery::ConstDevicePowerSinkPtr cleaning_sink,
-    std::shared_ptr<const rmf_traffic::agv::Planner> planner,
-    rmf_traffic::Time start_time,
+    rmf_traffic::Time earliest_start_time,
     ConstPriorityPtr priority = nullptr);
 };
 

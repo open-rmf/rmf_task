@@ -48,10 +48,22 @@ public:
   ///
   /// \param[in] planner
   ///   The planner for a agent in this fleet
+  ///
+  /// \param[in] tool_sink
+  ///   An additional device sink of the agent. This describes how power gets
+  ///   drained when a tool/device is active.
   Parameters(
+    std::shared_ptr<const rmf_traffic::agv::Planner> planner,
     rmf_battery::agv::BatterySystem battery_system,
     rmf_battery::ConstMotionPowerSinkPtr motion_sink,
     rmf_battery::ConstDevicePowerSinkPtr ambient_sink,
+    rmf_battery::ConstDevicePowerSinkPtr tool_sink = nullptr);
+
+    /// Get the planner
+  const std::shared_ptr<const rmf_traffic::agv::Planner>& planner() const;
+
+  /// Set the planner
+  Parameters& planner(
     std::shared_ptr<const rmf_traffic::agv::Planner> planner);
 
   /// Get the battery system
@@ -75,12 +87,12 @@ public:
   Parameters& ambient_sink(
     rmf_battery::ConstDevicePowerSinkPtr ambient_sink);
 
-  /// Get the planner
-  const std::shared_ptr<const rmf_traffic::agv::Planner>& planner() const;
+  /// Get the tool device sink
+  const rmf_battery::ConstDevicePowerSinkPtr& tool_sink() const;
 
-  /// Set the planner
-  Parameters& planner(
-    std::shared_ptr<const rmf_traffic::agv::Planner> planner);
+  /// Set the tool device sink
+  Parameters& tool_sink(
+    rmf_battery::ConstDevicePowerSinkPtr tool_sink);
 
   class Implementation;
 
