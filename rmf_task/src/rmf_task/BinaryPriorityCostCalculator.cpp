@@ -79,7 +79,7 @@ auto BinaryPriorityCostCalculator::compute_h(
   // portion of any of its next tasks
   for (const auto& u : node.unassigned_tasks)
   {
-    const auto invariant_duration =u.second.model->invariant_duration();
+    const auto invariant_duration = u.second.model->invariant_duration();
     const rmf_traffic::Time earliest_deployment_time =
       u.second.candidates.best_finish_time()
       - invariant_duration;
