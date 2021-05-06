@@ -314,10 +314,7 @@ public:
 
   ConstRequestPtr make_charging_request(rmf_traffic::Time start_time)
   {
-    const auto parameters = config.parameters();
-    return rmf_task::requests::ChargeBattery::make(
-      start_time,
-      config.constraints().recharge_soc());
+    return rmf_task::requests::ChargeBattery::make(start_time);
   }
 
   TaskPlanner::Assignments prune_assignments(

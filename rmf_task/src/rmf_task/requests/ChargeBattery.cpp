@@ -60,24 +60,20 @@ public:
 
   Model(
     rmf_traffic::Time earliest_start_time,
-    agv::Parameters parameters,
-    double max_charge_soc);
+    agv::Parameters parameters);
 
 private:
   rmf_traffic::Time _earliest_start_time;
   agv::Parameters _parameters;
-  double _max_charge_soc;
   rmf_traffic::Duration _invariant_duration;
 };
 
 //==============================================================================
 ChargeBattery::Model::Model(
   rmf_traffic::Time earliest_start_time,
-  agv::Parameters parameters,
-  double max_charge_soc)
+  agv::Parameters parameters)
 : _earliest_start_time(earliest_start_time),
-  _parameters(parameters),
-  _max_charge_soc(max_charge_soc)
+  _parameters(parameters)
 {
   _invariant_duration = rmf_traffic::time::from_seconds(0.0);
 }
@@ -95,9 +91,9 @@ ChargeBattery::Model::estimate_finish(
   // segmentation threshold, causing `solve` to return. This may cause an infinite
   // loop as a new identical charging task is added in each call to `solve` before
   // returning.
-
-  if ((initial_state.battery_soc() >= _max_charge_soc
-    || abs(initial_state.battery_soc() - _max_charge_soc) < 1e-3)
+  const auto recharge_soc = task_planning_constraints.recharge_soc();
+  if ((initial_state.battery_soc() >= recharge_soc
+    || abs(initial_state.battery_soc() - recharge_soc) < 1e-3)
     && initial_state.waypoint() == initial_state.charging_waypoint())
     return std::nullopt;
 
@@ -169,7 +165,7 @@ ChargeBattery::Model::estimate_finish(
       return std::nullopt;
   }
 
-  double delta_soc = _max_charge_soc - battery_soc;
+  double delta_soc = recharge_soc - battery_soc;
   assert(delta_soc >= 0.0);
   double time_to_charge =
     (3600 * delta_soc * _parameters.battery_system().capacity()) /
@@ -180,7 +176,7 @@ ChargeBattery::Model::estimate_finish(
     wait_until + variant_duration +
     rmf_traffic::time::from_seconds(time_to_charge));
 
-  state.battery_soc(_max_charge_soc);
+  state.battery_soc(recharge_soc);
 
   return Estimate(state, wait_until);
 }
@@ -194,25 +190,14 @@ rmf_traffic::Duration ChargeBattery::Model::invariant_duration() const
 //==============================================================================
 class ChargeBattery::Description::Implementation
 {
-public:
-  double max_charge_soc;
+
 };
 
 //==============================================================================
-rmf_task::DescriptionPtr ChargeBattery::Description::make(
-  double max_charge_soc)
+rmf_task::DescriptionPtr ChargeBattery::Description::make()
 {
-  if (max_charge_soc < 0.0 || max_charge_soc > 1.0)
-  {
-    // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
-    throw std::invalid_argument(
-      "Recharge State of Charge needs to be between 0.0 and 1.0.");
-    // *INDENT-ON*
-  }
-
   std::shared_ptr<Description> description(
     new Description());
-  description->_pimpl->max_charge_soc = max_charge_soc;
   return description;
 }
 
@@ -230,26 +215,17 @@ std::shared_ptr<Request::Model> ChargeBattery::Description::make_model(
 {
   return std::make_shared<ChargeBattery::Model>(
     earliest_start_time,
-    parameters,
-    _pimpl->max_charge_soc);
-}
-
-//==============================================================================
-double ChargeBattery::Description::max_charge_soc() const
-{
-  return _pimpl->max_charge_soc;
+    parameters);
 }
 
 //==============================================================================
 ConstRequestPtr ChargeBattery::make(
   rmf_traffic::Time earliest_start_time,
-  double max_charge_soc,
   ConstPriorityPtr priority)
 {
 
   std::string id = "Charge" + generate_uuid();
-  const auto description = Description::make(
-    max_charge_soc);
+  const auto description = Description::make();
 
   return std::make_shared<Request>(
     id, earliest_start_time, priority, description);

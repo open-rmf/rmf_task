@@ -46,15 +46,11 @@ public:
   {
   public:
 
-    static DescriptionPtr make(
-      double max_charge_soc = 1.0);
+    static DescriptionPtr make();
 
     std::shared_ptr<Request::Model> make_model(
       rmf_traffic::Time earliest_start_time,
       const agv::Parameters& parameters) const final;
-
-    /// Retrieve the state of charge to which the battery will be recharged
-    double max_charge_soc() const;
 
     class Implementation;
   private:
@@ -64,7 +60,6 @@ public:
 
   static ConstRequestPtr make(
     rmf_traffic::Time earliest_start_time,
-    double max_charge_soc = 1.0,
     ConstPriorityPtr priority = nullptr);
 };
 
