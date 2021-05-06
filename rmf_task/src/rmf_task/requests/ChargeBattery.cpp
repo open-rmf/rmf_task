@@ -92,8 +92,7 @@ ChargeBattery::Model::estimate_finish(
   // loop as a new identical charging task is added in each call to `solve` before
   // returning.
   const auto recharge_soc = task_planning_constraints.recharge_soc();
-  if ((initial_state.battery_soc() >= recharge_soc
-    || initial_state.battery_soc() >= recharge_soc - 1e-3)
+  if (initial_state.battery_soc() >= recharge_soc - 1e-3
     && initial_state.waypoint() == initial_state.charging_waypoint())
     return std::nullopt;
 
