@@ -101,8 +101,7 @@ std::shared_ptr<Candidates> Candidates::make(
   const std::vector<State>& initial_states,
   const Constraints& constraints,
   const Parameters& parameters,
-  const rmf_task::Request& request,
-  const std::shared_ptr<Request::Model> request_model,
+  const Request::Model& request_model,
   EstimateCache& estimate_cache,
   TaskPlanner::TaskPlannerError& error)
 {
@@ -110,7 +109,7 @@ std::shared_ptr<Candidates> Candidates::make(
   for (std::size_t i = 0; i < initial_states.size(); ++i)
   {
     const auto& state = initial_states[i];
-    const auto finish = request_model->estimate_finish(
+    const auto finish = request_model.estimate_finish(
       state, constraints, estimate_cache);
     if (finish.has_value())
     {
@@ -135,7 +134,7 @@ std::shared_ptr<Candidates> Candidates::make(
         state, constraints, estimate_cache);
       if (battery_estimate.has_value())
       {
-        auto new_finish = request_model->estimate_finish(
+        auto new_finish = request_model.estimate_finish(
           battery_estimate.value().finish_state(),
           constraints,
           estimate_cache);
@@ -206,7 +205,7 @@ std::shared_ptr<PendingTask> PendingTask::make(
     request_->earliest_start_time(), parameters);
 
   const auto candidates = Candidates::make(start_time, initial_states,
-      constraints, parameters, *request_, model, estimate_cache,
+      constraints, parameters, *model, estimate_cache,
       error);
 
   if (!candidates)

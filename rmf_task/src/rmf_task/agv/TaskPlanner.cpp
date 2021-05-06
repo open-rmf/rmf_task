@@ -453,8 +453,6 @@ public:
 
     initial_node->assigned_tasks.resize(initial_states.size());
 
-    // TODO(YV): Come up with a better solution for charge_battery_request
-    auto charge_battery = make_charging_request(time_now);
     for (const auto& request : requests)
     {
       // Generate a unique internal id for the request. Currently, multiple

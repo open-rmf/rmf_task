@@ -76,8 +76,7 @@ public:
     const std::vector<State>& initial_states,
     const Constraints& constraints,
     const Parameters& parameters,
-    const rmf_task::Request& request,
-    const std::shared_ptr<Request::Model> request_model,
+    const Request::Model& request_model,
     EstimateCache& estimate_cache,
     TaskPlanner::TaskPlannerError& error);
 
