@@ -157,7 +157,7 @@ Below are the required direct runtime non-ROS dependencies of `rmf_task` and the
 ### Target platforms [6.i]
 
 `rmf_task` does not support all of the tier 1 platforms as described in [REP-2000](https://www.ros.org/reps/rep-2000.html#support-tiers).
-`rmf_task` supports ROS Eloquent.
+`rmf_task` supports ROS Foxy.
 
 ## Security [7]
 
