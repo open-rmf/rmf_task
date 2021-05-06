@@ -29,9 +29,6 @@
 namespace rmf_task {
 namespace agv {
 
-using RequestModels =
-  std::unordered_map<std::string, std::shared_ptr<Request::Model>>;
-
 // ============================================================================
 struct Invariant
 {
@@ -80,7 +77,7 @@ public:
     const Constraints& constraints,
     const Parameters& parameters,
     const rmf_task::Request& request,
-    const RequestModels& request_models,
+    const std::shared_ptr<Request::Model> request_model,
     const std::shared_ptr<EstimateCache> estimate_cache,
     TaskPlanner::TaskPlannerError& error);
 
@@ -121,16 +118,17 @@ public:
     const Constraints& constraints,
     const Parameters& parameters,
     const ConstRequestPtr request_,
-    const RequestModels& request_models,
     const std::shared_ptr<EstimateCache> estimate_cache,
     TaskPlanner::TaskPlannerError& error);
 
   rmf_task::ConstRequestPtr request;
+  std::shared_ptr<Request::Model> model;
   Candidates candidates;
 
 private:
   PendingTask(
     ConstRequestPtr request_,
+    std::shared_ptr<Request::Model> model_,
     Candidates candidates_);
 };
 
@@ -155,8 +153,6 @@ struct Node
   InvariantSet unassigned_invariants;
   std::size_t next_available_internal_id = 1;
 
-  RequestModels request_models;
-
   // ID 0 is reserved for charging tasks
   std::size_t get_available_internal_id(bool charging_task = false)
   {
@@ -171,7 +167,7 @@ struct Node
       double earliest_start_time = rmf_traffic::time::to_seconds(
         u.second.request->earliest_start_time().time_since_epoch());
       const auto invariant_duration =
-        request_models[u.second.request->id()]->invariant_duration();
+        u.second.model->invariant_duration();
       double earliest_finish_time = earliest_start_time
         + rmf_traffic::time::to_seconds(invariant_duration);
 

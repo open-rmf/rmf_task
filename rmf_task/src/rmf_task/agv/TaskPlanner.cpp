@@ -309,8 +309,6 @@ public:
   std::shared_ptr<EstimateCache> estimate_cache;
   bool check_priority = false;
   ConstCostCalculatorPtr cost_calculator = nullptr;
-  std::unordered_map<std::string, std::shared_ptr<Request::Model>>
-  request_models = {};
 
   ConstRequestPtr make_charging_request(rmf_traffic::Time start_time)
   {
@@ -365,20 +363,14 @@ public:
     cost_calculator = config.cost_calculator() ? config.cost_calculator() :
       rmf_task::BinaryPriorityScheme::make_cost_calculator();
 
-    // Derive the Request::Model for each request to be used in estimating
-    // the finish for a request.
     // Also check if a high priority task exists among the requests.
     // If so the cost function for a node will be modified accordingly.
     for (const auto& request : requests)
     {
-      const auto request_model = request->description()->make_model(
-        request->earliest_start_time(),
-        config.parameters());
-      assert(request_model != nullptr);
-      request_models.insert({request->id(), request_model});
       if (request->priority())
       {
         check_priority = true;
+        break;
       }
     }
 
@@ -459,7 +451,6 @@ public:
   {
     auto initial_node = std::make_shared<Node>();
 
-    initial_node->request_models = request_models;
     initial_node->assigned_tasks.resize(initial_states.size());
 
     // TODO(YV): Come up with a better solution for charge_battery_request
@@ -475,7 +466,6 @@ public:
         config.constraints(),
         config.parameters(),
         request,
-        request_models,
         estimate_cache,
         error);
 
@@ -605,7 +595,7 @@ public:
     for (auto& new_u : new_node->unassigned_tasks)
     {
       const auto finish =
-        request_models[new_u.second.request->id()]->estimate_finish(
+        new_u.second.model->estimate_finish(
         entry.state, constraints, estimate_cache);
 
       if (finish.has_value())
@@ -667,7 +657,7 @@ public:
         for (auto& new_u : new_node->unassigned_tasks)
         {
           const auto finish =
-            request_models[new_u.second.request->id()]->estimate_finish(
+            new_u.second.model->estimate_finish(
             battery_estimate.value().finish_state(),
             constraints, estimate_cache);
           if (finish.has_value())
@@ -756,7 +746,7 @@ public:
       for (auto& new_u : new_node->unassigned_tasks)
       {
         const auto finish =
-          request_models[new_u.second.request->id()]->estimate_finish(
+          new_u.second.model->estimate_finish(
           estimate.value().finish_state(),
           config.constraints(), estimate_cache);
         if (finish.has_value())

@@ -102,7 +102,7 @@ std::shared_ptr<Candidates> Candidates::make(
   const Constraints& constraints,
   const Parameters& parameters,
   const rmf_task::Request& request,
-  const RequestModels& request_models,
+  const std::shared_ptr<Request::Model> request_model,
   const std::shared_ptr<EstimateCache> estimate_cache,
   TaskPlanner::TaskPlannerError& error)
 {
@@ -110,7 +110,6 @@ std::shared_ptr<Candidates> Candidates::make(
   for (std::size_t i = 0; i < initial_states.size(); ++i)
   {
     const auto& state = initial_states[i];
-    const auto request_model = request_models.find(request.id())->second;
     const auto finish = request_model->estimate_finish(
       state, constraints, estimate_cache);
     if (finish.has_value())
@@ -185,11 +184,13 @@ std::shared_ptr<Candidates> Candidates::make(
 // ============================================================================
 PendingTask::PendingTask(
   ConstRequestPtr request_,
+  std::shared_ptr<Request::Model> model_,
   Candidates candidates_)
 : request(std::move(request_)),
+  model(std::move(model_)),
   candidates(candidates_)
 {
-  // Do nothing
+
 }
 
 // ============================================================================
@@ -199,19 +200,22 @@ std::shared_ptr<PendingTask> PendingTask::make(
   const Constraints& constraints,
   const Parameters& parameters,
   const ConstRequestPtr request_,
-  const RequestModels& request_models,
   const std::shared_ptr<EstimateCache> estimate_cache,
   TaskPlanner::TaskPlannerError& error)
 {
+
+  const auto model = request_->description()->make_model(
+    request_->earliest_start_time(), parameters);
+
   const auto candidates = Candidates::make(start_time, initial_states,
-      constraints, parameters, *request_, request_models, estimate_cache,
+      constraints, parameters, *request_, model, estimate_cache,
       error);
 
   if (!candidates)
     return nullptr;
 
   std::shared_ptr<PendingTask> pending_task(
-    new PendingTask(request_, *candidates));
+    new PendingTask(request_, model, *candidates));
   return pending_task;
 }
 
