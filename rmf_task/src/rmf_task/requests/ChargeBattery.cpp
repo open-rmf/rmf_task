@@ -93,7 +93,7 @@ ChargeBattery::Model::estimate_finish(
   // returning.
   const auto recharge_soc = task_planning_constraints.recharge_soc();
   if ((initial_state.battery_soc() >= recharge_soc
-    || abs(initial_state.battery_soc() - recharge_soc) < 1e-3)
+    || initial_state.battery_soc() >= recharge_soc - 1e-3)
     && initial_state.waypoint() == initial_state.charging_waypoint())
     return std::nullopt;
 
@@ -115,9 +115,9 @@ ChargeBattery::Model::estimate_finish(
   double variant_battery_drain = 0.0;
   rmf_traffic::Duration variant_duration(0);
   const bool drain_battery = task_planning_constraints.drain_battery();
-  const auto planner = _parameters.planner();
-  const auto motion_sink = _parameters.motion_sink();
-  const auto device_sink = _parameters.ambient_sink();
+  const auto& planner = *_parameters.planner();
+  const auto& motion_sink = *_parameters.motion_sink();
+  const auto& ambient_sink = *_parameters.ambient_sink();
 
   if (initial_state.waypoint() != initial_state.charging_waypoint())
   {
@@ -134,7 +134,7 @@ ChargeBattery::Model::estimate_finish(
     {
       // Compute plan to charging waypoint along with battery drain
       rmf_traffic::agv::Planner::Goal goal{endpoints.second};
-      const auto result = planner->plan(
+      const auto result = planner.plan(
         initial_state.location(), goal);
       auto itinerary_start_time = start_time;
       for (const auto& itinerary : result->get_itinerary())
@@ -146,9 +146,9 @@ ChargeBattery::Model::estimate_finish(
 
         if (drain_battery)
         {
-          dSOC_motion = motion_sink->compute_change_in_charge(
+          dSOC_motion = motion_sink.compute_change_in_charge(
             trajectory);
-          dSOC_device = device_sink->compute_change_in_charge(
+          dSOC_device = ambient_sink.compute_change_in_charge(
             rmf_traffic::time::to_seconds(itinerary_duration));
           variant_battery_drain += dSOC_motion + dSOC_device;
           battery_soc = battery_soc - dSOC_motion - dSOC_device;

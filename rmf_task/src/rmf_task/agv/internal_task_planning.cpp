@@ -161,9 +161,7 @@ std::shared_ptr<Candidates> Candidates::make(
         // Control reaches here either if estimate_finish() was
         // called on initial state with full battery or low battery such that
         // agent is unable to make it back to the charger
-        if (abs(
-            state.battery_soc() -
-            constraints.recharge_soc()) < 1e-3)
+        if (state.battery_soc() >= constraints.recharge_soc() - 1e-3)
           error = TaskPlanner::TaskPlannerError::limited_capacity;
         else
           error = TaskPlanner::TaskPlannerError::low_battery;

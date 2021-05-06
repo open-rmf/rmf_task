@@ -108,9 +108,9 @@ std::optional<rmf_task::Estimate> Clean::Model::estimate_finish(
   double dSOC_motion = 0.0;
   double dSOC_ambient = 0.0;
   const bool drain_battery = task_planning_constraints.drain_battery();
-  const auto planner = _parameters.planner();
-  const auto motion_sink = _parameters.motion_sink();
-  const auto ambient_sink = _parameters.ambient_sink();
+  const auto& planner = *_parameters.planner();
+  const auto& motion_sink = *_parameters.motion_sink();
+  const auto& ambient_sink = *_parameters.ambient_sink();
 
   if (initial_state.waypoint() != _start_waypoint)
   {
@@ -127,7 +127,7 @@ std::optional<rmf_task::Estimate> Clean::Model::estimate_finish(
     {
       rmf_traffic::agv::Planner::Goal goal{endpoints.second};
 
-      const auto result_to_start = planner->plan(
+      const auto result_to_start = planner.plan(
         initial_state.location(), goal);
       // We assume we can always compute a plan
       auto itinerary_start_time = start_time;
@@ -142,10 +142,10 @@ std::optional<rmf_task::Estimate> Clean::Model::estimate_finish(
         if (drain_battery)
         {
           // Compute battery drain
-          dSOC_motion = motion_sink->compute_change_in_charge(
+          dSOC_motion = motion_sink.compute_change_in_charge(
             trajectory);
           dSOC_ambient =
-            ambient_sink->compute_change_in_charge(
+            ambient_sink.compute_change_in_charge(
             rmf_traffic::time::to_seconds(itinerary_duration));
           battery_soc = battery_soc - dSOC_motion - dSOC_ambient;
           variant_battery_drain += dSOC_motion + dSOC_ambient;
@@ -181,7 +181,7 @@ std::optional<rmf_task::Estimate> Clean::Model::estimate_finish(
   {
     rmf_traffic::Duration wait_duration(
       wait_until - initial_state.finish_time());
-    dSOC_ambient = ambient_sink->compute_change_in_charge(
+    dSOC_ambient = ambient_sink.compute_change_in_charge(
       rmf_traffic::time::to_seconds(wait_duration));
     battery_soc = battery_soc - dSOC_ambient;
 
@@ -221,7 +221,7 @@ std::optional<rmf_task::Estimate> Clean::Model::estimate_finish(
 
         rmf_traffic::agv::Planner::Goal goal{endpoints.second};
 
-        const auto result_to_charger = planner->plan(start, goal);
+        const auto result_to_charger = planner.plan(start, goal);
         // We assume we can always compute a plan
         auto itinerary_start_time = state.finish_time();
         rmf_traffic::Duration retreat_duration(0);
@@ -232,9 +232,9 @@ std::optional<rmf_task::Estimate> Clean::Model::estimate_finish(
           const rmf_traffic::Duration itinerary_duration =
             finish_time - itinerary_start_time;
 
-          dSOC_motion = motion_sink->compute_change_in_charge(
+          dSOC_motion = motion_sink.compute_change_in_charge(
             trajectory);
-          dSOC_ambient = ambient_sink->compute_change_in_charge(
+          dSOC_ambient = ambient_sink.compute_change_in_charge(
             rmf_traffic::time::to_seconds(itinerary_duration));
           retreat_battery_drain += dSOC_motion + dSOC_ambient;
 
