@@ -466,7 +466,7 @@ public:
         config.constraints(),
         config.parameters(),
         request,
-        estimate_cache,
+        *estimate_cache,
         error);
 
       if (!pending_task)
@@ -566,7 +566,7 @@ public:
           charge_battery->earliest_start_time(),
           config.parameters());
         auto battery_estimate = charge_battery_model->estimate_finish(
-          entry.previous_state, constraints, estimate_cache);
+          entry.previous_state, constraints, *estimate_cache);
         if (battery_estimate.has_value())
         {
           assignments.push_back(
@@ -596,7 +596,7 @@ public:
     {
       const auto finish =
         new_u.second.model->estimate_finish(
-        entry.state, constraints, estimate_cache);
+        entry.state, constraints, *estimate_cache);
 
       if (finish.has_value())
       {
@@ -643,7 +643,7 @@ public:
         charge_battery->earliest_start_time(),
         config.parameters());
       auto battery_estimate = charge_battery_model->estimate_finish(
-        entry.state, constraints, estimate_cache);
+        entry.state, constraints, *estimate_cache);
       if (battery_estimate.has_value())
       {
         new_node->assigned_tasks[entry.candidate].push_back(
@@ -659,7 +659,7 @@ public:
           const auto finish =
             new_u.second.model->estimate_finish(
             battery_estimate.value().finish_state(),
-            constraints, estimate_cache);
+            constraints, *estimate_cache);
           if (finish.has_value())
           {
             new_u.second.candidates.update_candidate(
@@ -729,7 +729,7 @@ public:
       charge_battery->earliest_start_time(),
       config.parameters());
     auto estimate = charge_battery_model->estimate_finish(
-      state, config.constraints(), estimate_cache);
+      state, config.constraints(), *estimate_cache);
     if (estimate.has_value())
     {
       new_node->assigned_tasks[agent].push_back(
@@ -748,7 +748,7 @@ public:
         const auto finish =
           new_u.second.model->estimate_finish(
           estimate.value().finish_state(),
-          config.constraints(), estimate_cache);
+          config.constraints(), *estimate_cache);
         if (finish.has_value())
         {
           new_u.second.candidates.update_candidate(

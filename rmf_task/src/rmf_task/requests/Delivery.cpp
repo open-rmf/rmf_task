@@ -30,7 +30,7 @@ public:
   std::optional<Estimate> estimate_finish(
     const agv::State& initial_state,
     const agv::Constraints& task_planning_constraints,
-    const std::shared_ptr<EstimateCache> estimate_cache) const final;
+    EstimateCache& estimate_cache) const final;
 
   rmf_traffic::Duration invariant_duration() const final;
 
@@ -101,7 +101,7 @@ Delivery::Model::Model(
 std::optional<rmf_task::Estimate> Delivery::Model::estimate_finish(
   const agv::State& initial_state,
   const agv::Constraints& task_planning_constraints,
-  const std::shared_ptr<EstimateCache> estimate_cache) const
+  EstimateCache& estimate_cache) const
 {
   rmf_traffic::agv::Plan::Start final_plan_start{
     initial_state.finish_time(),
@@ -128,7 +128,7 @@ std::optional<rmf_task::Estimate> Delivery::Model::estimate_finish(
   {
     const auto endpoints = std::make_pair(initial_state.waypoint(),
         _pickup_waypoint);
-    const auto& cache_result = estimate_cache->get(endpoints);
+    const auto& cache_result = estimate_cache.get(endpoints);
     // Use previously memoized values if possible
     if (cache_result)
     {
@@ -166,7 +166,7 @@ std::optional<rmf_task::Estimate> Delivery::Model::estimate_finish(
         itinerary_start_time = finish_time;
         variant_duration += itinerary_duration;
       }
-      estimate_cache->set(endpoints, variant_duration,
+      estimate_cache.set(endpoints, variant_duration,
         variant_battery_drain);
     }
 
@@ -212,7 +212,7 @@ std::optional<rmf_task::Estimate> Delivery::Model::estimate_finish(
     {
       const auto endpoints = std::make_pair(_dropoff_waypoint,
           state.charging_waypoint());
-      const auto& cache_result = estimate_cache->get(endpoints);
+      const auto& cache_result = estimate_cache.get(endpoints);
       if (cache_result)
       {
         retreat_battery_drain = cache_result->dsoc;
@@ -246,7 +246,7 @@ std::optional<rmf_task::Estimate> Delivery::Model::estimate_finish(
           itinerary_start_time = finish_time;
           retreat_duration += itinerary_duration;
         }
-        estimate_cache->set(endpoints, retreat_duration,
+        estimate_cache.set(endpoints, retreat_duration,
           retreat_battery_drain);
       }
     }

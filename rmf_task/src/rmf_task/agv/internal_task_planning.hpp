@@ -78,7 +78,7 @@ public:
     const Parameters& parameters,
     const rmf_task::Request& request,
     const std::shared_ptr<Request::Model> request_model,
-    const std::shared_ptr<EstimateCache> estimate_cache,
+    EstimateCache& estimate_cache,
     TaskPlanner::TaskPlannerError& error);
 
   Candidates(const Candidates& other);
@@ -118,7 +118,7 @@ public:
     const Constraints& constraints,
     const Parameters& parameters,
     const ConstRequestPtr request_,
-    const std::shared_ptr<EstimateCache> estimate_cache,
+    EstimateCache& estimate_cache,
     TaskPlanner::TaskPlannerError& error);
 
   rmf_task::ConstRequestPtr request;

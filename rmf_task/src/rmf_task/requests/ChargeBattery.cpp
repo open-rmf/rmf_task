@@ -54,7 +54,7 @@ public:
   std::optional<Estimate> estimate_finish(
     const agv::State& initial_state,
     const agv::Constraints& task_planning_constraints,
-    const std::shared_ptr<EstimateCache> estimate_cache) const final;
+    EstimateCache& estimate_cache) const final;
 
   rmf_traffic::Duration invariant_duration() const final;
 
@@ -83,7 +83,7 @@ std::optional<rmf_task::Estimate>
 ChargeBattery::Model::estimate_finish(
   const agv::State& initial_state,
   const agv::Constraints& task_planning_constraints,
-  const std::shared_ptr<EstimateCache> estimate_cache) const
+  EstimateCache& estimate_cache) const
 {
   // Important to return nullopt if a charging task is not needed. In the task
   // planner, if a charging task is added, the node's latest time may be set to
@@ -123,7 +123,7 @@ ChargeBattery::Model::estimate_finish(
   {
     const auto endpoints = std::make_pair(initial_state.waypoint(),
         initial_state.charging_waypoint());
-    const auto& cache_result = estimate_cache->get(endpoints);
+    const auto& cache_result = estimate_cache.get(endpoints);
     // Use memoized values if possible
     if (cache_result)
     {
@@ -156,7 +156,7 @@ ChargeBattery::Model::estimate_finish(
         itinerary_start_time = finish_time;
         variant_duration += itinerary_duration;
       }
-      estimate_cache->set(endpoints, variant_duration,
+      estimate_cache.set(endpoints, variant_duration,
         variant_battery_drain);
     }
 
