@@ -35,16 +35,15 @@ public:
   rmf_traffic::Duration invariant_duration() const final;
 
   Model(
-    rmf_traffic::Time earliest_start_time,
-    agv::Parameters parameters,
-    rmf_traffic::Trajectory cleaning_path,
+    const rmf_traffic::Time earliest_start_time,
+    const agv::Parameters& parameters,
+    const rmf_traffic::Trajectory& cleaning_path,
     std::size_t start_waypoint,
     std::size_t end_waypoint);
 
 private:
   rmf_traffic::Time _earliest_start_time;
   agv::Parameters _parameters;
-  rmf_traffic::Trajectory& _cleaning_path;
   std::size_t _start_waypoint;
   std::size_t _end_waypoint;
 
@@ -54,27 +53,26 @@ private:
 
 //==============================================================================
 Clean::Model::Model(
-  rmf_traffic::Time earliest_start_time,
-  agv::Parameters parameters,
-  rmf_traffic::Trajectory cleaning_path,
+  const rmf_traffic::Time earliest_start_time,
+  const agv::Parameters& parameters,
+  const rmf_traffic::Trajectory& cleaning_path,
   std::size_t start_waypoint,
   std::size_t end_waypoint)
 : _earliest_start_time(earliest_start_time),
   _parameters(parameters),
-  _cleaning_path(cleaning_path),
   _start_waypoint(start_waypoint),
   _end_waypoint(end_waypoint)
 {
   // Calculate duration of invariant component of task
-  const auto& cleaning_start_time = _cleaning_path.begin()->time();
-  const auto& cleaning_finish_time = *_cleaning_path.finish_time();
+  const auto& cleaning_start_time = cleaning_path.begin()->time();
+  const auto& cleaning_finish_time = *cleaning_path.finish_time();
 
   _invariant_duration =
     cleaning_finish_time - cleaning_start_time;
 
   // Compute battery drain over invariant path
   const double dSOC_motion =
-    _parameters.motion_sink()->compute_change_in_charge(_cleaning_path);
+    _parameters.motion_sink()->compute_change_in_charge(cleaning_path);
   const double dSOC_ambient =
     _parameters.ambient_sink()->compute_change_in_charge(
     rmf_traffic::time::to_seconds(_invariant_duration));

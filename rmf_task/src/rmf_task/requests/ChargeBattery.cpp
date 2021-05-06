@@ -59,7 +59,7 @@ public:
   rmf_traffic::Duration invariant_duration() const final;
 
   Model(
-    rmf_traffic::Time earliest_start_time,
+    const rmf_traffic::Time earliest_start_time,
     agv::Parameters parameters);
 
 private:
@@ -70,7 +70,7 @@ private:
 
 //==============================================================================
 ChargeBattery::Model::Model(
-  rmf_traffic::Time earliest_start_time,
+  const rmf_traffic::Time earliest_start_time,
   agv::Parameters parameters)
 : _earliest_start_time(earliest_start_time),
   _parameters(parameters)

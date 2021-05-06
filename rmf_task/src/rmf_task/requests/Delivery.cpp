@@ -35,8 +35,8 @@ public:
   rmf_traffic::Duration invariant_duration() const final;
 
   Model(
-    rmf_traffic::Time earliest_start_time,
-    agv::Parameters parameters,
+    const rmf_traffic::Time earliest_start_time,
+    const agv::Parameters& parameters,
     std::size_t pickup_waypoint,
     std::size_t dropoff_waypoint);
 
@@ -52,8 +52,8 @@ private:
 
 //==============================================================================
 Delivery::Model::Model(
-  rmf_traffic::Time earliest_start_time,
-  agv::Parameters parameters,
+  const rmf_traffic::Time earliest_start_time,
+  const agv::Parameters& parameters,
   std::size_t pickup_waypoint,
   std::size_t dropoff_waypoint)
 : _earliest_start_time(earliest_start_time),

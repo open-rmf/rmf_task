@@ -33,8 +33,8 @@ public:
   rmf_traffic::Duration invariant_duration() const final;
 
   Model(
-    rmf_traffic::Time earliest_start_time,
-    agv::Parameters parameters,
+    const rmf_traffic::Time earliest_start_time,
+    const agv::Parameters& parameters,
     std::size_t start_waypoint,
     std::size_t finish_waypoint,
     std::size_t num_loops);
@@ -44,7 +44,6 @@ private:
   agv::Parameters _parameters;
   std::size_t _start_waypoint;
   std::size_t _finish_waypoint;
-  std::size_t _num_loops;
 
   rmf_traffic::Duration _invariant_duration;
   double _invariant_battery_drain;
@@ -52,16 +51,15 @@ private:
 
 //==============================================================================
 Loop::Model::Model(
-  rmf_traffic::Time earliest_start_time,
-  agv::Parameters parameters,
+  const rmf_traffic::Time earliest_start_time,
+  const agv::Parameters& parameters,
   std::size_t start_waypoint,
   std::size_t finish_waypoint,
   std::size_t num_loops)
 : _earliest_start_time(earliest_start_time),
   _parameters(parameters),
   _start_waypoint(start_waypoint),
-  _finish_waypoint(finish_waypoint),
-  _num_loops(num_loops)
+  _finish_waypoint(finish_waypoint)
 {
   // Calculate the invariant duration and battery drain for this task
   _invariant_duration = rmf_traffic::Duration{0};
