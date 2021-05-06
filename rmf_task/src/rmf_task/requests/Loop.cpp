@@ -344,10 +344,10 @@ std::size_t Loop::Description::num_loops() const
 
 //==============================================================================
 ConstRequestPtr Loop::make(
-  const std::string& id,
   std::size_t start_waypoint,
   std::size_t finish_waypoint,
   std::size_t num_loops,
+  const std::string& id,
   rmf_traffic::Time earliest_start_time,
   ConstPriorityPtr priority)
 {

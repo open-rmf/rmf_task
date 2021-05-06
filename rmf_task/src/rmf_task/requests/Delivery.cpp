@@ -351,12 +351,13 @@ Delivery::Description::items() const
 }
 
 //==============================================================================
-ConstRequestPtr Delivery::make(const std::string& id,
+ConstRequestPtr Delivery::make(
   std::size_t pickup_waypoint,
   std::string pickup_dispenser,
   std::size_t dropoff_waypoint,
   std::string dropoff_ingestor,
   std::vector<DispenserRequestItem> items,
+  const std::string& id,
   rmf_traffic::Time earliest_start_time,
   ConstPriorityPtr priority)
 {

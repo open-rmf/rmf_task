@@ -209,30 +209,30 @@ SCENARIO("Grid World")
     std::vector<rmf_task::ConstRequestPtr> requests =
     {
       rmf_task::requests::Delivery::make(
-        "1",
         0,
         "dispenser",
         3,
         "ingestor",
         {},
+        "1",
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
-        "2",
         15,
         "dispenser",
         2,
         "ingestor",
         {},
+        "2",
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
-        "3",
         7,
         "dispenser",
         9,
         "ingestor",
         {},
+        "3",
         now + rmf_traffic::time::from_seconds(0))
     };
 
@@ -293,102 +293,102 @@ SCENARIO("Grid World")
     std::vector<rmf_task::ConstRequestPtr> requests =
     {
       rmf_task::requests::Delivery::make(
-        "1",
         0,
         "dispenser",
         3,
         "ingestor",
         {},
+        "1",
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
-        "2",
         15,
         "dispenser",
         2,
         "ingestor",
         {},
+        "2",
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
-        "3",
         7,
         "dispenser",
         9,
         "ingestor",
         {},
+        "3",
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
-        "4",
         8,
         "dispenser",
         11,
         "ingestor",
         {},
+        "4",
         now + rmf_traffic::time::from_seconds(50000)),
 
       rmf_task::requests::Delivery::make(
-        "5",
         10,
         "dispenser",
         0,
         "ingestor",
         {},
+        "5",
         now + rmf_traffic::time::from_seconds(50000)),
 
       rmf_task::requests::Delivery::make(
-        "6",
         4,
         "dispenser",
         8,
         "ingestor",
         {},
+        "6",
         now + rmf_traffic::time::from_seconds(60000)),
 
       rmf_task::requests::Delivery::make(
-        "7",
         8,
         "dispenser",
         14,
         "ingestor",
         {},
+        "7",
         now + rmf_traffic::time::from_seconds(60000)),
 
       rmf_task::requests::Delivery::make(
-        "8",
         5,
         "dispenser",
         11,
         "ingestor",
         {},
+        "8",
         now + rmf_traffic::time::from_seconds(60000)),
 
       rmf_task::requests::Delivery::make(
-        "9",
         9,
         "dispenser",
         0,
         "ingestor",
         {},
+        "9",
         now + rmf_traffic::time::from_seconds(60000)),
 
       rmf_task::requests::Delivery::make(
-        "10",
         1,
         "dispenser",
         3,
         "ingestor",
         {},
+        "10",
         now + rmf_traffic::time::from_seconds(60000)),
 
       rmf_task::requests::Delivery::make(
-        "11",
         0,
         "dispenser",
         12,
         "ingestor",
         {},
+        "11",
         now + rmf_traffic::time::from_seconds(60000))
     };
 
@@ -449,39 +449,39 @@ SCENARIO("Grid World")
     std::vector<rmf_task::ConstRequestPtr> requests =
     {
       rmf_task::requests::Delivery::make(
-        "1",
         0,
         "dispenser",
         3,
         "ingestor",
         {},
+        "1",
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
-        "2",
         15,
         "dispenser",
         2,
         "ingestor",
         {},
+        "2",
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
-        "3",
         9,
         "dispenser",
         4,
         "ingestor",
         {},
+        "3",
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
-        "4",
         8,
         "dispenser",
         11,
         "ingestor",
         {},
+        "4",
         now + rmf_traffic::time::from_seconds(50000))
     };
 
@@ -551,102 +551,102 @@ SCENARIO("Grid World")
     std::vector<rmf_task::ConstRequestPtr> requests =
     {
       rmf_task::requests::Delivery::make(
-        "1",
         6,
         "dispenser",
         3,
         "ingestor",
         {},
+        "1",
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
-        "2",
         10,
         "dispenser",
         7,
         "ingestor",
         {},
+        "2",
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
-        "3",
         2,
         "dispenser",
         12,
         "ingestor",
         {},
+        "3",
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
-        "4",
         8,
         "dispenser",
         11,
         "ingestor",
         {},
+        "4",
         now + rmf_traffic::time::from_seconds(50000)),
 
       rmf_task::requests::Delivery::make(
-        "5",
         10,
         "dispenser",
         6,
         "ingestor",
         {},
+        "5",
         now + rmf_traffic::time::from_seconds(50000)),
 
       rmf_task::requests::Delivery::make(
-        "6",
         2,
         "dispenser",
         9,
         "ingestor",
         {},
+        "6",
         now + rmf_traffic::time::from_seconds(70000)),
 
       rmf_task::requests::Delivery::make(
-        "7",
         3,
         "dispenser",
         4,
         "ingestor",
         {},
+        "7",
         now + rmf_traffic::time::from_seconds(70000)),
 
       rmf_task::requests::Delivery::make(
-        "8",
         5,
         "dispenser",
         11,
         "ingestor",
         {},
+        "8",
         now + rmf_traffic::time::from_seconds(70000)),
 
       rmf_task::requests::Delivery::make(
-        "9",
         9,
         "dispenser",
         1,
         "ingestor",
         {},
+        "9",
         now + rmf_traffic::time::from_seconds(70000)),
 
       rmf_task::requests::Delivery::make(
-        "10",
         1,
         "dispenser",
         5,
         "ingestor",
         {},
+        "10",
         now + rmf_traffic::time::from_seconds(70000)),
 
       rmf_task::requests::Delivery::make(
-        "11",
         13,
         "dispenser",
         10,
         "ingestor",
         {},
+        "11",
         now + rmf_traffic::time::from_seconds(70000))
     };
 
@@ -704,10 +704,10 @@ SCENARIO("Grid World")
     std::vector<rmf_task::ConstRequestPtr> requests =
     {
       rmf_task::requests::Loop::make(
-        "Loop1",
         0,
         15,
         1000,
+        "Loop1",
         now)
     };
 
@@ -750,10 +750,10 @@ SCENARIO("Grid World")
     std::vector<rmf_task::ConstRequestPtr> requests =
     {
       rmf_task::requests::Loop::make(
-        "Loop1",
         0,
         15,
         1000,
+        "Loop1",
         now)
     };
 
@@ -797,30 +797,30 @@ SCENARIO("Grid World")
     std::vector<rmf_task::ConstRequestPtr> requests =
     {
       rmf_task::requests::Delivery::make(
-        "1",
         0,
         "dispenser",
         3,
         "ingestor",
         {},
+        "1",
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
-        "2",
         15,
         "dispenser",
         2,
         "ingestor",
         {},
+        "2",
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
-        "3",
         7,
         "dispenser",
         9,
         "ingestor",
         {},
+        "3",
         now + rmf_traffic::time::from_seconds(0))
     };
 
@@ -849,12 +849,12 @@ SCENARIO("Grid World")
     THEN("When replanning with high priority for request with task_id:3")
     {
       requests[2] = rmf_task::requests::Delivery::make(
-        "3",
         7,
         "dispenser",
         9,
         "ingestor",
         {},
+        "3",
         now + rmf_traffic::time::from_seconds(0),
         rmf_task::BinaryPriorityScheme::make_high_priority());
     }
@@ -898,32 +898,32 @@ SCENARIO("Grid World")
     std::vector<rmf_task::ConstRequestPtr> requests =
     {
       rmf_task::requests::Delivery::make(
-        "1",
         0,
         "dispenser",
         3,
         "ingestor",
         {},
+        "1",
         now + rmf_traffic::time::from_seconds(0),
         rmf_task::BinaryPriorityScheme::make_high_priority()),
 
       rmf_task::requests::Delivery::make(
-        "2",
         15,
         "dispenser",
         2,
         "ingestor",
         {},
+        "2",
         now + rmf_traffic::time::from_seconds(0),
         rmf_task::BinaryPriorityScheme::make_high_priority()),
 
       rmf_task::requests::Delivery::make(
-        "3",
         7,
         "dispenser",
         9,
         "ingestor",
         {},
+        "3",
         now + rmf_traffic::time::from_seconds(0),
         rmf_task::BinaryPriorityScheme::make_high_priority())
     };
@@ -966,40 +966,40 @@ SCENARIO("Grid World")
     std::vector<rmf_task::ConstRequestPtr> requests =
     {
       rmf_task::requests::Delivery::make(
-        "1",
         0,
         "dispenser",
         3,
         "ingestor",
         {},
+        "1",
         now + rmf_traffic::time::from_seconds(0),
         rmf_task::BinaryPriorityScheme::make_high_priority()),
 
       rmf_task::requests::Delivery::make(
-        "2",
         15,
         "dispenser",
         2,
         "ingestor",
         {},
+        "2",
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
-        "3",
         7,
         "dispenser",
         9,
         "ingestor",
         {},
+        "3",
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
-        "4",
         4,
         "dispenser",
         7,
         "ingestor",
         {},
+        "4",
         now + rmf_traffic::time::from_seconds(0),
         rmf_task::BinaryPriorityScheme::make_high_priority())
     };
@@ -1051,40 +1051,40 @@ SCENARIO("Grid World")
     std::vector<rmf_task::ConstRequestPtr> requests =
     {
       rmf_task::requests::Delivery::make(
-        "1",
         0,
         "dispenser",
         3,
         "ingestor",
         {},
+        "1",
         now + rmf_traffic::time::from_seconds(0),
         rmf_task::BinaryPriorityScheme::make_high_priority()),
 
       rmf_task::requests::Delivery::make(
-        "2",
         15,
         "dispenser",
         2,
         "ingestor",
         {},
+        "2",
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
-        "3",
         7,
         "dispenser",
         9,
         "ingestor",
         {},
+        "3",
         now + rmf_traffic::time::from_seconds(100000)),
 
       rmf_task::requests::Delivery::make(
-        "4",
         7,
         "dispenser",
         6,
         "ingestor",
         {},
+        "4",
         now + rmf_traffic::time::from_seconds(100000),
         rmf_task::BinaryPriorityScheme::make_high_priority())
     };
@@ -1138,39 +1138,39 @@ SCENARIO("Grid World")
     std::vector<rmf_task::ConstRequestPtr> requests =
     {
       rmf_task::requests::Delivery::make(
-        "1",
         0,
         "dispenser",
         3,
         "ingestor",
         {},
+        "1",
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
-        "2",
         15,
         "dispenser",
         2,
         "ingestor",
         {},
+        "2",
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
-        "3",
         7,
         "dispenser",
         9,
         "ingestor",
         {},
+        "3",
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
-        "4",
         7,
         "dispenser",
         6,
         "ingestor",
         {},
+        "4",
         now + rmf_traffic::time::from_seconds(0))
     };
 
@@ -1205,40 +1205,40 @@ SCENARIO("Grid World")
       std::vector<rmf_task::ConstRequestPtr> requests =
       {
         rmf_task::requests::Delivery::make(
-          "1",
           0,
           "dispenser",
           3,
           "ingestor",
           {},
+          "1",
           now + rmf_traffic::time::from_seconds(0)),
 
         rmf_task::requests::Delivery::make(
-          "2",
           15,
           "dispenser",
           2,
           "ingestor",
           {},
+          "2",
           now + rmf_traffic::time::from_seconds(0)),
 
         rmf_task::requests::Delivery::make(
-          "3",
           7,
           "dispenser",
           9,
           "ingestor",
           {},
+          "3",
           now + rmf_traffic::time::from_seconds(0),
           rmf_task::BinaryPriorityScheme::make_high_priority()),
 
         rmf_task::requests::Delivery::make(
-          "4",
           7,
           "dispenser",
           6,
           "ingestor",
           {},
+          "4",
           now + rmf_traffic::time::from_seconds(0),
           rmf_task::BinaryPriorityScheme::make_high_priority())
       };
@@ -1291,39 +1291,39 @@ SCENARIO("Grid World")
     std::vector<rmf_task::ConstRequestPtr> requests =
     {
       rmf_task::requests::Delivery::make(
-        "1",
         0,
         "dispenser",
         3,
         "ingestor",
         {},
+        "1",
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
-        "2",
         15,
         "dispenser",
         2,
         "ingestor",
         {},
+        "2",
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
-        "3",
         7,
         "dispenser",
         9,
         "ingestor",
         {},
+        "3",
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
-        "4",
         7,
         "dispenser",
         6,
         "ingestor",
         {},
+        "4",
         now + rmf_traffic::time::from_seconds(0))
     };
 
@@ -1366,42 +1366,42 @@ SCENARIO("Grid World")
       std::vector<rmf_task::ConstRequestPtr> requests =
       {
         rmf_task::requests::Delivery::make(
-          "1",
           0,
           "dispenser",
           3,
           "ingestor",
           {},
+          "1",
           now + rmf_traffic::time::from_seconds(0),
           rmf_task::BinaryPriorityScheme::make_high_priority()),
 
         rmf_task::requests::Delivery::make(
-          "2",
           15,
           "dispenser",
           2,
           "ingestor",
           {},
+          "2",
           now + rmf_traffic::time::from_seconds(0),
           rmf_task::BinaryPriorityScheme::make_high_priority()),
 
         rmf_task::requests::Delivery::make(
-          "3",
           7,
           "dispenser",
           9,
           "ingestor",
           {},
+          "3",
           now + rmf_traffic::time::from_seconds(0),
           rmf_task::BinaryPriorityScheme::make_high_priority()),
 
         rmf_task::requests::Delivery::make(
-          "4",
           7,
           "dispenser",
           6,
           "ingestor",
           {},
+          "4",
           now + rmf_traffic::time::from_seconds(0))
       };
 
@@ -1465,39 +1465,39 @@ SCENARIO("Grid World")
     std::vector<rmf_task::ConstRequestPtr> requests =
     {
       rmf_task::requests::Delivery::make(
-        "1",
         0,
         "dispenser",
         3,
         "ingestor",
         {},
+        "1",
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
-        "2",
         15,
         "dispenser",
         2,
         "ingestor",
         {},
+        "2",
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
-        "3",
         9,
         "dispenser",
         4,
         "ingestor",
         {},
+        "3",
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
-        "4",
         8,
         "dispenser",
         11,
         "ingestor",
         {},
+        "4",
         now + rmf_traffic::time::from_seconds(50000))
     };
 

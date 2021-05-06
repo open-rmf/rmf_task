@@ -69,10 +69,10 @@ public:
   };
 
   static ConstRequestPtr make(
-    const std::string& id,
     std::size_t start_waypoint,
     std::size_t end_waypoint,
     const rmf_traffic::Trajectory& cleaning_path,
+    const std::string& id,
     rmf_traffic::Time earliest_start_time,
     ConstPriorityPtr priority = nullptr);
 };

@@ -48,8 +48,6 @@ public:
   {
   public:
 
-    using Start = rmf_traffic::agv::Planner::Start;
-
     static DescriptionPtr make(
       std::size_t start_waypoint,
       std::size_t finish_waypoint,
@@ -76,10 +74,10 @@ public:
   };
 
   static ConstRequestPtr make(
-    const std::string& id,
     std::size_t start_waypoint,
     std::size_t finish_waypoint,
     std::size_t num_loops,
+    const std::string& id,
     rmf_traffic::Time earliest_start_time,
     ConstPriorityPtr priority = nullptr);
 };
