@@ -16,25 +16,100 @@
 */
 
 #include "internal_task_planning.hpp"
+#include <rmf_task/requests/ChargeBattery.hpp>
 
 namespace rmf_task {
 namespace agv {
 
 // ============================================================================
+void Candidates::update_map()
+{
+  for (auto it = _value_map.begin(); it != _value_map.end(); ++it)
+  {
+    const auto c = it->second.candidate;
+    if (_candidate_map.size() <= c)
+      _candidate_map.resize(c+1);
+
+    _candidate_map[c] = it;
+  }
+}
+
+// ============================================================================
+Candidates::Candidates(Candidates::Map candidate_values)
+: _value_map(std::move(candidate_values))
+{
+  update_map();
+}
+
+// ============================================================================
+void Candidates::update_candidate(
+  std::size_t candidate,
+  State state,
+  rmf_traffic::Time wait_until,
+  State previous_state,
+  bool require_charge_battery)
+{
+  const auto it = _candidate_map.at(candidate);
+  _value_map.erase(it);
+  _candidate_map[candidate] = _value_map.insert(
+    {
+      state.finish_time(),
+      Entry{candidate, state, wait_until, previous_state, require_charge_battery}
+    });
+}
+
+// ============================================================================
+rmf_traffic::Time Candidates::best_finish_time() const
+{
+  assert(!_value_map.empty());
+  return _value_map.begin()->first;
+}
+
+// ============================================================================
+Candidates::Range Candidates::best_candidates() const
+{
+  assert(!_value_map.empty());
+
+  Range range;
+  range.begin = _value_map.begin();
+  auto it = range.begin;
+  while (it->first == range.begin->first)
+    ++it;
+
+  range.end = it;
+  return range;
+}
+
+// ============================================================================
+Candidates& Candidates::operator=(const Candidates& other)
+{
+  _value_map = other._value_map;
+  update_map();
+  return *this;
+}
+
+// ============================================================================
+Candidates::Candidates(const Candidates& other)
+{
+  _value_map = other._value_map;
+  update_map();
+}
+
+// ============================================================================
 std::shared_ptr<Candidates> Candidates::make(
+  const rmf_traffic::Time start_time,
   const std::vector<State>& initial_states,
-  const std::vector<Constraints>& constraints_set,
-  const rmf_task::Request& request,
-  const rmf_task::requests::ChargeBatteryDescription& charge_battery_desc,
-  const std::shared_ptr<EstimateCache> estimate_cache,
+  const Constraints& constraints,
+  const Parameters& parameters,
+  const Request::Model& request_model,
+  EstimateCache& estimate_cache,
   TaskPlanner::TaskPlannerError& error)
 {
   Map initial_map;
   for (std::size_t i = 0; i < initial_states.size(); ++i)
   {
     const auto& state = initial_states[i];
-    const auto& constraints = constraints_set[i];
-    const auto finish = request.description()->estimate_finish(
+    const auto finish = request_model.estimate_finish(
       state, constraints, estimate_cache);
     if (finish.has_value())
     {
@@ -49,13 +124,20 @@ std::shared_ptr<Candidates> Candidates::make(
     }
     else
     {
+      auto charge_battery = requests::ChargeBattery::make(
+        start_time);
+      const auto battery_model = charge_battery->description()->make_model(
+        start_time,
+        parameters);
       auto battery_estimate =
-        charge_battery_desc.estimate_finish(
+        battery_model->estimate_finish(
         state, constraints, estimate_cache);
       if (battery_estimate.has_value())
       {
-        auto new_finish = request.description()->estimate_finish(
-          battery_estimate.value().finish_state(), constraints, estimate_cache);
+        auto new_finish = request_model.estimate_finish(
+          battery_estimate.value().finish_state(),
+          constraints,
+          estimate_cache);
         if (new_finish.has_value())
         {
           initial_map.insert(
@@ -75,11 +157,10 @@ std::shared_ptr<Candidates> Candidates::make(
       }
       else
       {
-        // Control reaches here either if ChargeBattery::estimate_finish() was
+        // Control reaches here either if estimate_finish() was
         // called on initial state with full battery or low battery such that
         // agent is unable to make it back to the charger
-        if (abs(
-            state.battery_soc() - charge_battery_desc.max_charge_soc()) < 1e-3)
+        if (state.battery_soc() >= constraints.recharge_soc() - 1e-3)
           error = TaskPlanner::TaskPlannerError::limited_capacity;
         else
           error = TaskPlanner::TaskPlannerError::low_battery;
@@ -98,26 +179,40 @@ std::shared_ptr<Candidates> Candidates::make(
 }
 
 // ============================================================================
+PendingTask::PendingTask(
+  ConstRequestPtr request_,
+  std::shared_ptr<Request::Model> model_,
+  Candidates candidates_)
+: request(std::move(request_)),
+  model(std::move(model_)),
+  candidates(candidates_)
+{
+
+}
+
+// ============================================================================
 std::shared_ptr<PendingTask> PendingTask::make(
-  std::vector<rmf_task::agv::State>& initial_states,
-  std::vector<rmf_task::agv::Constraints>& constraints_set,
-  rmf_task::ConstRequestPtr request_,
-  rmf_task::Request::DescriptionPtr charge_battery_desc,
-  std::shared_ptr<EstimateCache> estimate_cache,
+  const rmf_traffic::Time start_time,
+  const std::vector<rmf_task::agv::State>& initial_states,
+  const Constraints& constraints,
+  const Parameters& parameters,
+  const ConstRequestPtr request_,
+  EstimateCache& estimate_cache,
   TaskPlanner::TaskPlannerError& error)
 {
 
-  auto battery_desc = std::dynamic_pointer_cast<
-    const rmf_task::requests::ChargeBatteryDescription>(charge_battery_desc);
+  const auto model = request_->description()->make_model(
+    request_->earliest_start_time(), parameters);
 
-  const auto candidates = Candidates::make(initial_states, constraints_set,
-      *request_, *battery_desc, estimate_cache, error);
+  const auto candidates = Candidates::make(start_time, initial_states,
+      constraints, parameters, *model, estimate_cache,
+      error);
 
   if (!candidates)
     return nullptr;
 
   std::shared_ptr<PendingTask> pending_task(
-    new PendingTask(request_, *candidates));
+    new PendingTask(request_, model, *candidates));
   return pending_task;
 }
 

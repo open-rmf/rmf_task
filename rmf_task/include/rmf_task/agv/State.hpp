@@ -21,7 +21,6 @@
 #include <chrono>
 
 #include <rmf_utils/impl_ptr.hpp>
-#include <rmf_utils/optional.hpp>
 
 #include <rmf_traffic/Time.hpp>
 #include <rmf_traffic/agv/Planner.hpp>
@@ -29,6 +28,7 @@
 namespace rmf_task {
 namespace agv {
 
+//==============================================================================
 /// This state representation is used for task planning.
 class State
 {

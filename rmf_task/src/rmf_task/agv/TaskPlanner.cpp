@@ -18,6 +18,7 @@
 #include <rmf_task/Estimate.hpp>
 #include <rmf_task/agv/State.hpp>
 #include <rmf_task/BinaryPriorityScheme.hpp>
+#include <rmf_task/requests/ChargeBattery.hpp>
 
 #include "../BinaryPriorityCostCalculator.hpp"
 
@@ -34,91 +35,51 @@ class TaskPlanner::Configuration::Implementation
 {
 public:
 
-  rmf_battery::agv::BatterySystem battery_system;
-  rmf_battery::ConstMotionPowerSinkPtr motion_sink;
-  rmf_battery::ConstDevicePowerSinkPtr ambient_sink;
-  std::shared_ptr<const rmf_traffic::agv::Planner> planner;
+  Parameters parameters;
+  Constraints constraints;
   ConstCostCalculatorPtr cost_calculator;
 };
 
+//==============================================================================
 TaskPlanner::Configuration::Configuration(
-  rmf_battery::agv::BatterySystem battery_system,
-  rmf_battery::ConstMotionPowerSinkPtr motion_sink,
-  rmf_battery::ConstDevicePowerSinkPtr ambient_sink,
-  std::shared_ptr<const rmf_traffic::agv::Planner> planner,
+  Parameters parameters,
+  Constraints constraints,
   ConstCostCalculatorPtr cost_calculator)
 : _pimpl(rmf_utils::make_impl<Implementation>(
       Implementation{
-        battery_system,
-        std::move(motion_sink),
-        std::move(ambient_sink),
-        std::move(planner),
-        std::move(cost_calculator)
+        std::move(parameters),
+        std::move(constraints),
+        std::move(cost_calculator),
       }))
 {
   // Do nothing
 }
 
 //==============================================================================
-const rmf_battery::agv::BatterySystem&
-TaskPlanner::Configuration::battery_system() const
+const Parameters& TaskPlanner::Configuration::parameters() const
 {
-  return _pimpl->battery_system;
+  return _pimpl->parameters;
 }
 
 //==============================================================================
-auto TaskPlanner::Configuration::battery_system(
-  rmf_battery::agv::BatterySystem battery_system) -> Configuration&
+auto TaskPlanner::Configuration::parameters(Parameters parameters)
+-> Configuration&
 {
-  _pimpl->battery_system = battery_system;
+  _pimpl->parameters = std::move(parameters);
   return *this;
 }
 
 //==============================================================================
-const std::shared_ptr<const rmf_battery::MotionPowerSink>& TaskPlanner::
-Configuration::motion_sink() const
+const Constraints& TaskPlanner::Configuration::constraints() const
 {
-  return _pimpl->motion_sink;
+  return _pimpl->constraints;
 }
 
 //==============================================================================
-auto TaskPlanner::Configuration::motion_sink(
-  rmf_battery::ConstMotionPowerSinkPtr motion_sink) -> Configuration&
+auto TaskPlanner::Configuration::constraints(Constraints constraints)
+-> Configuration&
 {
-  if (motion_sink)
-    _pimpl->motion_sink = std::move(motion_sink);
-  return *this;
-}
-
-//==============================================================================
-const rmf_battery::ConstDevicePowerSinkPtr&
-TaskPlanner::Configuration::ambient_sink() const
-{
-  return _pimpl->ambient_sink;
-}
-
-//==============================================================================
-auto TaskPlanner::Configuration::ambient_sink(
-  rmf_battery::ConstDevicePowerSinkPtr ambient_sink) -> Configuration&
-{
-  if (ambient_sink)
-    _pimpl->ambient_sink = std::move(ambient_sink);
-  return *this;
-}
-
-//==============================================================================
-const std::shared_ptr<const rmf_traffic::agv::Planner>&
-TaskPlanner::Configuration::planner() const
-{
-  return _pimpl->planner;
-}
-
-//==============================================================================
-auto TaskPlanner::Configuration::planner(
-  std::shared_ptr<const rmf_traffic::agv::Planner> planner) -> Configuration&
-{
-  if (planner)
-    _pimpl->planner = std::move(planner);
+  _pimpl->constraints = std::move(constraints);
   return *this;
 }
 
@@ -351,13 +312,7 @@ public:
 
   ConstRequestPtr make_charging_request(rmf_traffic::Time start_time)
   {
-    return rmf_task::requests::ChargeBattery::make(
-      config.battery_system(),
-      config.motion_sink(),
-      config.ambient_sink(),
-      config.planner(),
-      start_time,
-      true);
+    return rmf_task::requests::ChargeBattery::make(start_time);
   }
 
   TaskPlanner::Assignments prune_assignments(
@@ -371,7 +326,7 @@ public:
       // Remove charging task at end of assignments if any
       // TODO(YV): Remove this after fixing the planner
       if (std::dynamic_pointer_cast<
-          const rmf_task::requests::ChargeBatteryDescription>(
+          const rmf_task::requests::ChargeBattery::Description>(
           assignments[a].back().request()->description()))
         assignments[a].pop_back();
     }
@@ -389,7 +344,7 @@ public:
         continue;
 
       if (std::dynamic_pointer_cast<
-          const rmf_task::requests::ChargeBatteryDescription>(
+          const rmf_task::requests::ChargeBattery::Description>(
           agent.back().assignment.request()->description()))
         agent.pop_back();
     }
@@ -400,17 +355,15 @@ public:
   Result complete_solve(
     rmf_traffic::Time time_now,
     std::vector<State>& initial_states,
-    const std::vector<Constraints>& constraints_set,
     const std::vector<ConstRequestPtr>& requests,
     const std::function<bool()> interrupter,
     bool greedy)
   {
-    assert(initial_states.size() == constraints_set.size());
 
     cost_calculator = config.cost_calculator() ? config.cost_calculator() :
       rmf_task::BinaryPriorityScheme::make_cost_calculator();
 
-    // Check if a high priority task exists among the requests.
+    // Also check if a high priority task exists among the requests.
     // If so the cost function for a node will be modified accordingly.
     for (const auto& request : requests)
     {
@@ -423,7 +376,7 @@ public:
 
     TaskPlannerError error;
     auto node = make_initial_node(
-      initial_states, constraints_set, requests, time_now, error);
+      initial_states, requests, time_now, error);
     if (!node)
       return error;
 
@@ -433,9 +386,9 @@ public:
     while (node)
     {
       if (greedy)
-        node = greedy_solve(node, initial_states, constraints_set, time_now);
+        node = greedy_solve(node, initial_states, time_now);
       else
-        node = solve(node, initial_states, constraints_set,
+        node = solve(node, initial_states,
             requests.size(), time_now, interrupter);
 
       if (!node)
@@ -481,7 +434,7 @@ public:
       }
 
       node = make_initial_node(
-        estimates, constraints_set, new_tasks, time_now, error);
+        estimates, new_tasks, time_now, error);
       if (!node)
         return error;
       initial_states = estimates;
@@ -492,7 +445,6 @@ public:
 
   ConstNodePtr make_initial_node(
     std::vector<State> initial_states,
-    std::vector<Constraints> constraints_set,
     std::vector<ConstRequestPtr> requests,
     rmf_traffic::Time time_now,
     TaskPlannerError& error)
@@ -501,19 +453,18 @@ public:
 
     initial_node->assigned_tasks.resize(initial_states.size());
 
-    // TODO(YV): Come up with a better solution for charge_battery_request
-    auto charge_battery = make_charging_request(time_now);
     for (const auto& request : requests)
     {
       // Generate a unique internal id for the request. Currently, multiple
       // requests with the same string id will be assigned different internal ids
       std::size_t internal_id = initial_node->get_available_internal_id();
       const auto pending_task = PendingTask::make(
+        time_now,
         initial_states,
-        constraints_set,
+        config.constraints(),
+        config.parameters(),
         request,
-        charge_battery->description(),
-        estimate_cache,
+        *estimate_cache,
         error);
 
       if (!pending_task)
@@ -583,11 +534,10 @@ public:
     const Node::UnassignedTasks::value_type& u,
     const ConstNodePtr& parent,
     Filter* filter,
-    rmf_traffic::Time time_now,
-    const std::vector<Constraints>& constraints_set)
+    rmf_traffic::Time time_now)
   {
     const auto& entry = it->second;
-    const auto& constraints = constraints_set[entry.candidate];
+    const auto& constraints = config.constraints();
 
     if (parent->latest_time + segmentation_threshold < entry.wait_until)
     {
@@ -604,13 +554,17 @@ public:
       // Check if a battery task already precedes the latest assignment
       auto& assignments = new_node->assigned_tasks[entry.candidate];
       if (assignments.empty() || !std::dynamic_pointer_cast<
-          const rmf_task::requests::ChargeBatteryDescription>(
+          const rmf_task::requests::ChargeBattery::Description>(
           assignments.back().assignment.request()->description()))
       {
         auto charge_battery = make_charging_request(
           entry.previous_state.finish_time());
-        auto battery_estimate = charge_battery->description()->estimate_finish(
-          entry.previous_state, constraints, estimate_cache);
+        const auto charge_battery_model =
+          charge_battery->description()->make_model(
+          charge_battery->earliest_start_time(),
+          config.parameters());
+        auto battery_estimate = charge_battery_model->estimate_finish(
+          entry.previous_state, constraints, *estimate_cache);
         if (battery_estimate.has_value())
         {
           assignments.push_back(
@@ -639,8 +593,8 @@ public:
     for (auto& new_u : new_node->unassigned_tasks)
     {
       const auto finish =
-        new_u.second.request->description()->estimate_finish(
-        entry.state, constraints, estimate_cache);
+        new_u.second.model->estimate_finish(
+        entry.state, constraints, *estimate_cache);
 
       if (finish.has_value())
       {
@@ -682,8 +636,12 @@ public:
     if (add_charger)
     {
       auto charge_battery = make_charging_request(entry.state.finish_time());
-      auto battery_estimate = charge_battery->description()->estimate_finish(
-        entry.state, constraints, estimate_cache);
+      const auto charge_battery_model =
+        charge_battery->description()->make_model(
+        charge_battery->earliest_start_time(),
+        config.parameters());
+      auto battery_estimate = charge_battery_model->estimate_finish(
+        entry.state, constraints, *estimate_cache);
       if (battery_estimate.has_value())
       {
         new_node->assigned_tasks[entry.candidate].push_back(
@@ -697,9 +655,9 @@ public:
         for (auto& new_u : new_node->unassigned_tasks)
         {
           const auto finish =
-            new_u.second.request->description()->estimate_finish(
+            new_u.second.model->estimate_finish(
             battery_estimate.value().finish_state(),
-            constraints, estimate_cache);
+            constraints, *estimate_cache);
           if (finish.has_value())
           {
             new_u.second.candidates.update_candidate(
@@ -740,7 +698,6 @@ public:
     ConstNodePtr parent,
     const std::size_t agent,
     const std::vector<State>& initial_states,
-    const std::vector<Constraints>& constraints_set,
     rmf_traffic::Time time_now)
   {
     auto new_node = std::make_shared<Node>(*parent);
@@ -758,15 +715,19 @@ public:
     if (!assignments.empty())
     {
       if (std::dynamic_pointer_cast<
-          const rmf_task::requests::ChargeBatteryDescription>(
+          const rmf_task::requests::ChargeBattery::Description>(
           assignments.back().assignment.request()->description()))
         return nullptr;
       state = assignments.back().assignment.state();
     }
 
     auto charge_battery = make_charging_request(state.finish_time());
-    auto estimate = charge_battery->description()->estimate_finish(
-      state, constraints_set[agent], estimate_cache);
+    const auto charge_battery_model =
+      charge_battery->description()->make_model(
+      charge_battery->earliest_start_time(),
+      config.parameters());
+    auto estimate = charge_battery_model->estimate_finish(
+      state, config.constraints(), *estimate_cache);
     if (estimate.has_value())
     {
       new_node->assigned_tasks[agent].push_back(
@@ -783,9 +744,9 @@ public:
       for (auto& new_u : new_node->unassigned_tasks)
       {
         const auto finish =
-          new_u.second.request->description()->estimate_finish(
+          new_u.second.model->estimate_finish(
           estimate.value().finish_state(),
-          constraints_set[agent], estimate_cache);
+          config.constraints(), *estimate_cache);
         if (finish.has_value())
         {
           new_u.second.candidates.update_candidate(
@@ -813,7 +774,6 @@ public:
   ConstNodePtr greedy_solve(
     ConstNodePtr node,
     const std::vector<State>& initial_states,
-    const std::vector<Constraints>& constraints_set,
     rmf_traffic::Time time_now)
   {
     while (!finished(*node))
@@ -825,7 +785,7 @@ public:
         for (auto it = range.begin; it != range.end; ++it)
         {
           if (auto n = expand_candidate(
-              it, u, node, nullptr, time_now, constraints_set))
+              it, u, node, nullptr, time_now))
           {
             if (!next_node || (n->cost_estimate < next_node->cost_estimate))
             {
@@ -849,7 +809,6 @@ public:
                   parent_node,
                   it->second.candidate,
                   initial_states,
-                  constraints_set,
                   time_now);
                 if (new_charge_node)
                 {
@@ -873,7 +832,6 @@ public:
     ConstNodePtr parent,
     Filter& filter,
     const std::vector<State>& initial_states,
-    const std::vector<Constraints>& constraints_set,
     rmf_traffic::Time time_now)
   {
     std::vector<ConstNodePtr> new_nodes;
@@ -885,7 +843,7 @@ public:
       for (auto it = range.begin; it != range.end; it++)
       {
         if (auto new_node = expand_candidate(
-            it, u, parent, &filter, time_now, constraints_set))
+            it, u, parent, &filter, time_now))
           new_nodes.push_back(std::move(new_node));
       }
     }
@@ -894,7 +852,7 @@ public:
     for (std::size_t i = 0; i < parent->assigned_tasks.size(); ++i)
     {
       if (auto new_node = expand_charger(
-          parent, i, initial_states, constraints_set, time_now))
+          parent, i, initial_states, time_now))
         new_nodes.push_back(std::move(new_node));
     }
 
@@ -920,7 +878,6 @@ public:
   ConstNodePtr solve(
     ConstNodePtr initial_node,
     const std::vector<State>& initial_states,
-    const std::vector<Constraints>& constraints_set,
     const std::size_t num_tasks,
     rmf_traffic::Time time_now,
     std::function<bool()> interrupter)
@@ -951,7 +908,7 @@ public:
 
       // Apply possible actions to expand the node
       const auto new_nodes = expand(
-        top, filter, initial_states, constraints_set, time_now);
+        top, filter, initial_states, time_now);
 
       // Add copies and with a newly assigned task to queue
       for (const auto& n : new_nodes)
@@ -965,12 +922,13 @@ public:
 
 // ============================================================================
 TaskPlanner::TaskPlanner(
-  const rmf_task::agv::TaskPlanner::Configuration& config)
+  const rmf_task::agv::TaskPlanner::Configuration& configuration)
 : _pimpl(rmf_utils::make_impl<Implementation>(
       Implementation{
-        config,
+        configuration,
         std::make_shared<EstimateCache>(
-          config.planner()->get_configuration().graph().num_waypoints())
+          configuration.parameters().planner()->
+          get_configuration().graph().num_waypoints())
       }))
 {
   // Do nothing
@@ -979,14 +937,12 @@ TaskPlanner::TaskPlanner(
 // ============================================================================
 auto TaskPlanner::greedy_plan(
   rmf_traffic::Time time_now,
-  std::vector<State> initial_states,
-  std::vector<Constraints> constraints_set,
+  std::vector<State> agents,
   std::vector<ConstRequestPtr> requests) -> Result
 {
   return _pimpl->complete_solve(
     time_now,
-    initial_states,
-    constraints_set,
+    agents,
     requests,
     nullptr,
     true);
@@ -995,15 +951,13 @@ auto TaskPlanner::greedy_plan(
 // ============================================================================
 auto TaskPlanner::optimal_plan(
   rmf_traffic::Time time_now,
-  std::vector<State> initial_states,
-  std::vector<Constraints> constraints_set,
+  std::vector<State> agents,
   std::vector<ConstRequestPtr> requests,
   std::function<bool()> interrupter) -> Result
 {
   return _pimpl->complete_solve(
     time_now,
-    initial_states,
-    constraints_set,
+    agents,
     requests,
     interrupter,
     false);
@@ -1028,7 +982,8 @@ const std::shared_ptr<EstimateCache>& TaskPlanner::estimate_cache() const
 }
 
 // ============================================================================
-const rmf_task::agv::TaskPlanner::Configuration& TaskPlanner::config() const
+const rmf_task::agv::TaskPlanner::Configuration& TaskPlanner::configuration()
+const
 {
   return _pimpl->config;
 }

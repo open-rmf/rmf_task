@@ -18,6 +18,7 @@
 #include <rmf_task/agv/TaskPlanner.hpp>
 #include <rmf_task/agv/State.hpp>
 #include <rmf_task/agv/Constraints.hpp>
+#include <rmf_task/agv/Parameters.hpp>
 #include <rmf_task/requests/Delivery.hpp>
 #include <rmf_task/requests/ChargeBattery.hpp>
 #include <rmf_task/requests/Loop.hpp>
@@ -60,7 +61,7 @@ inline bool check_implicit_charging_task_start(
     const auto& s = agent[0].state();
     auto is_charge_request =
       std::dynamic_pointer_cast<
-      const rmf_task::requests::ChargeBatteryDescription>(
+      const rmf_task::requests::ChargeBattery::Description>(
       agent[0].request()->description());
 
     // No task should consume more charge than (1.0 - initial_soc)
@@ -179,13 +180,17 @@ SCENARIO("Grid World")
   const auto cost_calculator =
     rmf_task::BinaryPriorityScheme::make_cost_calculator();
 
-  TaskPlanner::Configuration task_config =
-    TaskPlanner::Configuration(
+  const rmf_task::agv::Constraints constraints{0.2, 1.0, drain_battery};
+  const rmf_task::agv::Parameters parameters{
+    planner,
     battery_system,
     motion_sink,
-    device_sink,
-    planner,
-    cost_calculator);
+    device_sink};
+
+  const TaskPlanner::Configuration task_config{
+    parameters,
+    constraints,
+    cost_calculator};
 
   WHEN("Planning for 3 requests and 2 agents")
   {
@@ -201,52 +206,34 @@ SCENARIO("Grid World")
       rmf_task::agv::State{second_location, 2, 1.0}
     };
 
-    std::vector<rmf_task::agv::Constraints> task_planning_constraints =
-    {
-      rmf_task::agv::Constraints{0.2},
-      rmf_task::agv::Constraints{0.2}
-    };
-
     std::vector<rmf_task::ConstRequestPtr> requests =
     {
       rmf_task::requests::Delivery::make(
-        "1",
         0,
         "dispenser",
         3,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
-        now + rmf_traffic::time::from_seconds(0),
-        drain_battery),
+        "1",
+        now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
-        "2",
         15,
         "dispenser",
         2,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
-        now + rmf_traffic::time::from_seconds(0),
-        drain_battery),
+        "2",
+        now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
-        "3",
         7,
         "dispenser",
         9,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
-        now + rmf_traffic::time::from_seconds(0),
-        drain_battery)
+        "3",
+        now + rmf_traffic::time::from_seconds(0))
     };
 
 
@@ -254,7 +241,7 @@ SCENARIO("Grid World")
 
     auto start_time = std::chrono::steady_clock::now();
     const auto greedy_result = task_planner.greedy_plan(
-      now, initial_states, task_planning_constraints, requests);
+      now, initial_states, requests);
     const auto greedy_assignments = std::get_if<
       TaskPlanner::Assignments>(&greedy_result);
     REQUIRE(greedy_assignments);
@@ -273,7 +260,7 @@ SCENARIO("Grid World")
     task_planner = TaskPlanner(task_config);
     start_time = std::chrono::steady_clock::now();
     const auto optimal_result = task_planner.optimal_plan(
-      now, initial_states, task_planning_constraints, requests, nullptr);
+      now, initial_states, requests, nullptr);
     const auto optimal_assignments = std::get_if<
       TaskPlanner::Assignments>(&optimal_result);
     const double optimal_cost = task_planner.compute_cost(*optimal_assignments);
@@ -303,163 +290,113 @@ SCENARIO("Grid World")
       rmf_task::agv::State{second_location, 2, 1.0}
     };
 
-    std::vector<rmf_task::agv::Constraints> task_planning_constraints =
-    {
-      rmf_task::agv::Constraints{0.2},
-      rmf_task::agv::Constraints{0.2}
-    };
-
     std::vector<rmf_task::ConstRequestPtr> requests =
     {
       rmf_task::requests::Delivery::make(
-        "1",
         0,
         "dispenser",
         3,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
-        now + rmf_traffic::time::from_seconds(0),
-        drain_battery),
+        "1",
+        now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
-        "2",
         15,
         "dispenser",
         2,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
-        now + rmf_traffic::time::from_seconds(0),
-        drain_battery),
+        "2",
+        now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
-        "3",
         7,
         "dispenser",
         9,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
-        now + rmf_traffic::time::from_seconds(0),
-        drain_battery),
+        "3",
+        now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
-        "4",
         8,
         "dispenser",
         11,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
-        now + rmf_traffic::time::from_seconds(50000),
-        drain_battery),
+        "4",
+        now + rmf_traffic::time::from_seconds(50000)),
 
       rmf_task::requests::Delivery::make(
-        "5",
         10,
         "dispenser",
         0,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
-        now + rmf_traffic::time::from_seconds(50000),
-        drain_battery),
+        "5",
+        now + rmf_traffic::time::from_seconds(50000)),
 
       rmf_task::requests::Delivery::make(
-        "6",
         4,
         "dispenser",
         8,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
-        now + rmf_traffic::time::from_seconds(60000),
-        drain_battery),
+        "6",
+        now + rmf_traffic::time::from_seconds(60000)),
 
       rmf_task::requests::Delivery::make(
-        "7",
         8,
         "dispenser",
         14,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
-        now + rmf_traffic::time::from_seconds(60000),
-        drain_battery),
+        "7",
+        now + rmf_traffic::time::from_seconds(60000)),
 
       rmf_task::requests::Delivery::make(
-        "8",
         5,
         "dispenser",
         11,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
-        now + rmf_traffic::time::from_seconds(60000),
-        drain_battery),
+        "8",
+        now + rmf_traffic::time::from_seconds(60000)),
 
       rmf_task::requests::Delivery::make(
-        "9",
         9,
         "dispenser",
         0,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
-        now + rmf_traffic::time::from_seconds(60000),
-        drain_battery),
+        "9",
+        now + rmf_traffic::time::from_seconds(60000)),
 
       rmf_task::requests::Delivery::make(
-        "10",
         1,
         "dispenser",
         3,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
-        now + rmf_traffic::time::from_seconds(60000),
-        drain_battery),
+        "10",
+        now + rmf_traffic::time::from_seconds(60000)),
 
       rmf_task::requests::Delivery::make(
-        "11",
         0,
         "dispenser",
         12,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
-        now + rmf_traffic::time::from_seconds(60000),
-        drain_battery)
+        "11",
+        now + rmf_traffic::time::from_seconds(60000))
     };
 
     TaskPlanner task_planner(task_config);
 
     auto start_time = std::chrono::steady_clock::now();
     const auto greedy_result = task_planner.greedy_plan(
-      now, initial_states, task_planning_constraints, requests);
+      now, initial_states, requests);
     const auto greedy_assignments = std::get_if<
       TaskPlanner::Assignments>(&greedy_result);
     REQUIRE(greedy_assignments);
@@ -478,7 +415,7 @@ SCENARIO("Grid World")
     task_planner = TaskPlanner(task_config);
     start_time = std::chrono::steady_clock::now();
     const auto optimal_result = task_planner.optimal_plan(
-      now, initial_states, task_planning_constraints, requests, nullptr);
+      now, initial_states, requests, nullptr);
     const auto optimal_assignments = std::get_if<
       TaskPlanner::Assignments>(&optimal_result);
     const double optimal_cost = task_planner.compute_cost(*optimal_assignments);
@@ -509,72 +446,50 @@ SCENARIO("Grid World")
       rmf_task::agv::State{second_location, 2, initial_soc}
     };
 
-    std::vector<rmf_task::agv::Constraints> task_planning_constraints =
-    {
-      rmf_task::agv::Constraints{0.2},
-      rmf_task::agv::Constraints{0.2}
-    };
-
     std::vector<rmf_task::ConstRequestPtr> requests =
     {
       rmf_task::requests::Delivery::make(
-        "1",
         0,
         "dispenser",
         3,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
-        now + rmf_traffic::time::from_seconds(0),
-        drain_battery),
+        "1",
+        now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
-        "2",
         15,
         "dispenser",
         2,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
-        now + rmf_traffic::time::from_seconds(0),
-        drain_battery),
+        "2",
+        now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
-        "3",
         9,
         "dispenser",
         4,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
-        now + rmf_traffic::time::from_seconds(0),
-        drain_battery),
+        "3",
+        now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
-        "4",
         8,
         "dispenser",
         11,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
-        now + rmf_traffic::time::from_seconds(50000),
-        drain_battery)
+        "4",
+        now + rmf_traffic::time::from_seconds(50000))
     };
 
     TaskPlanner task_planner(task_config);
 
     auto start_time = std::chrono::steady_clock::now();
     const auto greedy_result = task_planner.greedy_plan(
-      now, initial_states, task_planning_constraints, requests);
+      now, initial_states, requests);
     const auto greedy_assignments = std::get_if<
       TaskPlanner::Assignments>(&greedy_result);
     REQUIRE(greedy_assignments);
@@ -593,7 +508,7 @@ SCENARIO("Grid World")
     task_planner = TaskPlanner(task_config);
     start_time = std::chrono::steady_clock::now();
     const auto optimal_result = task_planner.optimal_plan(
-      now, initial_states, task_planning_constraints, requests, nullptr);
+      now, initial_states, requests, nullptr);
     const auto optimal_assignments = std::get_if<
       TaskPlanner::Assignments>(&optimal_result);
     const double optimal_cost = task_planner.compute_cost(*optimal_assignments);
@@ -633,163 +548,113 @@ SCENARIO("Grid World")
       rmf_task::agv::State{second_location, 2, 1.0}
     };
 
-    std::vector<rmf_task::agv::Constraints> task_planning_constraints =
-    {
-      rmf_task::agv::Constraints{0.2},
-      rmf_task::agv::Constraints{0.2}
-    };
-
     std::vector<rmf_task::ConstRequestPtr> requests =
     {
       rmf_task::requests::Delivery::make(
-        "1",
         6,
         "dispenser",
         3,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
-        now + rmf_traffic::time::from_seconds(0),
-        drain_battery),
+        "1",
+        now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
-        "2",
         10,
         "dispenser",
         7,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
-        now + rmf_traffic::time::from_seconds(0),
-        drain_battery),
+        "2",
+        now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
-        "3",
         2,
         "dispenser",
         12,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
-        now + rmf_traffic::time::from_seconds(0),
-        drain_battery),
+        "3",
+        now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
-        "4",
         8,
         "dispenser",
         11,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
-        now + rmf_traffic::time::from_seconds(50000),
-        drain_battery),
+        "4",
+        now + rmf_traffic::time::from_seconds(50000)),
 
       rmf_task::requests::Delivery::make(
-        "5",
         10,
         "dispenser",
         6,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
-        now + rmf_traffic::time::from_seconds(50000),
-        drain_battery),
+        "5",
+        now + rmf_traffic::time::from_seconds(50000)),
 
       rmf_task::requests::Delivery::make(
-        "6",
         2,
         "dispenser",
         9,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
-        now + rmf_traffic::time::from_seconds(70000),
-        drain_battery),
+        "6",
+        now + rmf_traffic::time::from_seconds(70000)),
 
       rmf_task::requests::Delivery::make(
-        "7",
         3,
         "dispenser",
         4,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
-        now + rmf_traffic::time::from_seconds(70000),
-        drain_battery),
+        "7",
+        now + rmf_traffic::time::from_seconds(70000)),
 
       rmf_task::requests::Delivery::make(
-        "8",
         5,
         "dispenser",
         11,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
-        now + rmf_traffic::time::from_seconds(70000),
-        drain_battery),
+        "8",
+        now + rmf_traffic::time::from_seconds(70000)),
 
       rmf_task::requests::Delivery::make(
-        "9",
         9,
         "dispenser",
         1,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
-        now + rmf_traffic::time::from_seconds(70000),
-        drain_battery),
+        "9",
+        now + rmf_traffic::time::from_seconds(70000)),
 
       rmf_task::requests::Delivery::make(
-        "10",
         1,
         "dispenser",
         5,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
-        now + rmf_traffic::time::from_seconds(70000),
-        drain_battery),
+        "10",
+        now + rmf_traffic::time::from_seconds(70000)),
 
       rmf_task::requests::Delivery::make(
-        "11",
         13,
         "dispenser",
         10,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
-        now + rmf_traffic::time::from_seconds(70000),
-        drain_battery)
+        "11",
+        now + rmf_traffic::time::from_seconds(70000))
     };
 
     TaskPlanner task_planner(task_config);
 
     auto start_time = std::chrono::steady_clock::now();
     const auto greedy_result = task_planner.greedy_plan(
-      now, initial_states, task_planning_constraints, requests);
+      now, initial_states, requests);
     const auto greedy_assignments = std::get_if<
       TaskPlanner::Assignments>(&greedy_result);
     REQUIRE(greedy_assignments);
@@ -808,7 +673,7 @@ SCENARIO("Grid World")
     task_planner = TaskPlanner(task_config);
     start_time = std::chrono::steady_clock::now();
     const auto optimal_result = task_planner.optimal_plan(
-      now, initial_states, task_planning_constraints, requests, nullptr);
+      now, initial_states, requests, nullptr);
     const auto optimal_assignments = std::get_if<
       TaskPlanner::Assignments>(&optimal_result);
     const double optimal_cost = task_planner.compute_cost(*optimal_assignments);
@@ -836,29 +701,20 @@ SCENARIO("Grid World")
       rmf_task::agv::State{first_location, 13, 1.0},
     };
 
-    std::vector<rmf_task::agv::Constraints> task_planning_constraints =
-    {
-      rmf_task::agv::Constraints{0.2},
-    };
-
     std::vector<rmf_task::ConstRequestPtr> requests =
     {
       rmf_task::requests::Loop::make(
-        "Loop1",
         0,
         15,
         1000,
-        motion_sink,
-        device_sink,
-        planner,
-        now,
-        true)
+        "Loop1",
+        now)
     };
 
     TaskPlanner task_planner(task_config);
 
     const auto greedy_result = task_planner.greedy_plan(
-      now, initial_states, task_planning_constraints, requests);
+      now, initial_states, requests);
     const auto greedy_assignments = std::get_if<
       TaskPlanner::Assignments>(&greedy_result);
     REQUIRE_FALSE(greedy_assignments);
@@ -870,7 +726,7 @@ SCENARIO("Grid World")
     // remain independent of one another
     task_planner = TaskPlanner(task_config);
     const auto optimal_result = task_planner.optimal_plan(
-      now, initial_states, task_planning_constraints, requests, nullptr);
+      now, initial_states, requests, nullptr);
     const auto optimal_assignments = std::get_if<
       TaskPlanner::Assignments>(&optimal_result);
     REQUIRE_FALSE(optimal_assignments);
@@ -891,29 +747,20 @@ SCENARIO("Grid World")
       rmf_task::agv::State{first_location, 13, 0.0},
     };
 
-    std::vector<rmf_task::agv::Constraints> task_planning_constraints =
-    {
-      rmf_task::agv::Constraints{0.2},
-    };
-
     std::vector<rmf_task::ConstRequestPtr> requests =
     {
       rmf_task::requests::Loop::make(
-        "Loop1",
         0,
         15,
         1000,
-        motion_sink,
-        device_sink,
-        planner,
-        now,
-        true)
+        "Loop1",
+        now)
     };
 
     TaskPlanner task_planner(task_config);
 
     const auto greedy_result = task_planner.greedy_plan(
-      now, initial_states, task_planning_constraints, requests);
+      now, initial_states, requests);
     const auto greedy_assignments = std::get_if<
       TaskPlanner::Assignments>(&greedy_result);
     REQUIRE_FALSE(greedy_assignments);
@@ -925,7 +772,7 @@ SCENARIO("Grid World")
     // remain independent of one another
     task_planner = TaskPlanner(task_config);
     const auto optimal_result = task_planner.optimal_plan(
-      now, initial_states, task_planning_constraints, requests, nullptr);
+      now, initial_states, requests, nullptr);
     const auto optimal_assignments = std::get_if<
       TaskPlanner::Assignments>(&optimal_result);
     REQUIRE_FALSE(optimal_assignments);
@@ -947,58 +794,41 @@ SCENARIO("Grid World")
       rmf_task::agv::State{first_location, 13, 1.0},
     };
 
-    std::vector<rmf_task::agv::Constraints> task_planning_constraints =
-    {
-      rmf_task::agv::Constraints{0.2},
-    };
-
     std::vector<rmf_task::ConstRequestPtr> requests =
     {
       rmf_task::requests::Delivery::make(
-        "1",
         0,
         "dispenser",
         3,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
-        now + rmf_traffic::time::from_seconds(0),
-        drain_battery),
+        "1",
+        now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
-        "2",
         15,
         "dispenser",
         2,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
-        now + rmf_traffic::time::from_seconds(0),
-        drain_battery),
+        "2",
+        now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
-        "3",
         7,
         "dispenser",
         9,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
-        now + rmf_traffic::time::from_seconds(0),
-        drain_battery)
+        "3",
+        now + rmf_traffic::time::from_seconds(0))
     };
 
     TaskPlanner task_planner(task_config);
 
     auto start_time = std::chrono::steady_clock::now();
     const auto optimal_result = task_planner.optimal_plan(
-      now, initial_states, task_planning_constraints, requests, nullptr);
+      now, initial_states, requests, nullptr);
     const auto optimal_assignments_ptr = std::get_if<
       TaskPlanner::Assignments>(&optimal_result);
     REQUIRE(optimal_assignments_ptr);
@@ -1019,17 +849,13 @@ SCENARIO("Grid World")
     THEN("When replanning with high priority for request with task_id:3")
     {
       requests[2] = rmf_task::requests::Delivery::make(
-        "3",
         7,
         "dispenser",
         9,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
+        "3",
         now + rmf_traffic::time::from_seconds(0),
-        drain_battery,
         rmf_task::BinaryPriorityScheme::make_high_priority());
     }
 
@@ -1037,7 +863,7 @@ SCENARIO("Grid World")
     task_planner = TaskPlanner(task_config);
     start_time = std::chrono::steady_clock::now();
     const auto new_optimal_result = task_planner.optimal_plan(
-      now, initial_states, task_planning_constraints, requests, nullptr);
+      now, initial_states, requests, nullptr);
     const auto new_optimal_assignments_ptr = std::get_if<
       TaskPlanner::Assignments>(&new_optimal_result);
     REQUIRE(new_optimal_assignments_ptr);
@@ -1069,53 +895,36 @@ SCENARIO("Grid World")
       rmf_task::agv::State{first_location, 13, 1.0},
     };
 
-    std::vector<rmf_task::agv::Constraints> task_planning_constraints =
-    {
-      rmf_task::agv::Constraints{0.2},
-    };
-
     std::vector<rmf_task::ConstRequestPtr> requests =
     {
       rmf_task::requests::Delivery::make(
-        "1",
         0,
         "dispenser",
         3,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
+        "1",
         now + rmf_traffic::time::from_seconds(0),
-        drain_battery,
         rmf_task::BinaryPriorityScheme::make_high_priority()),
 
       rmf_task::requests::Delivery::make(
-        "2",
         15,
         "dispenser",
         2,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
+        "2",
         now + rmf_traffic::time::from_seconds(0),
-        drain_battery,
         rmf_task::BinaryPriorityScheme::make_high_priority()),
 
       rmf_task::requests::Delivery::make(
-        "3",
         7,
         "dispenser",
         9,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
+        "3",
         now + rmf_traffic::time::from_seconds(0),
-        drain_battery,
         rmf_task::BinaryPriorityScheme::make_high_priority())
     };
 
@@ -1123,7 +932,7 @@ SCENARIO("Grid World")
 
     auto start_time = std::chrono::steady_clock::now();
     const auto optimal_result = task_planner.optimal_plan(
-      now, initial_states, task_planning_constraints, requests, nullptr);
+      now, initial_states, requests, nullptr);
     const auto optimal_assignments_ptr = std::get_if<
       TaskPlanner::Assignments>(&optimal_result);
     REQUIRE(optimal_assignments_ptr);
@@ -1154,65 +963,44 @@ SCENARIO("Grid World")
       rmf_task::agv::State{first_location, 13, 1.0},
     };
 
-    std::vector<rmf_task::agv::Constraints> task_planning_constraints =
-    {
-      rmf_task::agv::Constraints{0.2},
-    };
-
     std::vector<rmf_task::ConstRequestPtr> requests =
     {
       rmf_task::requests::Delivery::make(
-        "1",
         0,
         "dispenser",
         3,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
+        "1",
         now + rmf_traffic::time::from_seconds(0),
-        drain_battery,
         rmf_task::BinaryPriorityScheme::make_high_priority()),
 
       rmf_task::requests::Delivery::make(
-        "2",
         15,
         "dispenser",
         2,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
-        now + rmf_traffic::time::from_seconds(0),
-        drain_battery),
+        "2",
+        now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
-        "3",
         7,
         "dispenser",
         9,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
-        now + rmf_traffic::time::from_seconds(0),
-        drain_battery),
+        "3",
+        now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
-        "4",
         4,
         "dispenser",
         7,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
+        "4",
         now + rmf_traffic::time::from_seconds(0),
-        drain_battery,
         rmf_task::BinaryPriorityScheme::make_high_priority())
     };
 
@@ -1220,7 +1008,7 @@ SCENARIO("Grid World")
 
     auto start_time = std::chrono::steady_clock::now();
     const auto optimal_result = task_planner.optimal_plan(
-      now, initial_states, task_planning_constraints, requests, nullptr);
+      now, initial_states, requests, nullptr);
     const auto optimal_assignments_ptr = std::get_if<
       TaskPlanner::Assignments>(&optimal_result);
     REQUIRE(optimal_assignments_ptr);
@@ -1260,65 +1048,44 @@ SCENARIO("Grid World")
       rmf_task::agv::State{first_location, 13, 1.0},
     };
 
-    std::vector<rmf_task::agv::Constraints> task_planning_constraints =
-    {
-      rmf_task::agv::Constraints{0.2},
-    };
-
     std::vector<rmf_task::ConstRequestPtr> requests =
     {
       rmf_task::requests::Delivery::make(
-        "1",
         0,
         "dispenser",
         3,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
+        "1",
         now + rmf_traffic::time::from_seconds(0),
-        drain_battery,
         rmf_task::BinaryPriorityScheme::make_high_priority()),
 
       rmf_task::requests::Delivery::make(
-        "2",
         15,
         "dispenser",
         2,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
-        now + rmf_traffic::time::from_seconds(0),
-        drain_battery),
+        "2",
+        now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
-        "3",
         7,
         "dispenser",
         9,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
-        now + rmf_traffic::time::from_seconds(100000),
-        drain_battery),
+        "3",
+        now + rmf_traffic::time::from_seconds(100000)),
 
       rmf_task::requests::Delivery::make(
-        "4",
         7,
         "dispenser",
         6,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
+        "4",
         now + rmf_traffic::time::from_seconds(100000),
-        drain_battery,
         rmf_task::BinaryPriorityScheme::make_high_priority())
     };
 
@@ -1326,7 +1093,7 @@ SCENARIO("Grid World")
 
     auto start_time = std::chrono::steady_clock::now();
     const auto optimal_result = task_planner.optimal_plan(
-      now, initial_states, task_planning_constraints, requests, nullptr);
+      now, initial_states, requests, nullptr);
     const auto optimal_assignments_ptr = std::get_if<
       TaskPlanner::Assignments>(&optimal_result);
     REQUIRE(optimal_assignments_ptr);
@@ -1368,72 +1135,50 @@ SCENARIO("Grid World")
       rmf_task::agv::State{second_location, 1, 1.0}
     };
 
-    std::vector<rmf_task::agv::Constraints> task_planning_constraints =
-    {
-      rmf_task::agv::Constraints{0.2},
-      rmf_task::agv::Constraints{0.2}
-    };
-
     std::vector<rmf_task::ConstRequestPtr> requests =
     {
       rmf_task::requests::Delivery::make(
-        "1",
         0,
         "dispenser",
         3,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
-        now + rmf_traffic::time::from_seconds(0),
-        drain_battery),
+        "1",
+        now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
-        "2",
         15,
         "dispenser",
         2,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
-        now + rmf_traffic::time::from_seconds(0),
-        drain_battery),
+        "2",
+        now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
-        "3",
         7,
         "dispenser",
         9,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
-        now + rmf_traffic::time::from_seconds(0),
-        drain_battery),
+        "3",
+        now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
-        "4",
         7,
         "dispenser",
         6,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
-        now + rmf_traffic::time::from_seconds(0),
-        drain_battery)
+        "4",
+        now + rmf_traffic::time::from_seconds(0))
     };
 
     TaskPlanner task_planner(task_config);
 
     auto start_time = std::chrono::steady_clock::now();
     const auto optimal_result = task_planner.optimal_plan(
-      now, initial_states, task_planning_constraints, requests, nullptr);
+      now, initial_states, requests, nullptr);
     const auto optimal_assignments_ptr = std::get_if<
       TaskPlanner::Assignments>(&optimal_result);
     REQUIRE(optimal_assignments_ptr);
@@ -1460,63 +1205,47 @@ SCENARIO("Grid World")
       std::vector<rmf_task::ConstRequestPtr> requests =
       {
         rmf_task::requests::Delivery::make(
-          "1",
           0,
           "dispenser",
           3,
           "ingestor",
           {},
-          motion_sink,
-          device_sink,
-          planner,
-          now + rmf_traffic::time::from_seconds(0),
-          drain_battery),
+          "1",
+          now + rmf_traffic::time::from_seconds(0)),
 
         rmf_task::requests::Delivery::make(
-          "2",
           15,
           "dispenser",
           2,
           "ingestor",
           {},
-          motion_sink,
-          device_sink,
-          planner,
-          now + rmf_traffic::time::from_seconds(0),
-          drain_battery),
+          "2",
+          now + rmf_traffic::time::from_seconds(0)),
 
         rmf_task::requests::Delivery::make(
-          "3",
           7,
           "dispenser",
           9,
           "ingestor",
           {},
-          motion_sink,
-          device_sink,
-          planner,
+          "3",
           now + rmf_traffic::time::from_seconds(0),
-          drain_battery,
           rmf_task::BinaryPriorityScheme::make_high_priority()),
 
         rmf_task::requests::Delivery::make(
-          "4",
           7,
           "dispenser",
           6,
           "ingestor",
           {},
-          motion_sink,
-          device_sink,
-          planner,
+          "4",
           now + rmf_traffic::time::from_seconds(0),
-          drain_battery,
           rmf_task::BinaryPriorityScheme::make_high_priority())
       };
 
       auto start_time = std::chrono::steady_clock::now();
       const auto optimal_result = task_planner.optimal_plan(
-        now, initial_states, task_planning_constraints, requests, nullptr);
+        now, initial_states, requests, nullptr);
       const auto optimal_assignments_ptr = std::get_if<
         TaskPlanner::Assignments>(&optimal_result);
       REQUIRE(optimal_assignments_ptr);
@@ -1559,73 +1288,50 @@ SCENARIO("Grid World")
       rmf_task::agv::State{third_location, 5, 1.0}
     };
 
-    std::vector<rmf_task::agv::Constraints> task_planning_constraints =
-    {
-      rmf_task::agv::Constraints{0.2},
-      rmf_task::agv::Constraints{0.2},
-      rmf_task::agv::Constraints{0.2}
-    };
-
     std::vector<rmf_task::ConstRequestPtr> requests =
     {
       rmf_task::requests::Delivery::make(
-        "1",
         0,
         "dispenser",
         3,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
-        now + rmf_traffic::time::from_seconds(0),
-        drain_battery),
+        "1",
+        now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
-        "2",
         15,
         "dispenser",
         2,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
-        now + rmf_traffic::time::from_seconds(0),
-        drain_battery),
+        "2",
+        now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
-        "3",
         7,
         "dispenser",
         9,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
-        now + rmf_traffic::time::from_seconds(0),
-        drain_battery),
+        "3",
+        now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
-        "4",
         7,
         "dispenser",
         6,
         "ingestor",
         {},
-        motion_sink,
-        device_sink,
-        planner,
-        now + rmf_traffic::time::from_seconds(0),
-        drain_battery)
+        "4",
+        now + rmf_traffic::time::from_seconds(0))
     };
 
     TaskPlanner task_planner(task_config);
 
     auto start_time = std::chrono::steady_clock::now();
     const auto optimal_result = task_planner.optimal_plan(
-      now, initial_states, task_planning_constraints, requests, nullptr);
+      now, initial_states, requests, nullptr);
     const auto optimal_assignments_ptr = std::get_if<
       TaskPlanner::Assignments>(&optimal_result);
     REQUIRE(optimal_assignments_ptr);
@@ -1660,64 +1366,48 @@ SCENARIO("Grid World")
       std::vector<rmf_task::ConstRequestPtr> requests =
       {
         rmf_task::requests::Delivery::make(
-          "1",
           0,
           "dispenser",
           3,
           "ingestor",
           {},
-          motion_sink,
-          device_sink,
-          planner,
+          "1",
           now + rmf_traffic::time::from_seconds(0),
-          drain_battery,
           rmf_task::BinaryPriorityScheme::make_high_priority()),
 
         rmf_task::requests::Delivery::make(
-          "2",
           15,
           "dispenser",
           2,
           "ingestor",
           {},
-          motion_sink,
-          device_sink,
-          planner,
+          "2",
           now + rmf_traffic::time::from_seconds(0),
-          drain_battery,
           rmf_task::BinaryPriorityScheme::make_high_priority()),
 
         rmf_task::requests::Delivery::make(
-          "3",
           7,
           "dispenser",
           9,
           "ingestor",
           {},
-          motion_sink,
-          device_sink,
-          planner,
+          "3",
           now + rmf_traffic::time::from_seconds(0),
-          drain_battery,
           rmf_task::BinaryPriorityScheme::make_high_priority()),
 
         rmf_task::requests::Delivery::make(
-          "4",
           7,
           "dispenser",
           6,
           "ingestor",
           {},
-          motion_sink,
-          device_sink,
-          planner,
-          now + rmf_traffic::time::from_seconds(0),
-          drain_battery)
+          "4",
+          now + rmf_traffic::time::from_seconds(0))
       };
 
       auto start_time = std::chrono::steady_clock::now();
       const auto optimal_result = task_planner.optimal_plan(
-        now, initial_states, task_planning_constraints, requests, nullptr);
+        now, initial_states, requests, nullptr);
       const auto optimal_assignments_ptr = std::get_if<
         TaskPlanner::Assignments>(&optimal_result);
       REQUIRE(optimal_assignments_ptr);
@@ -1748,6 +1438,120 @@ SCENARIO("Grid World")
       }
       CHECK(id_count == 3);
     }
+  }
+
+  WHEN("Initial charge is low and battery recharge soc is constrained")
+  {
+    const auto now = std::chrono::steady_clock::now();
+    const double default_orientation = 0.0;
+    const double initial_soc = 0.3;
+    const double recharge_soc = 0.9;
+    rmf_task::agv::Constraints new_constraints{0.2, recharge_soc,
+      drain_battery};
+    rmf_task::agv::TaskPlanner::Configuration new_task_config{
+      parameters,
+      new_constraints,
+      cost_calculator};
+
+    rmf_traffic::agv::Plan::Start first_location{now, 13, default_orientation};
+    rmf_traffic::agv::Plan::Start second_location{now, 2, default_orientation};
+
+    std::vector<rmf_task::agv::State> initial_states =
+    {
+      rmf_task::agv::State{first_location, 13, initial_soc},
+      rmf_task::agv::State{second_location, 2, initial_soc}
+    };
+
+    std::vector<rmf_task::ConstRequestPtr> requests =
+    {
+      rmf_task::requests::Delivery::make(
+        0,
+        "dispenser",
+        3,
+        "ingestor",
+        {},
+        "1",
+        now + rmf_traffic::time::from_seconds(0)),
+
+      rmf_task::requests::Delivery::make(
+        15,
+        "dispenser",
+        2,
+        "ingestor",
+        {},
+        "2",
+        now + rmf_traffic::time::from_seconds(0)),
+
+      rmf_task::requests::Delivery::make(
+        9,
+        "dispenser",
+        4,
+        "ingestor",
+        {},
+        "3",
+        now + rmf_traffic::time::from_seconds(0)),
+
+      rmf_task::requests::Delivery::make(
+        8,
+        "dispenser",
+        11,
+        "ingestor",
+        {},
+        "4",
+        now + rmf_traffic::time::from_seconds(50000))
+    };
+
+    TaskPlanner task_planner(new_task_config);
+
+    auto start_time = std::chrono::steady_clock::now();
+    const auto greedy_result = task_planner.greedy_plan(
+      now, initial_states, requests);
+    const auto greedy_assignments = std::get_if<
+      TaskPlanner::Assignments>(&greedy_result);
+    REQUIRE(greedy_assignments);
+    const double greedy_cost = task_planner.compute_cost(*greedy_assignments);
+    auto finish_time = std::chrono::steady_clock::now();
+
+    if (display_solutions)
+    {
+      std::cout << "Greedy solution found in: "
+                << (finish_time - start_time).count() / 1e9 << std::endl;
+      display_solution("Greedy", *greedy_assignments, greedy_cost);
+    }
+
+    // Create new TaskPlanner to reset cache so that measured run times
+    // remain independent of one another
+    task_planner = TaskPlanner(new_task_config);
+    start_time = std::chrono::steady_clock::now();
+    const auto optimal_result = task_planner.optimal_plan(
+      now, initial_states, requests, nullptr);
+    const auto optimal_assignments = std::get_if<
+      TaskPlanner::Assignments>(&optimal_result);
+    const double optimal_cost = task_planner.compute_cost(*optimal_assignments);
+    finish_time = std::chrono::steady_clock::now();
+
+    if (display_solutions)
+    {
+      std::cout << "Optimal solution found in: "
+                << (finish_time - start_time).count() / 1e9 << std::endl;
+      display_solution("Optimal", *optimal_assignments, optimal_cost);
+    }
+
+    REQUIRE(optimal_cost <= greedy_cost);
+    // Here we check that the battery was charged only up to recharge_soc
+    for (const auto& agent : *optimal_assignments)
+    {
+      for (const auto& assignment : agent)
+      {
+        if (std::dynamic_pointer_cast<
+            const rmf_task::requests::ChargeBattery::Description>(
+            assignment.request()->description()))
+        {
+          CHECK(assignment.state().battery_soc() == recharge_soc);
+        }
+      }
+    }
+
   }
 
 }

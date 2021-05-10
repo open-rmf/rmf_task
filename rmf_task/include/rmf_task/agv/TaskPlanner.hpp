@@ -20,12 +20,8 @@
 
 #include <rmf_task/Request.hpp>
 #include <rmf_task/CostCalculator.hpp>
-
-#include <rmf_battery/agv/BatterySystem.hpp>
-#include <rmf_battery/MotionPowerSink.hpp>
-#include <rmf_battery/DevicePowerSink.hpp>
-
-#include <rmf_traffic/agv/Planner.hpp>
+#include <rmf_task/agv/Constraints.hpp>
+#include <rmf_task/agv/Parameters.hpp>
 
 #include <rmf_utils/impl_ptr.hpp>
 
@@ -49,56 +45,30 @@ public:
   public:
     /// Constructor
     ///
-    /// \param[in] battery_system
-    ///   The battery system of the robot
+    /// \param[in] parameters
+    ///   The parameters that describe the agents
     ///
-    /// \param[in] motion_sink
-    ///   The motion sink of the robot. This describes how power gets drained
-    ///   while the robot is moving.
-    ///
-    /// \param[in] ambient_sink
-    ///   The ambient device sink of the robot. This describes how power gets
-    ///   drained at all times from passive use of the robot's electronics.
-    ///
-    /// \param[in] planner
-    ///   The planner for a robot in this fleet
+    /// \param[in] constraints
+    ///   The constraints that apply to the agents
     ///
     /// \param[in] cost_calculator
     ///   An object that tells the planner how to calculate cost
     Configuration(
-      rmf_battery::agv::BatterySystem battery_system,
-      rmf_battery::ConstMotionPowerSinkPtr motion_sink,
-      rmf_battery::ConstDevicePowerSinkPtr ambient_sink,
-      std::shared_ptr<const rmf_traffic::agv::Planner> planner,
+      Parameters parameters,
+      Constraints constraints,
       ConstCostCalculatorPtr cost_calculator);
 
-    /// Get the battery system
-    const rmf_battery::agv::BatterySystem& battery_system() const;
+    /// Get the parameters that describe the agents
+    const Parameters& parameters() const;
 
-    /// Set the battery_system
-    Configuration& battery_system(
-      rmf_battery::agv::BatterySystem battery_system);
+    /// Set the parameters that describe the agents
+    Configuration& parameters(Parameters parameters);
 
-    /// Get the motion sink
-    const rmf_battery::ConstMotionPowerSinkPtr& motion_sink() const;
+    /// Get the constraints that are applicable to the agents
+    const Constraints& constraints() const;
 
-    /// Set the motion_sink
-    Configuration& motion_sink(
-      rmf_battery::ConstMotionPowerSinkPtr motion_sink);
-
-    /// Get the ambient device sink
-    const rmf_battery::ConstDevicePowerSinkPtr& ambient_sink() const;
-
-    /// Set the ambient device sink
-    Configuration& ambient_sink(
-      rmf_battery::ConstDevicePowerSinkPtr ambient_sink);
-
-    /// Get the planner
-    const std::shared_ptr<const rmf_traffic::agv::Planner>& planner() const;
-
-    /// Set the planner
-    Configuration& planner(
-      std::shared_ptr<const rmf_traffic::agv::Planner> planner);
+    /// Set the constraints that are applicable to the agents
+    Configuration& constraints(Constraints constraints);
 
     /// Get the CostCalculator
     const ConstCostCalculatorPtr& cost_calculator() const;
@@ -168,31 +138,29 @@ public:
 
   /// Constructor
   ///
-  /// \param[in] config
+  /// \param[in] configuration
   /// The configuration for the planner
-  TaskPlanner(const Configuration& config);
+  TaskPlanner(const Configuration& configuration);
 
-  /// Get a shared pointer to the configuration of this task planner
-  const Configuration& config() const;
+  /// Get the configuration of this task planner
+  const Configuration& configuration() const;
 
   /// Get the greedy planner based assignments for a set of initial states and
   /// requests
   Result greedy_plan(
     rmf_traffic::Time time_now,
-    std::vector<State> initial_states,
-    std::vector<Constraints> constraints_set,
+    std::vector<State> agents,
     std::vector<ConstRequestPtr> requests);
 
   /// Get the optimal planner based assignments for a set of initial states and
   /// requests
   /// \note When the number of requests exceed 10 for the same start time
   /// segment, this plan may take a while to be generated. Hence, it is
-  /// recommended to call plan() method and use the greedy solution for bidding.
+  /// recommended to call greedy_plan() method and use the greedy solution for bidding.
   /// If a bid is awarded, the optimal solution may be used for assignments.
   Result optimal_plan(
     rmf_traffic::Time time_now,
-    std::vector<State> initial_states,
-    std::vector<Constraints> constraints_set,
+    std::vector<State> agents,
     std::vector<ConstRequestPtr> requests,
     std::function<bool()> interrupter);
 

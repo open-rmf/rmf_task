@@ -18,6 +18,8 @@
 #include "BinaryPriorityCostCalculator.hpp"
 #include "InvariantHeuristicQueue.hpp"
 
+#include <rmf_task/requests/ChargeBattery.hpp>
+
 namespace rmf_task {
 
 //==============================================================================
@@ -25,7 +27,7 @@ auto BinaryPriorityCostCalculator::compute_g_assignment(
   const TaskPlanner::Assignment& assignment) const -> double
 {
   if (std::dynamic_pointer_cast<
-      const rmf_task::requests::ChargeBatteryDescription>(
+      const rmf_task::requests::ChargeBattery::Description>(
       assignment.request()->description()))
   {
     return 0.0; // Ignore charging tasks in cost
@@ -77,9 +79,10 @@ auto BinaryPriorityCostCalculator::compute_h(
   // portion of any of its next tasks
   for (const auto& u : node.unassigned_tasks)
   {
+    const auto invariant_duration = u.second.model->invariant_duration();
     const rmf_traffic::Time earliest_deployment_time =
       u.second.candidates.best_finish_time()
-      - u.second.request->description()->invariant_duration();
+      - invariant_duration;
     const double earliest_deployment_time_s =
       rmf_traffic::time::to_seconds(
       earliest_deployment_time.time_since_epoch());
@@ -162,7 +165,7 @@ bool BinaryPriorityCostCalculator::valid_assignment_priority(
     auto it = agent.begin();
     // We update the iterator such that the first assignment is a non-charging task
     while (std::dynamic_pointer_cast<
-        const rmf_task::requests::ChargeBatteryDescription>(
+        const rmf_task::requests::ChargeBattery::Description>(
         it->assignment.request()->description()))
     {
       ++it;
@@ -175,7 +178,7 @@ bool BinaryPriorityCostCalculator::valid_assignment_priority(
     for (; it != agent.end(); ++it)
     {
       if (std::dynamic_pointer_cast<
-          const rmf_task::requests::ChargeBatteryDescription>(
+          const rmf_task::requests::ChargeBattery::Description>(
           it->assignment.request()->description()))
         continue;
       auto curr_priority = it->assignment.request()->priority();

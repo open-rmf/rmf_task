@@ -19,6 +19,7 @@
 #define RMF_TASK__REQUESTS__CHARGEBATTERY_HPP
 
 #include <string>
+#include <optional>
 
 #include <rmf_traffic/Time.hpp>
 #include <rmf_traffic/agv/Planner.hpp>
@@ -27,8 +28,6 @@
 #include <rmf_battery/MotionPowerSink.hpp>
 #include <rmf_battery/DevicePowerSink.hpp>
 
-#include <rmf_utils/optional.hpp>
-
 #include <rmf_task/agv/State.hpp>
 #include <rmf_task/Request.hpp>
 #include <rmf_task/Estimate.hpp>
@@ -36,54 +35,33 @@
 namespace rmf_task {
 namespace requests {
 
-class ChargeBatteryDescription : public rmf_task::Request::Description
-{
-public:
-
-  static DescriptionPtr make(
-    rmf_battery::agv::BatterySystem battery_system,
-    rmf_battery::ConstMotionPowerSinkPtr motion_sink,
-    rmf_battery::ConstDevicePowerSinkPtr device_sink,
-    std::shared_ptr<const rmf_traffic::agv::Planner> planner,
-    rmf_traffic::Time start_time,
-    bool drain_battery = true);
-
-  rmf_utils::optional<rmf_task::Estimate> estimate_finish(
-    const agv::State& initial_state,
-    const agv::Constraints& task_planning_constraints,
-    const std::shared_ptr<EstimateCache> estimate_cache) const final;
-
-  rmf_traffic::Duration invariant_duration() const final;
-
-  /// Get the battery system in this request
-  const rmf_battery::agv::BatterySystem& battery_system() const;
-
-  /// Retrieve the charge soc which the battery will be charged upto
-  double max_charge_soc() const;
-
-  class Implementation;
-private:
-  ChargeBatteryDescription();
-
-  rmf_utils::impl_ptr<Implementation> _pimpl;
-};
-
 //==============================================================================
 class ChargeBattery
 {
 public:
 
+  class Model;
+
+  class Description : public Request::Description
+  {
+  public:
+
+    static DescriptionPtr make();
+
+    std::shared_ptr<Request::Model> make_model(
+      rmf_traffic::Time earliest_start_time,
+      const agv::Parameters& parameters) const final;
+
+    class Implementation;
+  private:
+    Description();
+    rmf_utils::impl_ptr<Implementation> _pimpl;
+  };
+
   static ConstRequestPtr make(
-    rmf_battery::agv::BatterySystem battery_system,
-    rmf_battery::ConstMotionPowerSinkPtr motion_sink,
-    rmf_battery::ConstDevicePowerSinkPtr device_sink,
-    std::shared_ptr<const rmf_traffic::agv::Planner> planner,
-    rmf_traffic::Time start_time,
-    bool drain_battery = true,
+    rmf_traffic::Time earliest_start_time,
     ConstPriorityPtr priority = nullptr);
 };
-
-using ChargeBatteryDescriptionPtr = std::shared_ptr<ChargeBatteryDescription>;
 
 } // namespace requests
 } // namespace rmf_task

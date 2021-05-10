@@ -25,6 +25,7 @@
 
 namespace rmf_task {
 
+//==============================================================================
 /// This is for a binary prioritization scheme. Tasks are assigned either high priority or low priority.
 class BinaryPriorityScheme
 {

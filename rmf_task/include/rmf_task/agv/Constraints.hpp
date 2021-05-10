@@ -23,6 +23,7 @@
 namespace rmf_task {
 namespace agv {
 
+//==============================================================================
 class Constraints
 {
 public:
@@ -30,16 +31,40 @@ public:
   /// Constructor
   ///
   /// \param[in] threshold_soc
-  ///   Minimum charge level the battery is allowed to deplete to. This
+  ///   Minimum charge level the vehicle is allowed to deplete to. This
   ///   value needs to be between 0.0 and 1.0.
-  Constraints(double threshold_soc);
+  ///
+  /// \param[in] recharge_soc
+  ///   The charge level the vehicle should be recharged to. This
+  ///   value needs to be between 0.0 and 1.0. Default value is 1.0.
+  ///
+  /// \param[in] drain_battery
+  ///   If true, battery drain will be considered during task allocation and
+  ///   ChargeBattery tasks will automatically be included if necessary.
+  Constraints(
+    double threshold_soc,
+    double recharge_soc = 1.0,
+    bool drain_battery = true);
 
-  /// Gets the battery state of charge threshold value.
+  /// Gets the vehicle's state of charge threshold value.
   double threshold_soc() const;
 
-  /// Sets a new battery state of charge threshold value. This value needs to be
+  /// Sets the vehicle's state of charge threshold value. This value needs to be
   /// between 0.0 and 1.0.
   Constraints& threshold_soc(double threshold_soc);
+
+  /// Gets the vehicle's state of charge recharge value.
+  double recharge_soc() const;
+
+  /// Sets the vehicle's recharge state of charge value. This value needs to be
+  /// between 0.0 and 1.0.
+  Constraints& recharge_soc(double recharge_soc);
+
+  /// Get the value of drain_battery
+  bool drain_battery() const;
+
+  /// Set the value of drain_battery
+  Constraints& drain_battery(bool drain_battery);
 
   class Implementation;
 private:
