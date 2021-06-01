@@ -54,6 +54,7 @@ inline void CHECK_TIMES(const TaskPlanner::Assignments& assignments,
     for (std::size_t i = 0; i < agent.size(); ++i)
     {
       CHECK(agent[i].deployment_time() >= now);
+      CHECK(agent[i].state().finish_time() >= agent[i].deployment_time());
       if (i == 0)
         continue;
       CHECK(agent[i].deployment_time() >= agent[i-1].state().finish_time());
@@ -108,12 +109,13 @@ inline void display_solution(
     {
       const auto& s = a.state();
       const double request_seconds =
-        a.request()->earliest_start_time().time_since_epoch().count()/1e9;
+        a.request()->earliest_start_time().time_since_epoch().count();
       const double start_seconds =
-        a.deployment_time().time_since_epoch().count()/1e9;
+        a.deployment_time().time_since_epoch().count();
       const rmf_traffic::Time finish_time = s.finish_time();
-      const double finish_seconds = finish_time.time_since_epoch().count()/1e9;
-      std::cout << "    <" << a.request()->id() << ": " << request_seconds
+      const double finish_seconds = finish_time.time_since_epoch().count();
+      std::cout << std::fixed
+                << "    <" << a.request()->id() << ": " << request_seconds
                 << ", " << start_seconds
                 << ", "<< finish_seconds << ", " << 100* s.battery_soc()
                 << "%>" << std::endl;
@@ -125,7 +127,7 @@ inline void display_solution(
 //==============================================================================
 SCENARIO("Grid World")
 {
-  const bool display_solutions = true;
+  const bool display_solutions = false;
   const int grid_size = 4;
   const double edge_length = 1000;
   const bool drain_battery = true;
@@ -420,6 +422,7 @@ SCENARIO("Grid World")
     REQUIRE(greedy_assignments);
     const double greedy_cost = task_planner.compute_cost(*greedy_assignments);
     auto finish_time = std::chrono::steady_clock::now();
+    CHECK_TIMES(*greedy_assignments, now);
 
     if (display_solutions)
     {
@@ -514,6 +517,7 @@ SCENARIO("Grid World")
     REQUIRE(greedy_assignments);
     const double greedy_cost = task_planner.compute_cost(*greedy_assignments);
     auto finish_time = std::chrono::steady_clock::now();
+    CHECK_TIMES(*greedy_assignments, now);
 
     if (display_solutions)
     {
@@ -680,6 +684,7 @@ SCENARIO("Grid World")
     REQUIRE(greedy_assignments);
     const double greedy_cost = task_planner.compute_cost(*greedy_assignments);
     auto finish_time = std::chrono::steady_clock::now();
+    CHECK_TIMES(*greedy_assignments, now);
 
     if (display_solutions)
     {
@@ -1539,6 +1544,7 @@ SCENARIO("Grid World")
     REQUIRE(greedy_assignments);
     const double greedy_cost = task_planner.compute_cost(*greedy_assignments);
     auto finish_time = std::chrono::steady_clock::now();
+    CHECK_TIMES(*greedy_assignments, now);
 
     if (display_solutions)
     {

@@ -200,9 +200,11 @@ std::shared_ptr<PendingTask> PendingTask::make(
   EstimateCache& estimate_cache,
   TaskPlanner::TaskPlannerError& error)
 {
-
+  const auto earliest_start_time = std::max(
+    start_time,
+    request_->earliest_start_time());
   const auto model = request_->description()->make_model(
-    request_->earliest_start_time(), parameters);
+    earliest_start_time, parameters);
 
   const auto candidates = Candidates::make(start_time, initial_states,
       constraints, parameters, *model, estimate_cache,
