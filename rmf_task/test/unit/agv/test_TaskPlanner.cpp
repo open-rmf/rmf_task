@@ -46,6 +46,22 @@
 using TaskPlanner = rmf_task::agv::TaskPlanner;
 
 //==============================================================================
+inline void CHECK_TIMES(const TaskPlanner::Assignments& assignments,
+  const rmf_traffic::Time now)
+{
+  for (const auto& agent : assignments)
+  {
+    for (std::size_t i = 0; i < agent.size(); ++i)
+    {
+      CHECK(agent[i].deployment_time() >= now);
+      if (i == 0)
+        continue;
+      CHECK(agent[i].deployment_time() >= agent[i-1].state().finish_time());
+    }
+  }
+}
+
+//==============================================================================
 inline bool check_implicit_charging_task_start(
   const TaskPlanner::Assignments& assignments,
   const double initial_soc)
@@ -109,7 +125,7 @@ inline void display_solution(
 //==============================================================================
 SCENARIO("Grid World")
 {
-  const bool display_solutions = false;
+  const bool display_solutions = true;
   const int grid_size = 4;
   const double edge_length = 1000;
   const bool drain_battery = true;
@@ -247,6 +263,7 @@ SCENARIO("Grid World")
     REQUIRE(greedy_assignments);
     const double greedy_cost = task_planner.compute_cost(*greedy_assignments);
     auto finish_time = std::chrono::steady_clock::now();
+    CHECK_TIMES(*greedy_assignments, now);
 
     if (display_solutions)
     {
@@ -265,6 +282,7 @@ SCENARIO("Grid World")
       TaskPlanner::Assignments>(&optimal_result);
     const double optimal_cost = task_planner.compute_cost(*optimal_assignments);
     finish_time = std::chrono::steady_clock::now();
+    CHECK_TIMES(*optimal_assignments, now);
 
     if (display_solutions)
     {
@@ -420,6 +438,7 @@ SCENARIO("Grid World")
       TaskPlanner::Assignments>(&optimal_result);
     const double optimal_cost = task_planner.compute_cost(*optimal_assignments);
     finish_time = std::chrono::steady_clock::now();
+    CHECK_TIMES(*optimal_assignments, now);
 
     if (display_solutions)
     {
@@ -513,6 +532,7 @@ SCENARIO("Grid World")
       TaskPlanner::Assignments>(&optimal_result);
     const double optimal_cost = task_planner.compute_cost(*optimal_assignments);
     finish_time = std::chrono::steady_clock::now();
+    CHECK_TIMES(*optimal_assignments, now);
 
     if (display_solutions)
     {
@@ -678,6 +698,7 @@ SCENARIO("Grid World")
       TaskPlanner::Assignments>(&optimal_result);
     const double optimal_cost = task_planner.compute_cost(*optimal_assignments);
     finish_time = std::chrono::steady_clock::now();
+    CHECK_TIMES(*optimal_assignments, now);
 
     if (display_solutions)
     {
@@ -835,6 +856,7 @@ SCENARIO("Grid World")
     const auto& optimal_assignments = *optimal_assignments_ptr;
     const double optimal_cost = task_planner.compute_cost(optimal_assignments);
     auto finish_time = std::chrono::steady_clock::now();
+    CHECK_TIMES(optimal_assignments, now);
 
     if (display_solutions)
     {
@@ -871,6 +893,7 @@ SCENARIO("Grid World")
     const double new_optimal_cost = task_planner.compute_cost(
       new_optimal_assignments);
     finish_time = std::chrono::steady_clock::now();
+    CHECK_TIMES(new_optimal_assignments, now);
 
     if (display_solutions)
     {
@@ -939,6 +962,7 @@ SCENARIO("Grid World")
     const auto& optimal_assignments = *optimal_assignments_ptr;
     const double optimal_cost = task_planner.compute_cost(optimal_assignments);
     auto finish_time = std::chrono::steady_clock::now();
+    CHECK_TIMES(optimal_assignments, now);
 
     if (display_solutions)
     {
@@ -1015,6 +1039,7 @@ SCENARIO("Grid World")
     const auto& optimal_assignments = *optimal_assignments_ptr;
     const double optimal_cost = task_planner.compute_cost(optimal_assignments);
     auto finish_time = std::chrono::steady_clock::now();
+    CHECK_TIMES(optimal_assignments, now);
 
     if (display_solutions)
     {
@@ -1100,6 +1125,7 @@ SCENARIO("Grid World")
     const auto& optimal_assignments = *optimal_assignments_ptr;
     const double optimal_cost = task_planner.compute_cost(optimal_assignments);
     auto finish_time = std::chrono::steady_clock::now();
+    CHECK_TIMES(optimal_assignments, now);
 
     if (display_solutions)
     {
@@ -1185,6 +1211,7 @@ SCENARIO("Grid World")
     const auto& optimal_assignments = *optimal_assignments_ptr;
     const double optimal_cost = task_planner.compute_cost(optimal_assignments);
     auto finish_time = std::chrono::steady_clock::now();
+    CHECK_TIMES(optimal_assignments, now);
 
     if (display_solutions)
     {
@@ -1253,6 +1280,7 @@ SCENARIO("Grid World")
       const double optimal_cost =
         task_planner.compute_cost(optimal_assignments);
       auto finish_time = std::chrono::steady_clock::now();
+      CHECK_TIMES(optimal_assignments, now);
 
       if (display_solutions)
       {
@@ -1268,9 +1296,7 @@ SCENARIO("Grid World")
       CHECK(agent_0_assignments.front().request()->id() == "4");
       CHECK(agent_1_assignments.front().request()->id() == "3");
     }
-
   }
-
 
   WHEN("Planning for 3 robots and 4 tasks")
   {
@@ -1338,6 +1364,7 @@ SCENARIO("Grid World")
     const auto& optimal_assignments = *optimal_assignments_ptr;
     const double optimal_cost = task_planner.compute_cost(optimal_assignments);
     auto finish_time = std::chrono::steady_clock::now();
+    CHECK_TIMES(optimal_assignments, now);
 
     if (display_solutions)
     {
@@ -1415,6 +1442,7 @@ SCENARIO("Grid World")
       const double optimal_cost =
         task_planner.compute_cost(optimal_assignments);
       auto finish_time = std::chrono::steady_clock::now();
+      CHECK_TIMES(optimal_assignments, now);
 
       if (display_solutions)
       {
@@ -1529,6 +1557,7 @@ SCENARIO("Grid World")
       TaskPlanner::Assignments>(&optimal_result);
     const double optimal_cost = task_planner.compute_cost(*optimal_assignments);
     finish_time = std::chrono::steady_clock::now();
+    CHECK_TIMES(*optimal_assignments, now);
 
     if (display_solutions)
     {
@@ -1550,6 +1579,65 @@ SCENARIO("Grid World")
           CHECK(assignment.state().battery_soc() == recharge_soc);
         }
       }
+    }
+
+  }
+
+  WHEN("Start times for requests are earlier than now")
+  {
+
+    const auto now = std::chrono::steady_clock::now();
+    const double default_orientation = 0.0;
+
+    rmf_traffic::agv::Plan::Start first_location{now, 13, default_orientation};
+
+    std::vector<rmf_task::agv::State> initial_states =
+    {
+      rmf_task::agv::State{first_location, 13, 1.0},
+    };
+
+    const auto start_time =
+      std::chrono::steady_clock::time_point::min();
+
+    std::vector<rmf_task::ConstRequestPtr> requests =
+    {
+      rmf_task::requests::Loop::make(
+        0,
+        15,
+        1,
+        "Loop1",
+        start_time),
+      rmf_task::requests::Loop::make(
+        0,
+        1,
+        1,
+        "Loop2",
+        start_time),
+      rmf_task::requests::Loop::make(
+        3,
+        4,
+        1,
+        "Loop3",
+        start_time),
+    };
+
+    TaskPlanner task_planner(task_config);
+
+    const auto optimal_result = task_planner.optimal_plan(
+      now, initial_states, requests, nullptr);
+    const auto optimal_assignments_ptr = std::get_if<
+      TaskPlanner::Assignments>(&optimal_result);
+    REQUIRE(optimal_assignments_ptr);
+    const auto& optimal_assignments = *optimal_assignments_ptr;
+    const double optimal_cost = task_planner.compute_cost(optimal_assignments);
+    auto finish_time = std::chrono::steady_clock::now();
+    CHECK_TIMES(optimal_assignments, now);
+
+    if (display_solutions)
+    {
+      std::cout << "Optimal solution found in: "
+                << (finish_time - start_time).count() / 1e9 << std::endl;
+      display_solution("Optimal", optimal_assignments, optimal_cost);
     }
 
   }
