@@ -1,5 +1,9 @@
 name: tsan
-on: [push, pull_request]
+on: 
+  pull_request:
+  schedule:
+    - cron: '31 0 * * *'
+
 jobs:
   tsan:
     name: tsan
