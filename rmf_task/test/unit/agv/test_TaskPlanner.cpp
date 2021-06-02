@@ -1708,28 +1708,28 @@ SCENARIO("Grid World")
 
     TaskPlanner task_planner(new_task_config);
 
-  auto start_time = std::chrono::steady_clock::now();
-  const auto optimal_result = task_planner.optimal_plan(
-    now, initial_states, requests, nullptr);
-  auto finish_time = std::chrono::steady_clock::now();
-  const auto optimal_assignments_ptr = std::get_if<
-    TaskPlanner::Assignments>(&optimal_result);
-  REQUIRE(optimal_assignments_ptr);
-  const auto& optimal_assignments = *optimal_assignments_ptr;
-  const double optimal_cost = task_planner.compute_cost(optimal_assignments);
-  REQUIRE((!optimal_assignments.empty() && !optimal_assignments[0].empty()));
-  const auto& first_assignment = optimal_assignments[0][0];
-  CHECK(std::dynamic_pointer_cast<
-            const rmf_task::requests::ChargeBattery::Description>(
-            first_assignment.request()->description()));
-  CHECK_TIMES(optimal_assignments, now);
+    auto start_time = std::chrono::steady_clock::now();
+    const auto optimal_result = task_planner.optimal_plan(
+      now, initial_states, requests, nullptr);
+    auto finish_time = std::chrono::steady_clock::now();
+    const auto optimal_assignments_ptr = std::get_if<
+      TaskPlanner::Assignments>(&optimal_result);
+    REQUIRE(optimal_assignments_ptr);
+    const auto& optimal_assignments = *optimal_assignments_ptr;
+    const double optimal_cost = task_planner.compute_cost(optimal_assignments);
+    REQUIRE((!optimal_assignments.empty() && !optimal_assignments[0].empty()));
+    const auto& first_assignment = optimal_assignments[0][0];
+    CHECK(std::dynamic_pointer_cast<
+        const rmf_task::requests::ChargeBattery::Description>(
+        first_assignment.request()->description()));
+    CHECK_TIMES(optimal_assignments, now);
 
-  if (display_solutions)
-  {
-    std::cout << "Optimal solution found in: "
-              << (finish_time - start_time).count() / 1e9 << std::endl;
-    display_solution("Optimal", optimal_assignments, optimal_cost);
-  }
+    if (display_solutions)
+    {
+      std::cout << "Optimal solution found in: "
+                << (finish_time - start_time).count() / 1e9 << std::endl;
+      display_solution("Optimal", optimal_assignments, optimal_cost);
+    }
 
   }
 
