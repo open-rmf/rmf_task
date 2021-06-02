@@ -1589,9 +1589,8 @@ SCENARIO("Grid World")
 
   }
 
-  WHEN("Start times for requests are earlier than now")
+  WHEN("start_time for requests are earlier than time_now")
   {
-
     const auto now = std::chrono::steady_clock::now();
     const double default_orientation = 0.0;
 
@@ -1645,6 +1644,92 @@ SCENARIO("Grid World")
                 << (finish_time - start_time).count() / 1e9 << std::endl;
       display_solution("Optimal", optimal_assignments, optimal_cost);
     }
+
+  }
+
+  WHEN("start_time for requests are earlier than time_now and low battery")
+  {
+    const auto now = std::chrono::steady_clock::now();
+    const double default_orientation = 0.0;
+    const double initial_soc = 0.3;
+    const double recharge_soc = 1.0;
+    rmf_task::agv::Constraints new_constraints{0.2, recharge_soc,
+      drain_battery};
+    rmf_task::agv::TaskPlanner::Configuration new_task_config{
+      parameters,
+      new_constraints,
+      cost_calculator};
+
+    rmf_traffic::agv::Plan::Start first_location{now, 13, default_orientation};
+
+    std::vector<rmf_task::agv::State> initial_states =
+    {
+      rmf_task::agv::State{first_location, 13, initial_soc},
+    };
+
+    std::vector<rmf_task::ConstRequestPtr> requests =
+    {
+      rmf_task::requests::Delivery::make(
+        0,
+        "dispenser",
+        3,
+        "ingestor",
+        {},
+        "1",
+        now + rmf_traffic::time::from_seconds(0)),
+
+      rmf_task::requests::Delivery::make(
+        15,
+        "dispenser",
+        2,
+        "ingestor",
+        {},
+        "2",
+        now + rmf_traffic::time::from_seconds(0)),
+
+      rmf_task::requests::Delivery::make(
+        9,
+        "dispenser",
+        4,
+        "ingestor",
+        {},
+        "3",
+        now + rmf_traffic::time::from_seconds(0)),
+
+      rmf_task::requests::Delivery::make(
+        8,
+        "dispenser",
+        11,
+        "ingestor",
+        {},
+        "4",
+        now + rmf_traffic::time::from_seconds(50000))
+    };
+
+    TaskPlanner task_planner(new_task_config);
+
+  auto start_time = std::chrono::steady_clock::now();
+  const auto optimal_result = task_planner.optimal_plan(
+    now, initial_states, requests, nullptr);
+  auto finish_time = std::chrono::steady_clock::now();
+  const auto optimal_assignments_ptr = std::get_if<
+    TaskPlanner::Assignments>(&optimal_result);
+  REQUIRE(optimal_assignments_ptr);
+  const auto& optimal_assignments = *optimal_assignments_ptr;
+  const double optimal_cost = task_planner.compute_cost(optimal_assignments);
+  REQUIRE((!optimal_assignments.empty() && !optimal_assignments[0].empty()));
+  const auto& first_assignment = optimal_assignments[0][0];
+  CHECK(std::dynamic_pointer_cast<
+            const rmf_task::requests::ChargeBattery::Description>(
+            first_assignment.request()->description()));
+  CHECK_TIMES(optimal_assignments, now);
+
+  if (display_solutions)
+  {
+    std::cout << "Optimal solution found in: "
+              << (finish_time - start_time).count() / 1e9 << std::endl;
+    display_solution("Optimal", optimal_assignments, optimal_cost);
+  }
 
   }
 
