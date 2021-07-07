@@ -5,6 +5,7 @@
   <version>0.1.0</version>
   <description>Package for managing tasks in the Robotics Middleware Framework</description>
   <maintainer email="yadunund@openrobotics.org">Yadunund</maintainer>
+  <maintainer email="marco@openrobotics.org">Marco A. Gutiérrez</maintainer>
   <license>Apache License 2.0</license>
   <author>Aaron</author>
   <author>Yadunund</author>
