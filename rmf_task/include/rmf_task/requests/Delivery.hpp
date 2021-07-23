@@ -93,7 +93,8 @@ public:
     std::vector<DispenserRequestItem> items,
     const std::string& id,
     rmf_traffic::Time earliest_start_time,
-    ConstPriorityPtr priority = nullptr);
+    ConstPriorityPtr priority = nullptr,
+    bool automatic = false);
 };
 
 } // namespace requests

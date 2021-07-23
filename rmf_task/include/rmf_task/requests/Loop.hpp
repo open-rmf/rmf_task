@@ -79,7 +79,8 @@ public:
     std::size_t num_loops,
     const std::string& id,
     rmf_traffic::Time earliest_start_time,
-    ConstPriorityPtr priority = nullptr);
+    ConstPriorityPtr priority = nullptr,
+    bool automatic = false);
 };
 
 } // namespace tasks

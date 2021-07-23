@@ -347,7 +347,8 @@ ConstRequestPtr Loop::make(
   std::size_t num_loops,
   const std::string& id,
   rmf_traffic::Time earliest_start_time,
-  ConstPriorityPtr priority)
+  ConstPriorityPtr priority,
+  bool automatic)
 {
   const auto description = Description::make(
     start_waypoint,
@@ -355,7 +356,7 @@ ConstRequestPtr Loop::make(
     num_loops);
 
   return std::make_shared<Request>(
-    id, earliest_start_time, std::move(priority), description);
+    id, earliest_start_time, std::move(priority), description, automatic);
 
 }
 

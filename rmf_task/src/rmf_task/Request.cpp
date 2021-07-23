@@ -27,6 +27,7 @@ public:
   rmf_traffic::Time earliest_start_time;
   rmf_task::ConstPriorityPtr priority;
   DescriptionPtr description;
+  bool automatic;
 };
 
 //==============================================================================
@@ -34,13 +35,15 @@ Request::Request(
   const std::string& id,
   rmf_traffic::Time earliest_start_time,
   ConstPriorityPtr priority,
-  DescriptionPtr description)
+  DescriptionPtr description,
+  bool automatic)
 : _pimpl(rmf_utils::make_impl<Implementation>(
       Implementation {
         id,
         earliest_start_time,
         std::move(priority),
-        std::move(description)
+        std::move(description),
+        automatic
       }))
 {
   // Do nothing
@@ -68,6 +71,12 @@ ConstPriorityPtr Request::priority() const
 const Request::DescriptionPtr& Request::description() const
 {
   return _pimpl->description;
+}
+
+//==============================================================================
+bool Request::automatic() const
+{
+  return _pimpl->automatic;
 }
 
 } // namespace rmf_task

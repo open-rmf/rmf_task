@@ -333,7 +333,8 @@ ConstRequestPtr Clean::make(
   const rmf_traffic::Trajectory& cleaning_path,
   const std::string& id,
   rmf_traffic::Time earliest_start_time,
-  ConstPriorityPtr priority)
+  ConstPriorityPtr priority,
+  bool automatic)
 {
   const auto description = Clean::Description::make(
     start_waypoint,
@@ -341,7 +342,7 @@ ConstRequestPtr Clean::make(
     cleaning_path);
 
   return std::make_shared<Request>(
-    id, earliest_start_time, priority, description);
+    id, earliest_start_time, priority, description, automatic);
 }
 
 } // namespace requests

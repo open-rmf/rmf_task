@@ -60,7 +60,8 @@ public:
 
   static ConstRequestPtr make(
     rmf_traffic::Time earliest_start_time,
-    ConstPriorityPtr priority = nullptr);
+    ConstPriorityPtr priority = nullptr,
+    bool automatic = true);
 };
 
 } // namespace requests

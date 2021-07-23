@@ -220,14 +220,15 @@ std::shared_ptr<Request::Model> ChargeBattery::Description::make_model(
 //==============================================================================
 ConstRequestPtr ChargeBattery::make(
   rmf_traffic::Time earliest_start_time,
-  ConstPriorityPtr priority)
+  ConstPriorityPtr priority,
+  bool automatic)
 {
 
   std::string id = "Charge" + generate_uuid();
   const auto description = Description::make();
 
   return std::make_shared<Request>(
-    id, earliest_start_time, priority, description);
+    id, earliest_start_time, priority, description, automatic);
 
 }
 

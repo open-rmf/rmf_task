@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef RMF_TASK__TASK_HPP
-#define RMF_TASK__TASK_HPP
+#ifndef RMF_TASK__REQUEST_HPP
+#define RMF_TASK__REQUEST_HPP
 
 #include <memory>
 
@@ -82,7 +82,8 @@ public:
     const std::string& id,
     rmf_traffic::Time earliest_start_time,
     ConstPriorityPtr priority,
-    DescriptionPtr description);
+    DescriptionPtr description,
+    bool automatic = false);
 
   /// The unique id for this request
   const std::string& id() const;
@@ -95,6 +96,9 @@ public:
 
   /// Get the description of this request
   const DescriptionPtr& description() const;
+
+  // Returns true if this request was automatically generated
+  bool automatic() const;
 
   class Implementation;
 private:

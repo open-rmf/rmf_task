@@ -19,6 +19,7 @@
 #define RMF_TASK__AGV__TASKPLANNER_HPP
 
 #include <rmf_task/Request.hpp>
+#include <rmf_task/RequestFactory.hpp>
 #include <rmf_task/CostCalculator.hpp>
 #include <rmf_task/agv/Constraints.hpp>
 #include <rmf_task/agv/Parameters.hpp>
@@ -150,7 +151,8 @@ public:
   Result greedy_plan(
     rmf_traffic::Time time_now,
     std::vector<State> agents,
-    std::vector<ConstRequestPtr> requests);
+    std::vector<ConstRequestPtr> requests,
+    ConstRequestFactoryPtr finishing_request = nullptr);
 
   /// Get the optimal planner based assignments for a set of initial states and
   /// requests
@@ -162,7 +164,8 @@ public:
     rmf_traffic::Time time_now,
     std::vector<State> agents,
     std::vector<ConstRequestPtr> requests,
-    std::function<bool()> interrupter);
+    std::function<bool()> interrupter,
+    ConstRequestFactoryPtr finishing_request = nullptr);
 
   /// Compute the cost of a set of assignments
   double compute_cost(const Assignments& assignments) const;

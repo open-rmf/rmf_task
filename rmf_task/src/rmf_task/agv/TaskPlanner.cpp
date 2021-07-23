@@ -352,11 +352,41 @@ public:
     return node;
   }
 
+  void append_finishing_request(
+    const RequestFactory& factory,
+    TaskPlanner::Assignments& complete_assignments)
+  {
+    for (auto& agent : complete_assignments)
+    {
+      const auto& state = agent.back().state();
+      const auto request = factory.make_request(state);
+      std::vector<State> agents;
+      agents.push_back(state);
+      const auto result = complete_solve(
+        state.finish_time(),
+        agents,
+        {request},
+        nullptr,
+        nullptr,
+        false);
+
+      const auto assignments = std::get_if<TaskPlanner::Assignments>(&result);
+      if (assignments != nullptr)
+      {
+        for (const auto& assignment : (*assignments)[0])
+        {
+          agent.push_back(assignment);
+        }
+      }
+    }
+  }
+
   Result complete_solve(
     rmf_traffic::Time time_now,
     std::vector<State>& initial_states,
     const std::vector<ConstRequestPtr>& requests,
     const std::function<bool()> interrupter,
+    ConstRequestFactoryPtr finishing_request,
     bool greedy)
   {
 
@@ -438,6 +468,13 @@ public:
       if (!node)
         return error;
       initial_states = estimates;
+    }
+
+    // If a finishing_request is present, accommodate the request at the end of
+    // the assignments for each agent
+    if (finishing_request != nullptr)
+    {
+      append_finishing_request(*finishing_request, complete_assignments);
     }
 
     return complete_assignments;
@@ -938,13 +975,15 @@ TaskPlanner::TaskPlanner(
 auto TaskPlanner::greedy_plan(
   rmf_traffic::Time time_now,
   std::vector<State> agents,
-  std::vector<ConstRequestPtr> requests) -> Result
+  std::vector<ConstRequestPtr> requests,
+  ConstRequestFactoryPtr finishing_request) -> Result
 {
   return _pimpl->complete_solve(
     time_now,
     agents,
     requests,
     nullptr,
+    finishing_request,
     true);
 }
 
@@ -953,13 +992,15 @@ auto TaskPlanner::optimal_plan(
   rmf_traffic::Time time_now,
   std::vector<State> agents,
   std::vector<ConstRequestPtr> requests,
-  std::function<bool()> interrupter) -> Result
+  std::function<bool()> interrupter,
+  ConstRequestFactoryPtr finishing_request) -> Result
 {
   return _pimpl->complete_solve(
     time_now,
     agents,
     requests,
     interrupter,
+    finishing_request,
     false);
 }
 
