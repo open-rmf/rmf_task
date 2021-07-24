@@ -1783,7 +1783,8 @@ SCENARIO("Grid World")
         TaskPlanner::Assignments>(&optimal_result);
       REQUIRE(optimal_assignments_ptr);
       const auto& optimal_assignments = *optimal_assignments_ptr;
-      const double optimal_cost = task_planner.compute_cost(optimal_assignments);
+      const double optimal_cost =
+        task_planner.compute_cost(optimal_assignments);
       auto finish_time = std::chrono::steady_clock::now();
       CHECK_TIMES(optimal_assignments, now);
 
@@ -1818,7 +1819,8 @@ SCENARIO("Grid World")
         TaskPlanner::Assignments>(&optimal_result);
       REQUIRE(optimal_assignments_ptr);
       const auto& optimal_assignments = *optimal_assignments_ptr;
-      const double optimal_cost = task_planner.compute_cost(optimal_assignments);
+      const double optimal_cost =
+        task_planner.compute_cost(optimal_assignments);
       auto finish_time = std::chrono::steady_clock::now();
       CHECK_TIMES(optimal_assignments, now);
 
@@ -1889,7 +1891,8 @@ SCENARIO("Grid World")
         TaskPlanner::Assignments>(&optimal_result);
       REQUIRE(optimal_assignments_ptr);
       const auto& optimal_assignments = *optimal_assignments_ptr;
-      const double optimal_cost = task_planner.compute_cost(optimal_assignments);
+      const double optimal_cost =
+        task_planner.compute_cost(optimal_assignments);
       auto finish_time = std::chrono::steady_clock::now();
       CHECK_TIMES(optimal_assignments, now);
 
@@ -1922,7 +1925,8 @@ SCENARIO("Grid World")
         TaskPlanner::Assignments>(&optimal_result);
       REQUIRE(optimal_assignments_ptr);
       const auto& optimal_assignments = *optimal_assignments_ptr;
-      const double optimal_cost = task_planner.compute_cost(optimal_assignments);
+      const double optimal_cost =
+        task_planner.compute_cost(optimal_assignments);
       auto finish_time = std::chrono::steady_clock::now();
       CHECK_TIMES(optimal_assignments, now);
 

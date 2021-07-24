@@ -371,7 +371,7 @@ public:
         state.finish_time(),
         config.parameters());
       auto estimate = model->estimate_finish(
-          state, config.constraints(), *estimate_cache);
+        state, config.constraints(), *estimate_cache);
       if (estimate.has_value())
       {
         agent.push_back(
@@ -390,11 +390,11 @@ public:
           make_charging_request(state.finish_time());
         const auto charge_battery_model =
           charging_request->description()->make_model(
-            state.finish_time(),
-            config.parameters());
+          state.finish_time(),
+          config.parameters());
         const auto charge_battery_estimate =
           charge_battery_model->estimate_finish(
-            state, config.constraints(), *estimate_cache);
+          state, config.constraints(), *estimate_cache);
         if (charge_battery_estimate.has_value())
         {
           model = request->description()->make_model(
