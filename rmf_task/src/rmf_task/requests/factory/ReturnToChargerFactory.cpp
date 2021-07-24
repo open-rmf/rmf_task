@@ -18,6 +18,8 @@
 #include <rmf_task/requests/factory/ReturnToChargerFactory.hpp>
 #include <rmf_task/requests/Loop.hpp>
 
+#include <random>
+
 namespace rmf_task {
 namespace requests {
 
@@ -57,7 +59,7 @@ ReturnToChargerFactory::ReturnToChargerFactory()
 
 //==============================================================================
 ConstRequestPtr ReturnToChargerFactory::make_request(
-  const agv::State& state)
+  const agv::State& state) const
 {
   std::string id = "ReturnToCharger" + generate_uuid();
   const auto start_waypoint = state.location().waypoint();

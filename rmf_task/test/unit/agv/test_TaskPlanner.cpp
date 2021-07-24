@@ -23,6 +23,9 @@
 #include <rmf_task/requests/ChargeBattery.hpp>
 #include <rmf_task/requests/Loop.hpp>
 
+#include <rmf_task/requests/factory/ChargeBatteryFactory.hpp>
+#include <rmf_task/requests/factory/ReturnToChargerFactory.hpp>
+
 #include <rmf_task/BinaryPriorityScheme.hpp>
 
 #include <rmf_traffic/agv/Graph.hpp>
@@ -1731,6 +1734,214 @@ SCENARIO("Grid World")
       display_solution("Optimal", optimal_assignments, optimal_cost);
     }
 
+  }
+
+  WHEN("Planning without and with ChargeBatteryFactory")
+  {
+    const auto now = std::chrono::steady_clock::now();
+    const double default_orientation = 0.0;
+
+    rmf_traffic::agv::Plan::Start first_location{now, 13, default_orientation};
+    rmf_traffic::agv::Plan::Start second_location{now, 1, default_orientation};
+
+    std::vector<rmf_task::agv::State> initial_states =
+    {
+      rmf_task::agv::State{first_location, 13, 1.0},
+      rmf_task::agv::State{second_location, 1, 1.0},
+    };
+
+    std::vector<rmf_task::ConstRequestPtr> requests =
+    {
+      rmf_task::requests::Loop::make(
+        0,
+        15,
+        1,
+        "Loop1",
+        now),
+      rmf_task::requests::Loop::make(
+        0,
+        14,
+        1,
+        "Loop2",
+        now),
+      rmf_task::requests::Loop::make(
+        3,
+        4,
+        1,
+        "Loop3",
+        now),
+    };
+
+    TaskPlanner task_planner(task_config);
+
+    THEN("When ChargeBatteryFactory is not supplied during planning")
+    {
+      auto start_time = std::chrono::steady_clock::now();
+      const auto optimal_result = task_planner.optimal_plan(
+        now, initial_states, requests, nullptr);
+      const auto optimal_assignments_ptr = std::get_if<
+        TaskPlanner::Assignments>(&optimal_result);
+      REQUIRE(optimal_assignments_ptr);
+      const auto& optimal_assignments = *optimal_assignments_ptr;
+      const double optimal_cost = task_planner.compute_cost(optimal_assignments);
+      auto finish_time = std::chrono::steady_clock::now();
+      CHECK_TIMES(optimal_assignments, now);
+
+      if (display_solutions)
+      {
+        std::cout << "Optimal solution found in: "
+                  << (finish_time - start_time).count() / 1e9 << std::endl;
+        display_solution("Optimal", optimal_assignments, optimal_cost);
+      }
+
+      // Check that the last assignment for each agent is a charging task
+      for (const auto& agent : optimal_assignments)
+      {
+        const auto last_assignment = agent.back();
+        auto is_charge_request =
+          std::dynamic_pointer_cast<
+          const rmf_task::requests::ChargeBattery::Description>(
+          last_assignment.request()->description());
+        CHECK_FALSE(is_charge_request);
+      }
+    }
+
+    THEN("When ChargeBatteryFactory is supplied during planning")
+    {
+      const auto finishing_request =
+        std::make_shared<rmf_task::requests::ChargeBatteryFactory>();
+
+      auto start_time = std::chrono::steady_clock::now();
+      const auto optimal_result = task_planner.optimal_plan(
+        now, initial_states, requests, nullptr, finishing_request);
+      const auto optimal_assignments_ptr = std::get_if<
+        TaskPlanner::Assignments>(&optimal_result);
+      REQUIRE(optimal_assignments_ptr);
+      const auto& optimal_assignments = *optimal_assignments_ptr;
+      const double optimal_cost = task_planner.compute_cost(optimal_assignments);
+      auto finish_time = std::chrono::steady_clock::now();
+      CHECK_TIMES(optimal_assignments, now);
+
+      if (display_solutions)
+      {
+        std::cout << "Optimal solution found in: "
+                  << (finish_time - start_time).count() / 1e9 << std::endl;
+        display_solution("Optimal", optimal_assignments, optimal_cost);
+      }
+
+      // Check that the last assignment for each agent is a charging task
+      for (const auto& agent : optimal_assignments)
+      {
+        const auto last_assignment = agent.back();
+        auto is_charge_request =
+          std::dynamic_pointer_cast<
+          const rmf_task::requests::ChargeBattery::Description>(
+          last_assignment.request()->description());
+        CHECK(is_charge_request);
+      }
+    }
+  }
+
+  WHEN("Planning without and with ReturnToChargerFactory")
+  {
+    const auto now = std::chrono::steady_clock::now();
+    const double default_orientation = 0.0;
+
+    rmf_traffic::agv::Plan::Start first_location{now, 13, default_orientation};
+    rmf_traffic::agv::Plan::Start second_location{now, 1, default_orientation};
+
+    std::vector<rmf_task::agv::State> initial_states =
+    {
+      rmf_task::agv::State{first_location, 13, 1.0},
+      rmf_task::agv::State{second_location, 1, 1.0},
+    };
+
+    std::vector<rmf_task::ConstRequestPtr> requests =
+    {
+      rmf_task::requests::Loop::make(
+        0,
+        15,
+        1,
+        "Loop1",
+        now),
+      rmf_task::requests::Loop::make(
+        0,
+        14,
+        1,
+        "Loop2",
+        now),
+      rmf_task::requests::Loop::make(
+        3,
+        4,
+        1,
+        "Loop3",
+        now),
+    };
+
+    TaskPlanner task_planner(task_config);
+
+    THEN("When ReturnToChargerFactory is not supplied during planning")
+    {
+      auto start_time = std::chrono::steady_clock::now();
+      const auto optimal_result = task_planner.optimal_plan(
+        now, initial_states, requests, nullptr);
+      const auto optimal_assignments_ptr = std::get_if<
+        TaskPlanner::Assignments>(&optimal_result);
+      REQUIRE(optimal_assignments_ptr);
+      const auto& optimal_assignments = *optimal_assignments_ptr;
+      const double optimal_cost = task_planner.compute_cost(optimal_assignments);
+      auto finish_time = std::chrono::steady_clock::now();
+      CHECK_TIMES(optimal_assignments, now);
+
+      if (display_solutions)
+      {
+        std::cout << "Optimal solution found in: "
+                  << (finish_time - start_time).count() / 1e9 << std::endl;
+        display_solution("Optimal", optimal_assignments, optimal_cost);
+      }
+
+      // Check that the last assignment for each agent is a charging task
+      for (const auto& agent : optimal_assignments)
+      {
+        const auto last_assignment = agent.back();
+        CHECK_FALSE(last_assignment.request()->automatic());
+        const auto& state = last_assignment.state();
+        CHECK_FALSE(state.location().waypoint() == state.charging_waypoint());
+      }
+    }
+
+    THEN("When ReturnToChargerFactory is supplied during planning")
+    {
+      const auto finishing_request =
+        std::make_shared<rmf_task::requests::ReturnToChargerFactory>();
+
+      auto start_time = std::chrono::steady_clock::now();
+      const auto optimal_result = task_planner.optimal_plan(
+        now, initial_states, requests, nullptr, finishing_request);
+      const auto optimal_assignments_ptr = std::get_if<
+        TaskPlanner::Assignments>(&optimal_result);
+      REQUIRE(optimal_assignments_ptr);
+      const auto& optimal_assignments = *optimal_assignments_ptr;
+      const double optimal_cost = task_planner.compute_cost(optimal_assignments);
+      auto finish_time = std::chrono::steady_clock::now();
+      CHECK_TIMES(optimal_assignments, now);
+
+      if (display_solutions)
+      {
+        std::cout << "Optimal solution found in: "
+                  << (finish_time - start_time).count() / 1e9 << std::endl;
+        display_solution("Optimal", optimal_assignments, optimal_cost);
+      }
+
+      // Check that the last assignment for each agent is a charging task
+      for (const auto& agent : optimal_assignments)
+      {
+        const auto last_assignment = agent.back();
+        CHECK(last_assignment.request()->automatic());
+        const auto& state = last_assignment.state();
+        CHECK(state.location().waypoint() == state.charging_waypoint());
+      }
+    }
   }
 
 }

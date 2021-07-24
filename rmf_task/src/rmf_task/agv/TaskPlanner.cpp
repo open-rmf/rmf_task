@@ -360,22 +360,67 @@ public:
     {
       const auto& state = agent.back().state();
       const auto request = factory.make_request(state);
-      std::vector<State> agents;
-      agents.push_back(state);
-      const auto result = complete_solve(
-        state.finish_time(),
-        agents,
-        {request},
-        nullptr,
-        nullptr,
-        false);
 
-      const auto assignments = std::get_if<TaskPlanner::Assignments>(&result);
-      if (assignments != nullptr)
+      // TODO(YV) Currently we are unable to recursively call complete_solve()
+      // here as the prune_assignments() function will remove any ChargeBattery
+      // requests at the back of the assignments. But the finishing factory
+      // could be a ChargeBattery request and hence this approach does not work.
+      // When we fix the logic with unnecessary ChargeBattery tasks, we should
+      // revist making this a recursive call.
+      auto model = request->description()->make_model(
+        state.finish_time(),
+        config.parameters());
+      auto estimate = model->estimate_finish(
+          state, config.constraints(), *estimate_cache);
+      if (estimate.has_value())
       {
-        for (const auto& assignment : (*assignments)[0])
+        agent.push_back(
+          Assignment
+          {
+            request,
+            estimate.value().finish_state(),
+            estimate.value().wait_until()
+          });
+      }
+      else
+      {
+        // Insufficient battery to perform the finishing request. We check if
+        // adding a ChargeBattery task before will allow for it to be performed
+        const auto charging_request =
+          make_charging_request(state.finish_time());
+        const auto charge_battery_model =
+          charging_request->description()->make_model(
+            state.finish_time(),
+            config.parameters());
+        const auto charge_battery_estimate =
+          charge_battery_model->estimate_finish(
+            state, config.constraints(), *estimate_cache);
+        if (charge_battery_estimate.has_value())
         {
-          agent.push_back(assignment);
+          model = request->description()->make_model(
+            charge_battery_estimate.value().finish_state().finish_time(),
+            config.parameters());
+          estimate = model->estimate_finish(
+            charge_battery_estimate.value().finish_state(),
+            config.constraints(),
+            *estimate_cache);
+          if (estimate.has_value())
+          {
+            // Append the ChargeBattery and finishing request
+            agent.push_back(
+              Assignment{
+                charging_request,
+                charge_battery_estimate.value().finish_state(),
+                charge_battery_estimate.value().wait_until()
+              });
+            agent.push_back(
+              Assignment
+              {
+                request,
+                estimate.value().finish_state(),
+                estimate.value().wait_until()
+              });
+          }
         }
       }
     }
@@ -440,7 +485,13 @@ public:
 
       if (node->unassigned_tasks.empty())
       {
-        return prune_assignments(complete_assignments);
+        auto pruned_assignments = prune_assignments(complete_assignments);
+        if (finishing_request != nullptr)
+        {
+          append_finishing_request(*finishing_request, pruned_assignments);
+        }
+
+        return pruned_assignments;
       }
 
       std::vector<ConstRequestPtr> new_tasks;

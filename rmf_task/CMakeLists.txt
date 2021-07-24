@@ -33,6 +33,7 @@ find_package(rmf_cmake_uncrustify QUIET)
 file(GLOB lib_srcs
   "src/rmf_task/agv/*.cpp"
   "src/rmf_task/requests/*.cpp"
+  "src/rmf_task/requests/factory/*.cpp"
   "src/rmf_task/*.cpp"
 )
 
@@ -73,7 +74,7 @@ if(BUILD_TESTING AND ament_cmake_catch2_FOUND AND rmf_cmake_uncrustify_FOUND)
       ${rmf_dispenser_msgs_INCLUDE_DIRS}
   )
 
-  find_file(uncrustify_config_file 
+  find_file(uncrustify_config_file
     NAMES "rmf_code_style.cfg"
     PATHS "${rmf_utils_DIR}/../../../share/rmf_utils/")
 
