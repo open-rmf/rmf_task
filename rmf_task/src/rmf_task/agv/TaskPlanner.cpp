@@ -358,6 +358,11 @@ public:
   {
     for (auto& agent : complete_assignments)
     {
+      if (agent.empty())
+      {
+        continue;
+      }
+
       const auto& state = agent.back().state();
       const auto request = factory.make_request(state);
 
