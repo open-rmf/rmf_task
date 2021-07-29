@@ -165,7 +165,13 @@ ChargeBattery::Model::estimate_finish(
   }
 
   double delta_soc = recharge_soc - battery_soc;
-  assert(delta_soc >= 0.0);
+  if (delta_soc <= 1e-3)
+  {
+    // The robot's battery level when it reaches the charger is greater than
+    // the specified battery level the robot should be charged up to. Hence, we
+    // do not need a ChargeBattery task.
+    return std::nullopt;
+  }
   double time_to_charge =
     (3600 * delta_soc * _parameters.battery_system().capacity()) /
     _parameters.battery_system().charging_current();
