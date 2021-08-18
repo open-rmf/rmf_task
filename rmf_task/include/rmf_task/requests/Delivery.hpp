@@ -32,8 +32,6 @@
 #include <rmf_task/Request.hpp>
 #include <rmf_task/Estimate.hpp>
 
-#include <rmf_dispenser_msgs/msg/dispenser_request_item.hpp>
-
 namespace rmf_task {
 namespace requests {
 
@@ -48,15 +46,13 @@ public:
   {
   public:
 
-    using DispenserRequestItem = rmf_dispenser_msgs::msg::DispenserRequestItem;
     using Start = rmf_traffic::agv::Planner::Start;
 
     static DescriptionPtr make(
       std::size_t pickup_waypoint,
-      std::string pickup_dispenser,
+      rmf_traffic::Duration pickup_duration,
       std::size_t dropoff_waypoint,
-      std::string dropoff_ingestor,
-      std::vector<DispenserRequestItem> items);
+      rmf_traffic::Duration dropoff_duration);
 
     std::shared_ptr<Request::Model> make_model(
       rmf_traffic::Time earliest_start_time,
@@ -65,17 +61,14 @@ public:
     /// Get the pickup waypoint in this request
     std::size_t pickup_waypoint() const;
 
-    /// Get the name of the dispenser at the pickup waypoint
-    const std::string& pickup_dispenser() const;
+    /// Get the duration over which delivery items are loaded
+    rmf_traffic::Duration pickup_wait() const;
 
     /// Get the dropoff waypoint in this request
     std::size_t dropoff_waypoint() const;
 
-    /// Get the name of the ingestor at the dropoff waypoint
-    const std::string& dropoff_ingestor() const;
-
-    /// Get the list of dispenser request items in this request
-    const std::vector<DispenserRequestItem>&  items() const;
+    /// Get the duration over which delivery items are unloaded
+    rmf_traffic::Duration dropoff_wait() const;
 
     class Implementation;
   private:
@@ -83,14 +76,12 @@ public:
     rmf_utils::impl_ptr<Implementation> _pimpl;
   };
 
-  using DispenserRequestItem = rmf_dispenser_msgs::msg::DispenserRequestItem;
 
   static ConstRequestPtr make(
     std::size_t pickup_waypoint,
-    std::string pickup_dispenser,
+    rmf_traffic::Duration pickup_wait,
     std::size_t dropoff_waypoint,
-    std::string dropoff_ingestor,
-    std::vector<DispenserRequestItem> items,
+    rmf_traffic::Duration dropoff_wait,
     const std::string& id,
     rmf_traffic::Time earliest_start_time,
     ConstPriorityPtr priority = nullptr,

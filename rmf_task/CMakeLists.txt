@@ -23,7 +23,6 @@ include(GNUInstallDirs)
 find_package(rmf_utils REQUIRED)
 find_package(rmf_traffic REQUIRED)
 find_package(rmf_battery REQUIRED)
-find_package(rmf_dispenser_msgs REQUIRED)
 find_package(Eigen3 REQUIRED)
 
 find_package(ament_cmake_catch2 QUIET)
@@ -44,7 +43,6 @@ add_library(rmf_task SHARED
 target_link_libraries(rmf_task
   PUBLIC
     rmf_battery::rmf_battery
-    ${rmf_dispenser_msgs_LIBRARIES}
 )
 
 target_include_directories(rmf_task
@@ -52,7 +50,6 @@ target_include_directories(rmf_task
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
     ${EIGEN3_INCLUDE_DIRS}
-    ${rmf_dispenser_msgs_INCLUDE_DIRS}
 )
 
 if(BUILD_TESTING AND ament_cmake_catch2_FOUND AND rmf_cmake_uncrustify_FOUND)
@@ -65,13 +62,11 @@ if(BUILD_TESTING AND ament_cmake_catch2_FOUND AND rmf_cmake_uncrustify_FOUND)
       rmf_task
       rmf_utils::rmf_utils
       rmf_traffic::rmf_traffic
-      ${rmf_dispenser_msgs_LIBRARIES}
   )
 
   target_include_directories(test_rmf_task
     PRIVATE
       $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/>
-      ${rmf_dispenser_msgs_INCLUDE_DIRS}
   )
 
   find_file(uncrustify_config_file

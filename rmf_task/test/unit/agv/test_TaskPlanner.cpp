@@ -213,6 +213,9 @@ SCENARIO("Grid World")
     constraints,
     cost_calculator};
 
+  // Duration for loading/unloading items for delivery tasks
+  const auto delivery_wait = rmf_traffic::time::from_seconds(0);
+
   WHEN("Planning for 3 requests and 2 agents")
   {
     const auto now = std::chrono::steady_clock::now();
@@ -231,28 +234,25 @@ SCENARIO("Grid World")
     {
       rmf_task::requests::Delivery::make(
         0,
-        "dispenser",
+        delivery_wait,
         3,
-        "ingestor",
-        {},
+        delivery_wait,
         "1",
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
         15,
-        "dispenser",
+        delivery_wait,
         2,
-        "ingestor",
-        {},
+        delivery_wait,
         "2",
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
         7,
-        "dispenser",
+        delivery_wait,
         9,
-        "ingestor",
-        {},
+        delivery_wait,
         "3",
         now + rmf_traffic::time::from_seconds(0))
     };
@@ -317,100 +317,89 @@ SCENARIO("Grid World")
     {
       rmf_task::requests::Delivery::make(
         0,
-        "dispenser",
+        delivery_wait,
         3,
-        "ingestor",
-        {},
+        delivery_wait,
         "1",
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
         15,
-        "dispenser",
+        delivery_wait,
         2,
-        "ingestor",
-        {},
+        delivery_wait,
         "2",
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
         7,
-        "dispenser",
+        delivery_wait,
         9,
-        "ingestor",
-        {},
+        delivery_wait,
         "3",
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
         8,
-        "dispenser",
+        delivery_wait,
         11,
-        "ingestor",
-        {},
+        delivery_wait,
         "4",
         now + rmf_traffic::time::from_seconds(50000)),
 
       rmf_task::requests::Delivery::make(
         10,
-        "dispenser",
+        delivery_wait,
         0,
-        "ingestor",
-        {},
+        delivery_wait,
         "5",
         now + rmf_traffic::time::from_seconds(50000)),
 
       rmf_task::requests::Delivery::make(
         4,
-        "dispenser",
+        delivery_wait,
         8,
-        "ingestor",
-        {},
+        delivery_wait,
         "6",
         now + rmf_traffic::time::from_seconds(60000)),
 
       rmf_task::requests::Delivery::make(
         8,
-        "dispenser",
+        delivery_wait,
         14,
-        "ingestor",
-        {},
+        delivery_wait,
         "7",
         now + rmf_traffic::time::from_seconds(60000)),
 
       rmf_task::requests::Delivery::make(
         5,
-        "dispenser",
+        delivery_wait,
         11,
-        "ingestor",
-        {},
+        delivery_wait,
         "8",
         now + rmf_traffic::time::from_seconds(60000)),
 
       rmf_task::requests::Delivery::make(
         9,
-        "dispenser",
+        delivery_wait,
         0,
-        "ingestor",
-        {},
+        delivery_wait,
         "9",
         now + rmf_traffic::time::from_seconds(60000)),
 
       rmf_task::requests::Delivery::make(
         1,
-        "dispenser",
+        delivery_wait,
         3,
-        "ingestor",
-        {},
+        delivery_wait,
         "10",
         now + rmf_traffic::time::from_seconds(60000)),
 
       rmf_task::requests::Delivery::make(
         0,
-        "dispenser",
+        delivery_wait,
         12,
-        "ingestor",
-        {},
+        delivery_wait,
         "11",
         now + rmf_traffic::time::from_seconds(60000))
     };
@@ -475,37 +464,33 @@ SCENARIO("Grid World")
     {
       rmf_task::requests::Delivery::make(
         0,
-        "dispenser",
+        delivery_wait,
         3,
-        "ingestor",
-        {},
+        delivery_wait,
         "1",
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
         15,
-        "dispenser",
+        delivery_wait,
         2,
-        "ingestor",
-        {},
+        delivery_wait,
         "2",
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
         9,
-        "dispenser",
+        delivery_wait,
         4,
-        "ingestor",
-        {},
+        delivery_wait,
         "3",
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
         8,
-        "dispenser",
+        delivery_wait,
         11,
-        "ingestor",
-        {},
+        delivery_wait,
         "4",
         now + rmf_traffic::time::from_seconds(50000))
     };
@@ -579,100 +564,89 @@ SCENARIO("Grid World")
     {
       rmf_task::requests::Delivery::make(
         6,
-        "dispenser",
+        delivery_wait,
         3,
-        "ingestor",
-        {},
+        delivery_wait,
         "1",
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
         10,
-        "dispenser",
+        delivery_wait,
         7,
-        "ingestor",
-        {},
+        delivery_wait,
         "2",
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
         2,
-        "dispenser",
+        delivery_wait,
         12,
-        "ingestor",
-        {},
+        delivery_wait,
         "3",
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
         8,
-        "dispenser",
+        delivery_wait,
         11,
-        "ingestor",
-        {},
+        delivery_wait,
         "4",
         now + rmf_traffic::time::from_seconds(50000)),
 
       rmf_task::requests::Delivery::make(
         10,
-        "dispenser",
+        delivery_wait,
         6,
-        "ingestor",
-        {},
+        delivery_wait,
         "5",
         now + rmf_traffic::time::from_seconds(50000)),
 
       rmf_task::requests::Delivery::make(
         2,
-        "dispenser",
+        delivery_wait,
         9,
-        "ingestor",
-        {},
+        delivery_wait,
         "6",
         now + rmf_traffic::time::from_seconds(70000)),
 
       rmf_task::requests::Delivery::make(
         3,
-        "dispenser",
+        delivery_wait,
         4,
-        "ingestor",
-        {},
+        delivery_wait,
         "7",
         now + rmf_traffic::time::from_seconds(70000)),
 
       rmf_task::requests::Delivery::make(
         5,
-        "dispenser",
+        delivery_wait,
         11,
-        "ingestor",
-        {},
+        delivery_wait,
         "8",
         now + rmf_traffic::time::from_seconds(70000)),
 
       rmf_task::requests::Delivery::make(
         9,
-        "dispenser",
+        delivery_wait,
         1,
-        "ingestor",
-        {},
+        delivery_wait,
         "9",
         now + rmf_traffic::time::from_seconds(70000)),
 
       rmf_task::requests::Delivery::make(
         1,
-        "dispenser",
+        delivery_wait,
         5,
-        "ingestor",
-        {},
+        delivery_wait,
         "10",
         now + rmf_traffic::time::from_seconds(70000)),
 
       rmf_task::requests::Delivery::make(
         13,
-        "dispenser",
+        delivery_wait,
         10,
-        "ingestor",
-        {},
+        delivery_wait,
         "11",
         now + rmf_traffic::time::from_seconds(70000))
     };
@@ -827,28 +801,25 @@ SCENARIO("Grid World")
     {
       rmf_task::requests::Delivery::make(
         0,
-        "dispenser",
+        delivery_wait,
         3,
-        "ingestor",
-        {},
+        delivery_wait,
         "1",
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
         15,
-        "dispenser",
+        delivery_wait,
         2,
-        "ingestor",
-        {},
+        delivery_wait,
         "2",
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
         7,
-        "dispenser",
+        delivery_wait,
         9,
-        "ingestor",
-        {},
+        delivery_wait,
         "3",
         now + rmf_traffic::time::from_seconds(0))
     };
@@ -880,10 +851,9 @@ SCENARIO("Grid World")
     {
       requests[2] = rmf_task::requests::Delivery::make(
         7,
-        "dispenser",
+        delivery_wait,
         9,
-        "ingestor",
-        {},
+        delivery_wait,
         "3",
         now + rmf_traffic::time::from_seconds(0),
         rmf_task::BinaryPriorityScheme::make_high_priority());
@@ -930,30 +900,27 @@ SCENARIO("Grid World")
     {
       rmf_task::requests::Delivery::make(
         0,
-        "dispenser",
+        delivery_wait,
         3,
-        "ingestor",
-        {},
+        delivery_wait,
         "1",
         now + rmf_traffic::time::from_seconds(0),
         rmf_task::BinaryPriorityScheme::make_high_priority()),
 
       rmf_task::requests::Delivery::make(
         15,
-        "dispenser",
+        delivery_wait,
         2,
-        "ingestor",
-        {},
+        delivery_wait,
         "2",
         now + rmf_traffic::time::from_seconds(0),
         rmf_task::BinaryPriorityScheme::make_high_priority()),
 
       rmf_task::requests::Delivery::make(
         7,
-        "dispenser",
+        delivery_wait,
         9,
-        "ingestor",
-        {},
+        delivery_wait,
         "3",
         now + rmf_traffic::time::from_seconds(0),
         rmf_task::BinaryPriorityScheme::make_high_priority())
@@ -999,38 +966,34 @@ SCENARIO("Grid World")
     {
       rmf_task::requests::Delivery::make(
         0,
-        "dispenser",
+        delivery_wait,
         3,
-        "ingestor",
-        {},
+        delivery_wait,
         "1",
         now + rmf_traffic::time::from_seconds(0),
         rmf_task::BinaryPriorityScheme::make_high_priority()),
 
       rmf_task::requests::Delivery::make(
         15,
-        "dispenser",
+        delivery_wait,
         2,
-        "ingestor",
-        {},
+        delivery_wait,
         "2",
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
         7,
-        "dispenser",
+        delivery_wait,
         9,
-        "ingestor",
-        {},
+        delivery_wait,
         "3",
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
         4,
-        "dispenser",
+        delivery_wait,
         7,
-        "ingestor",
-        {},
+        delivery_wait,
         "4",
         now + rmf_traffic::time::from_seconds(0),
         rmf_task::BinaryPriorityScheme::make_high_priority())
@@ -1085,38 +1048,34 @@ SCENARIO("Grid World")
     {
       rmf_task::requests::Delivery::make(
         0,
-        "dispenser",
+        delivery_wait,
         3,
-        "ingestor",
-        {},
+        delivery_wait,
         "1",
         now + rmf_traffic::time::from_seconds(0),
         rmf_task::BinaryPriorityScheme::make_high_priority()),
 
       rmf_task::requests::Delivery::make(
         15,
-        "dispenser",
+        delivery_wait,
         2,
-        "ingestor",
-        {},
+        delivery_wait,
         "2",
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
         7,
-        "dispenser",
+        delivery_wait,
         9,
-        "ingestor",
-        {},
+        delivery_wait,
         "3",
         now + rmf_traffic::time::from_seconds(100000)),
 
       rmf_task::requests::Delivery::make(
         7,
-        "dispenser",
+        delivery_wait,
         6,
-        "ingestor",
-        {},
+        delivery_wait,
         "4",
         now + rmf_traffic::time::from_seconds(100000),
         rmf_task::BinaryPriorityScheme::make_high_priority())
@@ -1173,37 +1132,33 @@ SCENARIO("Grid World")
     {
       rmf_task::requests::Delivery::make(
         0,
-        "dispenser",
+        delivery_wait,
         3,
-        "ingestor",
-        {},
+        delivery_wait,
         "1",
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
         15,
-        "dispenser",
+        delivery_wait,
         2,
-        "ingestor",
-        {},
+        delivery_wait,
         "2",
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
         7,
-        "dispenser",
+        delivery_wait,
         9,
-        "ingestor",
-        {},
+        delivery_wait,
         "3",
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
         7,
-        "dispenser",
+        delivery_wait,
         6,
-        "ingestor",
-        {},
+        delivery_wait,
         "4",
         now + rmf_traffic::time::from_seconds(0))
     };
@@ -1241,38 +1196,34 @@ SCENARIO("Grid World")
       {
         rmf_task::requests::Delivery::make(
           0,
-          "dispenser",
+          delivery_wait,
           3,
-          "ingestor",
-          {},
+          delivery_wait,
           "1",
           now + rmf_traffic::time::from_seconds(0)),
 
         rmf_task::requests::Delivery::make(
           15,
-          "dispenser",
+          delivery_wait,
           2,
-          "ingestor",
-          {},
+          delivery_wait,
           "2",
           now + rmf_traffic::time::from_seconds(0)),
 
         rmf_task::requests::Delivery::make(
           7,
-          "dispenser",
+          delivery_wait,
           9,
-          "ingestor",
-          {},
+          delivery_wait,
           "3",
           now + rmf_traffic::time::from_seconds(0),
           rmf_task::BinaryPriorityScheme::make_high_priority()),
 
         rmf_task::requests::Delivery::make(
           7,
-          "dispenser",
+          delivery_wait,
           6,
-          "ingestor",
-          {},
+          delivery_wait,
           "4",
           now + rmf_traffic::time::from_seconds(0),
           rmf_task::BinaryPriorityScheme::make_high_priority())
@@ -1326,37 +1277,33 @@ SCENARIO("Grid World")
     {
       rmf_task::requests::Delivery::make(
         0,
-        "dispenser",
+        delivery_wait,
         3,
-        "ingestor",
-        {},
+        delivery_wait,
         "1",
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
         15,
-        "dispenser",
+        delivery_wait,
         2,
-        "ingestor",
-        {},
+        delivery_wait,
         "2",
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
         7,
-        "dispenser",
+        delivery_wait,
         9,
-        "ingestor",
-        {},
+        delivery_wait,
         "3",
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
         7,
-        "dispenser",
+        delivery_wait,
         6,
-        "ingestor",
-        {},
+        delivery_wait,
         "4",
         now + rmf_traffic::time::from_seconds(0))
     };
@@ -1402,40 +1349,36 @@ SCENARIO("Grid World")
       {
         rmf_task::requests::Delivery::make(
           0,
-          "dispenser",
+          delivery_wait,
           3,
-          "ingestor",
-          {},
+          delivery_wait,
           "1",
           now + rmf_traffic::time::from_seconds(0),
           rmf_task::BinaryPriorityScheme::make_high_priority()),
 
         rmf_task::requests::Delivery::make(
           15,
-          "dispenser",
+          delivery_wait,
           2,
-          "ingestor",
-          {},
+          delivery_wait,
           "2",
           now + rmf_traffic::time::from_seconds(0),
           rmf_task::BinaryPriorityScheme::make_high_priority()),
 
         rmf_task::requests::Delivery::make(
           7,
-          "dispenser",
+          delivery_wait,
           9,
-          "ingestor",
-          {},
+          delivery_wait,
           "3",
           now + rmf_traffic::time::from_seconds(0),
           rmf_task::BinaryPriorityScheme::make_high_priority()),
 
         rmf_task::requests::Delivery::make(
           7,
-          "dispenser",
+          delivery_wait,
           6,
-          "ingestor",
-          {},
+          delivery_wait,
           "4",
           now + rmf_traffic::time::from_seconds(0))
       };
@@ -1502,37 +1445,33 @@ SCENARIO("Grid World")
     {
       rmf_task::requests::Delivery::make(
         0,
-        "dispenser",
+        delivery_wait,
         3,
-        "ingestor",
-        {},
+        delivery_wait,
         "1",
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
         15,
-        "dispenser",
+        delivery_wait,
         2,
-        "ingestor",
-        {},
+        delivery_wait,
         "2",
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
         9,
-        "dispenser",
+        delivery_wait,
         4,
-        "ingestor",
-        {},
+        delivery_wait,
         "3",
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
         8,
-        "dispenser",
+        delivery_wait,
         11,
-        "ingestor",
-        {},
+        delivery_wait,
         "4",
         now + rmf_traffic::time::from_seconds(50000))
     };
@@ -1674,37 +1613,33 @@ SCENARIO("Grid World")
     {
       rmf_task::requests::Delivery::make(
         0,
-        "dispenser",
+        delivery_wait,
         3,
-        "ingestor",
-        {},
+        delivery_wait,
         "1",
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
         15,
-        "dispenser",
+        delivery_wait,
         2,
-        "ingestor",
-        {},
+        delivery_wait,
         "2",
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
         9,
-        "dispenser",
+        delivery_wait,
         4,
-        "ingestor",
-        {},
+        delivery_wait,
         "3",
         now + rmf_traffic::time::from_seconds(0)),
 
       rmf_task::requests::Delivery::make(
         8,
-        "dispenser",
+        delivery_wait,
         11,
-        "ingestor",
-        {},
+        delivery_wait,
         "4",
         now + rmf_traffic::time::from_seconds(50000))
     };
