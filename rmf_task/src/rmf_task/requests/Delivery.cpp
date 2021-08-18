@@ -38,13 +38,17 @@ public:
     const rmf_traffic::Time earliest_start_time,
     const agv::Parameters& parameters,
     std::size_t pickup_waypoint,
-    std::size_t dropoff_waypoint);
+    rmf_traffic::Duration pickup_wait,
+    std::size_t dropoff_waypoint,
+    rmf_traffic::Duration dropoff_wait);
 
 private:
   rmf_traffic::Time _earliest_start_time;
   agv::Parameters _parameters;
   std::size_t _pickup_waypoint;
+  rmf_traffic::Duration _pickup_wait;
   std::size_t _dropoff_waypoint;
+  rmf_traffic::Duration _dropoff_wait;
 
   rmf_traffic::Duration _invariant_duration;
   double _invariant_battery_drain;
@@ -55,15 +59,19 @@ Delivery::Model::Model(
   const rmf_traffic::Time earliest_start_time,
   const agv::Parameters& parameters,
   std::size_t pickup_waypoint,
-  std::size_t dropoff_waypoint)
+  rmf_traffic::Duration pickup_wait,
+  std::size_t dropoff_waypoint,
+  rmf_traffic::Duration dropoff_wait)
 : _earliest_start_time(earliest_start_time),
   _parameters(parameters),
   _pickup_waypoint(pickup_waypoint),
   _dropoff_waypoint(dropoff_waypoint)
 {
   // Calculate duration of invariant component of task
-  _invariant_duration = rmf_traffic::Duration{0};
-  _invariant_battery_drain = 0.0;
+  _invariant_duration = pickup_wait + dropoff_wait;
+  _invariant_battery_drain =
+    _parameters.ambient_sink()->compute_change_in_charge(
+    rmf_traffic::time::to_seconds(pickup_wait + dropoff_wait));
 
   if (_pickup_waypoint != _dropoff_waypoint)
   {
@@ -276,26 +284,23 @@ public:
   {}
 
   std::size_t pickup_waypoint;
-  std::string pickup_dispenser;
+  rmf_traffic::Duration pickup_wait;
   std::size_t dropoff_waypoint;
-  std::string dropoff_ingestor;
-  std::vector<DispenserRequestItem> items;
+  rmf_traffic::Duration dropoff_wait;
 };
 
 //==============================================================================
 rmf_task::DescriptionPtr Delivery::Description::make(
   std::size_t pickup_waypoint,
-  std::string pickup_dispenser,
+  rmf_traffic::Duration pickup_wait,
   std::size_t dropoff_waypoint,
-  std::string dropoff_ingestor,
-  std::vector<DispenserRequestItem> items)
+  rmf_traffic::Duration dropoff_wait)
 {
   std::shared_ptr<Description> delivery(new Description());
   delivery->_pimpl->pickup_waypoint = pickup_waypoint;
-  delivery->_pimpl->pickup_dispenser = std::move(pickup_dispenser);
+  delivery->_pimpl->pickup_wait = pickup_wait;
   delivery->_pimpl->dropoff_waypoint = dropoff_waypoint;
-  delivery->_pimpl->dropoff_ingestor = std::move(dropoff_ingestor);
-  delivery->_pimpl->items = std::move(items);
+  delivery->_pimpl->dropoff_wait = dropoff_wait;
 
   return delivery;
 }
@@ -316,7 +321,9 @@ std::shared_ptr<Request::Model> Delivery::Description::make_model(
     earliest_start_time,
     parameters,
     _pimpl->pickup_waypoint,
-    _pimpl->dropoff_waypoint);
+    _pimpl->pickup_wait,
+    _pimpl->dropoff_waypoint,
+    _pimpl->dropoff_wait);
 }
 
 //==============================================================================
@@ -326,15 +333,15 @@ std::size_t Delivery::Description::pickup_waypoint() const
 }
 
 //==============================================================================
-const std::string& Delivery::Description::pickup_dispenser() const
+rmf_traffic::Duration Delivery::Description::pickup_wait() const
 {
-  return _pimpl->pickup_dispenser;
+  return _pimpl->pickup_wait;
 }
 
 //==============================================================================
-const std::string& Delivery::Description::dropoff_ingestor() const
+rmf_traffic::Duration Delivery::Description::dropoff_wait() const
 {
-  return _pimpl->dropoff_ingestor;
+  return _pimpl->dropoff_wait;
 }
 
 //==============================================================================
@@ -344,29 +351,20 @@ std::size_t Delivery::Description::dropoff_waypoint() const
 }
 
 //==============================================================================
-const std::vector<Delivery::Description::DispenserRequestItem>&
-Delivery::Description::items() const
-{
-  return _pimpl->items;
-}
-
-//==============================================================================
 ConstRequestPtr Delivery::make(
   std::size_t pickup_waypoint,
-  std::string pickup_dispenser,
+  rmf_traffic::Duration pickup_wait,
   std::size_t dropoff_waypoint,
-  std::string dropoff_ingestor,
-  std::vector<DispenserRequestItem> items,
+  rmf_traffic::Duration dropoff_wait,
   const std::string& id,
   rmf_traffic::Time earliest_start_time,
   ConstPriorityPtr priority)
 {
   const auto description = Description::make(
     pickup_waypoint,
-    pickup_dispenser,
+    pickup_wait,
     dropoff_waypoint,
-    dropoff_ingestor,
-    items);
+    dropoff_wait);
 
   return std::make_shared<Request>(
     id, earliest_start_time, std::move(priority), description);
