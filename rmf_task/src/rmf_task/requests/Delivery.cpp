@@ -71,7 +71,7 @@ Delivery::Model::Model(
   _invariant_duration = pickup_wait + dropoff_wait;
   _invariant_battery_drain =
     _parameters.ambient_sink()->compute_change_in_charge(
-      rmf_traffic::time::to_seconds(pickup_wait + dropoff_wait));
+    rmf_traffic::time::to_seconds(pickup_wait + dropoff_wait));
 
   if (_pickup_waypoint != _dropoff_waypoint)
   {
