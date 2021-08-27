@@ -29,7 +29,7 @@ namespace rmf_task {
 namespace agv {
 
 //==============================================================================
-/// This state representation is used for task planning.
+/// A class that is used to describe the state of an AGV
 class State
 {
 public:

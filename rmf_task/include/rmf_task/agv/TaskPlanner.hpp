@@ -146,20 +146,16 @@ public:
   /// Get the configuration of this task planner
   const Configuration& configuration() const;
 
-  /// Get the greedy planner based assignments for a set of initial states and
-  /// requests
+  /// Generate task assignments using a greedy approach which may solve faster
+  /// but optimality is not guaranteed
   Result greedy_plan(
     rmf_traffic::Time time_now,
     std::vector<State> agents,
     std::vector<ConstRequestPtr> requests,
     ConstRequestFactoryPtr finishing_request = nullptr);
 
-  /// Get the optimal planner based assignments for a set of initial states and
-  /// requests
-  /// \note When the number of requests exceed 10 for the same start time
-  /// segment, this plan may take a while to be generated. Hence, it is
-  /// recommended to call greedy_plan() method and use the greedy solution for bidding.
-  /// If a bid is awarded, the optimal solution may be used for assignments.
+  /// Generate task assignments that are optimal. This may take more time to
+  /// solve than greedy_plan()
   Result optimal_plan(
     rmf_traffic::Time time_now,
     std::vector<State> agents,

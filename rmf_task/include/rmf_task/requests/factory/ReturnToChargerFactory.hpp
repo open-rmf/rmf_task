@@ -28,9 +28,9 @@ namespace requests {
 
 //==============================================================================
 /// The ReturnToChargerFactory will generate a request for the AGV to return to
-/// its desginated charging_waypoint and remain idle there. The AGV does not 
-/// wait for its battery to recharge before accepting new requests. This 
-/// factory may be used when AGVs should not remain idle at the location of 
+/// its desginated charging_waypoint and remain idle there. The AGV does not
+/// wait for its battery to recharge before accepting new requests. This
+/// factory may be used when AGVs should not remain idle at the location of
 /// their last task but rather wait for new orders at their charging stations.
 class ReturnToChargerFactory : public RequestFactory
 {
@@ -38,6 +38,7 @@ public:
 
   ReturnToChargerFactory();
 
+  /// Documentation inherited
   ConstRequestPtr make_request(
     const agv::State& state) const final;
 

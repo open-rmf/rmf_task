@@ -24,6 +24,8 @@ namespace rmf_task {
 namespace agv {
 
 //==============================================================================
+/// A class that describes constraints that are common among the agents/AGVs
+/// available for performing requests
 class Constraints
 {
 public:

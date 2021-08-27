@@ -23,16 +23,13 @@
 namespace rmf_task {
 
 //==============================================================================
-/// An abstract interface for generating a tailored request for an AGV given 
-/// its current state
+/// An abstract interface for generating a tailored request for an AGV given
 class RequestFactory
 {
 public:
 
-  /// Generate a request for the AGV
-  ///
-  /// \param[in] state
-  ///   The state of the AGV when it is ready to perform the request.
+  /// Generate a request for the AGV given its state when it is ready to
+  /// perform the request.
   virtual ConstRequestPtr make_request(
     const agv::State& state) const = 0;
 

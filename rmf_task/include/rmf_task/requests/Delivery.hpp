@@ -36,10 +36,13 @@ namespace rmf_task {
 namespace requests {
 
 //==============================================================================
+/// A class that generates a Request which requires an AGV to pickup items from
+/// one location and deliver them to another
 class Delivery
 {
 public:
 
+  // Forward declare the Model for this request
   class Model;
 
   class Description : public Request::Description
@@ -48,12 +51,14 @@ public:
 
     using Start = rmf_traffic::agv::Planner::Start;
 
+    /// Generate the description for this request
     static DescriptionPtr make(
       std::size_t pickup_waypoint,
       rmf_traffic::Duration pickup_duration,
       std::size_t dropoff_waypoint,
       rmf_traffic::Duration dropoff_duration);
 
+    /// Documentation inherited
     std::shared_ptr<Request::Model> make_model(
       rmf_traffic::Time earliest_start_time,
       const agv::Parameters& parameters) const final;
@@ -76,7 +81,33 @@ public:
     rmf_utils::impl_ptr<Implementation> _pimpl;
   };
 
-
+  /// Generate a delivery request
+  ///
+  /// \param[in] pickup_waypoint
+  ///   The graph index for the pickup location
+  ///
+  /// \param[in] pickup_wait
+  ///   The expected duration the AGV has to wait at the pickup location for
+  ///   the items to be loaded
+  ///
+  /// \param[in] dropoff_waypoint
+  ///   The graph index for the dropoff location
+  ///
+  /// \param[in] dropoff_wait
+  ///   The expected duration the AGV has to wait at the dropoff location for
+  ///   the items to be unloaded
+  ///
+  /// \param[in] id
+  ///   A unique id for this request
+  ///
+  /// \param[in] earliest_start_time
+  ///   The desired start time for this request
+  ///
+  /// \param[in] priority
+  ///   The priority for this request
+  ///
+  /// \param[in] automatic
+  ///   Whether this request is user-submitted or auto-generated
   static ConstRequestPtr make(
     std::size_t pickup_waypoint,
     rmf_traffic::Duration pickup_wait,
