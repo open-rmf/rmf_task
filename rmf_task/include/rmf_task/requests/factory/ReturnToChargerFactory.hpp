@@ -27,7 +27,11 @@ namespace rmf_task {
 namespace requests {
 
 //==============================================================================
-// Retuns a Loop request from current state back to its charging waypoint
+/// The ReturnToChargerFactory will generate a request for the AGV to return to
+/// its desginated charging_waypoint and remain idle there. The AGV does not 
+/// wait for its battery to recharge before accepting new requests. This 
+/// factory may be used when AGVs should not remain idle at the location of 
+/// their last task but rather wait for new orders at their charging stations.
 class ReturnToChargerFactory : public RequestFactory
 {
 public:

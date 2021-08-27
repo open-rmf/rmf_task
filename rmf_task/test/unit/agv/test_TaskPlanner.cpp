@@ -1730,7 +1730,7 @@ SCENARIO("Grid World")
         display_solution("Optimal", optimal_assignments, optimal_cost);
       }
 
-      // Check that the last assignment for each agent is a charging task
+      // Check that the last assignment for each agent is not a ChargeBattery request
       for (const auto& agent : optimal_assignments)
       {
         const auto last_assignment = agent.back();
@@ -1766,7 +1766,7 @@ SCENARIO("Grid World")
         display_solution("Optimal", optimal_assignments, optimal_cost);
       }
 
-      // Check that the last assignment for each agent is a charging task
+      // Check that the last assignment for each agent is a ChargeBattery request
       for (const auto& agent : optimal_assignments)
       {
         const auto last_assignment = agent.back();
@@ -1838,7 +1838,7 @@ SCENARIO("Grid World")
         display_solution("Optimal", optimal_assignments, optimal_cost);
       }
 
-      // Check that the last assignment for each agent is a charging task
+      // Check that the final location for each agent is not its charging waypoint
       for (const auto& agent : optimal_assignments)
       {
         const auto last_assignment = agent.back();
@@ -1872,7 +1872,7 @@ SCENARIO("Grid World")
         display_solution("Optimal", optimal_assignments, optimal_cost);
       }
 
-      // Check that the last assignment for each agent is a charging task
+      // Check that the final location for each agent is its charging waypoint
       for (const auto& agent : optimal_assignments)
       {
         const auto last_assignment = agent.back();

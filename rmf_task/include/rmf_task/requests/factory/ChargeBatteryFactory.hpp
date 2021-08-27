@@ -27,6 +27,10 @@ namespace rmf_task {
 namespace requests {
 
 //==============================================================================
+/// The ChargeBatteryFactory will generate a ChargeBattery request which will
+/// instruct the AGV to head back to its designated charging_waypoint as
+/// specified in its agv::State and wait till its battery state of charge is
+/// charged up to the recharge_soc specified in its agv::Constraints
 class ChargeBatteryFactory : public RequestFactory
 {
 public:
