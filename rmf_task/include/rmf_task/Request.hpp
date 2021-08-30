@@ -90,6 +90,9 @@ public:
   ///
   /// \param[in] description
   ///   The description for this request
+  ///
+  /// \param[in] automatic
+  ///   True if this request is auto-generated
   Request(
     const std::string& id,
     rmf_traffic::Time earliest_start_time,

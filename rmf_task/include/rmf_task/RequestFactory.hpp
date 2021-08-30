@@ -28,8 +28,8 @@ class RequestFactory
 {
 public:
 
-  /// Generate a request for the AGV given its state when it is ready to
-  /// perform the request.
+  /// Generate a request for the AGV given the state that the robot will have
+  /// when it is ready to perform the request
   virtual ConstRequestPtr make_request(
     const agv::State& state) const = 0;
 

@@ -28,8 +28,8 @@
 namespace rmf_task {
 
 //==============================================================================
-/// A class to store the state of an AGV after finishing the request and the
-/// time that the AGV should wait till before executing the request.
+/// A class to store the time that the AGV should wait till before executing the
+/// request and the state of the AGV after finishing the request.
 /// Note: The wait time is different from the earliest_start_time specified in
 /// the request definition. The wait time may be earlier to ensure that the AGV
 /// arrvies at the first location of the request by the earliest_start_time

@@ -73,7 +73,7 @@ public:
   ///   The priority for this request
   ///
   /// \param[in] automatic
-  ///   Whether this request is user-submitted or auto-generated
+  ///   True if this request is auto-generated
   static ConstRequestPtr make(
     rmf_traffic::Time earliest_start_time,
     ConstPriorityPtr priority = nullptr,

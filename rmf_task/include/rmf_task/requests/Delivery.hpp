@@ -107,7 +107,7 @@ public:
   ///   The priority for this request
   ///
   /// \param[in] automatic
-  ///   Whether this request is user-submitted or auto-generated
+  ///   True if this request is auto-generated
   static ConstRequestPtr make(
     std::size_t pickup_waypoint,
     rmf_traffic::Duration pickup_wait,
