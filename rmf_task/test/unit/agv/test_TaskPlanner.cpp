@@ -23,8 +23,8 @@
 #include <rmf_task/requests/ChargeBattery.hpp>
 #include <rmf_task/requests/Loop.hpp>
 
-#include <rmf_task/requests/factory/ChargeBatteryFactory.hpp>
-#include <rmf_task/requests/factory/ReturnToChargerFactory.hpp>
+#include <rmf_task/requests/ChargeBatteryFactory.hpp>
+#include <rmf_task/requests/ReturnToChargerFactory.hpp>
 
 #include <rmf_task/BinaryPriorityScheme.hpp>
 

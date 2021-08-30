@@ -15,7 +15,7 @@
  *
 */
 
-#include <rmf_task/requests/factory/ChargeBatteryFactory.hpp>
+#include <rmf_task/requests/ChargeBatteryFactory.hpp>
 #include <rmf_task/requests/ChargeBattery.hpp>
 
 namespace rmf_task {

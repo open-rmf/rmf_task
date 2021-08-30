@@ -15,7 +15,7 @@
  *
 */
 
-#include <rmf_task/requests/factory/ReturnToChargerFactory.hpp>
+#include <rmf_task/requests/ReturnToChargerFactory.hpp>
 #include <rmf_task/requests/Loop.hpp>
 
 #include <random>
