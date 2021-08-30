@@ -15,7 +15,7 @@
  *
 */
 
-#include <rmf_task/requests/ReturnToChargerFactory.hpp>
+#include <rmf_task/requests/ParkRobotFactory.hpp>
 #include <rmf_task/requests/Loop.hpp>
 
 #include <random>
@@ -45,25 +45,32 @@ std::string generate_uuid(const std::size_t length = 3)
 } // anonymous namespace
 
 //==============================================================================
-class ReturnToChargerFactory::Implementation
+class ParkRobotFactory::Implementation
 {
+public:
 
+  std::optional<std::size_t> parking_waypoint;
 };
 
 //==============================================================================
-ReturnToChargerFactory::ReturnToChargerFactory()
-: _pimpl(rmf_utils::make_impl<Implementation>(Implementation()))
+ParkRobotFactory::ParkRobotFactory(
+  std::optional<std::size_t> parking_waypoint)
+: _pimpl(rmf_utils::make_impl<Implementation>(
+      Implementation{
+        parking_waypoint
+      }))
 {
   // Do nothing
 }
 
 //==============================================================================
-ConstRequestPtr ReturnToChargerFactory::make_request(
+ConstRequestPtr ParkRobotFactory::make_request(
   const agv::State& state) const
 {
   std::string id = "ReturnToCharger" + generate_uuid();
   const auto start_waypoint = state.location().waypoint();
-  const auto finish_waypoint = state.charging_waypoint();
+  const auto finish_waypoint = _pimpl->parking_waypoint.has_value() ?
+    _pimpl->parking_waypoint.value() : state.charging_waypoint();
   const auto request = Loop::make(
     start_waypoint,
     finish_waypoint,

@@ -15,28 +15,37 @@
  *
 */
 
-#ifndef RMF_TASK__REQUESTS__FACTORY__RETURNTOCHARGERFACTORY_HPP
-#define RMF_TASK__REQUESTS__FACTORY__RETURNTOCHARGERFACTORY_HPP
+#ifndef RMF_TASK__REQUESTS__FACTORY__PARKROBOTFACTORY_HPP
+#define RMF_TASK__REQUESTS__FACTORY__PARKROBOTFACTORY_HPP
 
 #include <rmf_task/RequestFactory.hpp>
 #include <rmf_task/agv/State.hpp>
 
 #include <rmf_utils/impl_ptr.hpp>
 
+#include <optional>
+
 namespace rmf_task {
 namespace requests {
 
 //==============================================================================
-/// The ReturnToChargerFactory will generate a request for the AGV to return to
-/// its desginated charging_waypoint and remain idle there. The AGV does not
-/// wait for its battery to recharge before accepting new requests. This
-/// factory may be used when AGVs should not remain idle at the location of
-/// their last task but rather wait for new orders at their charging stations.
-class ReturnToChargerFactory : public RequestFactory
+/// The ParkRobotFactory will generate a request for the AGV to return to
+/// its desginated parking spot and remain idle there. This factory may be used
+/// when AGVs should not remain idle at the location of their last task but
+/// rather wait for new orders at their designated parking spots.
+class ParkRobotFactory : public RequestFactory
 {
 public:
 
-  ReturnToChargerFactory();
+  /// Constructor
+  ///
+  /// \param[in] parking_waypoint
+  ///   The graph index of the waypoint assigned to this AGV for parking.
+  ///   If nullopt, the AGV will return to its charging_waypoint and remain idle
+  ///   there. It will not wait for its battery to charge up before undertaking
+  ///   new tasks.
+  ParkRobotFactory(
+    std::optional<std::size_t> parking_waypoint = std::nullopt);
 
   /// Documentation inherited
   ConstRequestPtr make_request(
@@ -51,4 +60,4 @@ private:
 } // namespace requests
 } // namespace rmf_task
 
-#endif // RMF_TASK__REQUESTS__FACTORY__RETURNTOCHARGERFACTORY_HPP
+#endif // RMF_TASK__REQUESTS__FACTORY__PARKROBOTFACTORY_HPP

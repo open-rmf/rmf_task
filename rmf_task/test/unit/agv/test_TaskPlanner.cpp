@@ -24,7 +24,7 @@
 #include <rmf_task/requests/Loop.hpp>
 
 #include <rmf_task/requests/ChargeBatteryFactory.hpp>
-#include <rmf_task/requests/ReturnToChargerFactory.hpp>
+#include <rmf_task/requests/ParkRobotFactory.hpp>
 
 #include <rmf_task/BinaryPriorityScheme.hpp>
 
@@ -1792,7 +1792,7 @@ SCENARIO("Grid World")
     }
   }
 
-  WHEN("Planning without and with ReturnToChargerFactory")
+  WHEN("Planning without and with ParkRobotFactory")
   {
     const auto now = std::chrono::steady_clock::now();
     const double default_orientation = 0.0;
@@ -1830,7 +1830,7 @@ SCENARIO("Grid World")
 
     TaskPlanner task_planner(task_config, default_options);
 
-    THEN("When ReturnToChargerFactory is not supplied during planning")
+    THEN("When ParkRobotFactory is not supplied during planning")
     {
       auto start_time = std::chrono::steady_clock::now();
       const auto optimal_result = task_planner.plan(
@@ -1861,10 +1861,10 @@ SCENARIO("Grid World")
       }
     }
 
-    THEN("When ReturnToChargerFactory is supplied during planning")
+    THEN("When ParkRobotFactory is supplied during planning")
     {
       const auto finishing_request =
-        std::make_shared<rmf_task::requests::ReturnToChargerFactory>();
+        std::make_shared<rmf_task::requests::ParkRobotFactory>();
       task_planner.default_options().finishing_request(finishing_request);
       REQUIRE(task_planner.default_options().finishing_request() != nullptr);
 
