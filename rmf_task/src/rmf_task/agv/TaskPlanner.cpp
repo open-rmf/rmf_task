@@ -99,6 +99,72 @@ auto TaskPlanner::Configuration::cost_calculator(
 }
 
 //==============================================================================
+class TaskPlanner::Options::Implementation
+{
+public:
+
+  bool greedy;
+  std::function<bool()> interrupter;
+  ConstRequestFactoryPtr finishing_request;
+};
+
+//==============================================================================
+TaskPlanner::Options::Options(
+  bool greedy,
+  std::function<bool()> interrupter,
+  ConstRequestFactoryPtr finishing_request)
+: _pimpl(rmf_utils::make_impl<Implementation>(
+      Implementation{
+        std::move(greedy),
+        std::move(interrupter),
+        std::move(finishing_request)
+      }))
+{
+  // Do nothing
+}
+
+//==============================================================================
+auto TaskPlanner::Options::greedy(bool value) -> Options&
+{
+  _pimpl->greedy = value;
+  return *this;
+}
+
+//==============================================================================
+bool TaskPlanner::Options::greedy() const
+{
+  return _pimpl->greedy;
+}
+
+//==============================================================================
+auto TaskPlanner::Options::interrupter(std::function<bool()> interrupter)
+-> Options&
+{
+  _pimpl->interrupter = std::move(interrupter);
+  return *this;
+}
+
+//==============================================================================
+const std::function<bool()>& TaskPlanner::Options::interrupter() const
+{
+  return _pimpl->interrupter;
+}
+
+//==============================================================================
+auto TaskPlanner::Options::finishing_request(
+  ConstRequestFactoryPtr finishing_request) -> Options&
+{
+  _pimpl->finishing_request = std::move(finishing_request);
+  return *this;
+}
+
+//==============================================================================
+ConstRequestFactoryPtr TaskPlanner::Options::finishing_request() const
+{
+  return _pimpl->finishing_request;
+}
+
+//==============================================================================
 class TaskPlanner::Assignment::Implementation
 {
 public:
@@ -306,6 +372,7 @@ class TaskPlanner::Implementation
 public:
 
   Configuration config;
+  Options default_options;
   std::shared_ptr<EstimateCache> estimate_cache;
   bool check_priority = false;
   ConstCostCalculatorPtr cost_calculator = nullptr;
@@ -1015,10 +1082,12 @@ public:
 
 // ============================================================================
 TaskPlanner::TaskPlanner(
-  const rmf_task::agv::TaskPlanner::Configuration& configuration)
+  Configuration configuration,
+  Options default_options)
 : _pimpl(rmf_utils::make_impl<Implementation>(
       Implementation{
         configuration,
+        default_options,
         std::make_shared<EstimateCache>(
           configuration.parameters().planner()->
           get_configuration().graph().num_waypoints())
@@ -1028,36 +1097,34 @@ TaskPlanner::TaskPlanner(
 }
 
 // ============================================================================
-auto TaskPlanner::greedy_plan(
+auto TaskPlanner::plan(
   rmf_traffic::Time time_now,
   std::vector<State> agents,
-  std::vector<ConstRequestPtr> requests,
-  ConstRequestFactoryPtr finishing_request) -> Result
+  std::vector<ConstRequestPtr> requests) -> Result
 {
   return _pimpl->complete_solve(
     time_now,
     agents,
     requests,
-    nullptr,
-    finishing_request,
-    true);
+    _pimpl->default_options.interrupter(),
+    _pimpl->default_options.finishing_request(),
+    _pimpl->default_options.greedy());
 }
 
 // ============================================================================
-auto TaskPlanner::optimal_plan(
+auto TaskPlanner::plan(
   rmf_traffic::Time time_now,
   std::vector<State> agents,
   std::vector<ConstRequestPtr> requests,
-  std::function<bool()> interrupter,
-  ConstRequestFactoryPtr finishing_request) -> Result
+  Options options) -> Result
 {
   return _pimpl->complete_solve(
     time_now,
     agents,
     requests,
-    interrupter,
-    finishing_request,
-    false);
+    options.interrupter(),
+    options.finishing_request(),
+    options.greedy());
 }
 
 // ============================================================================
@@ -1083,6 +1150,18 @@ const rmf_task::agv::TaskPlanner::Configuration& TaskPlanner::configuration()
 const
 {
   return _pimpl->config;
+}
+
+// ============================================================================
+auto TaskPlanner::default_options() const -> const Options&
+{
+  return _pimpl->default_options;
+}
+
+// ============================================================================
+auto TaskPlanner::default_options() -> Options&
+{
+  return _pimpl->default_options;
 }
 
 } // namespace agv
