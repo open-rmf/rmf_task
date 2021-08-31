@@ -30,6 +30,8 @@ namespace rmf_task {
 namespace agv {
 
 //==============================================================================
+/// A class that containts parameters that are common among the agents/AGVs
+/// available for performing requests
 class Parameters
 {
 public:

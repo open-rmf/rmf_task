@@ -15,19 +15,30 @@
  *
 */
 
-#ifndef RMF_TASK__PRIORITY_HPP
-#define RMF_TASK__PRIORITY_HPP
+#ifndef RMF_TASK__REQUESTFACTORY_HPP
+#define RMF_TASK__REQUESTFACTORY_HPP
 
-#include <memory>
+#include <rmf_task/Request.hpp>
 
 namespace rmf_task {
 
 //==============================================================================
-// Forward declare abstract interface. The definition will remain as internal detail.
-/// A class to specify the priority for a request
-class Priority;
-using PriorityPtr = std::shared_ptr<Priority>;
-using ConstPriorityPtr = std::shared_ptr<const Priority>;
+/// An abstract interface for generating a tailored request for an AGV given
+class RequestFactory
+{
+public:
+
+  /// Generate a request for the AGV given the state that the robot will have
+  /// when it is ready to perform the request
+  virtual ConstRequestPtr make_request(
+    const agv::State& state) const = 0;
+
+  virtual ~RequestFactory() = default;
+};
+
+using RequestFactoryPtr = std::shared_ptr<RequestFactory>;
+using ConstRequestFactoryPtr = std::shared_ptr<const RequestFactory>;
 
 } // namespace rmf_task
-# endif // RMF_TASK__PRIORITY_HPP
+
+#endif // RMF_TASK__REQUESTFACTORY_HPP

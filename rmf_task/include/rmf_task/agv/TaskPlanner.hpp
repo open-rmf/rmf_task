@@ -19,6 +19,7 @@
 #define RMF_TASK__AGV__TASKPLANNER_HPP
 
 #include <rmf_task/Request.hpp>
+#include <rmf_task/RequestFactory.hpp>
 #include <rmf_task/CostCalculator.hpp>
 #include <rmf_task/agv/Constraints.hpp>
 #include <rmf_task/agv/Parameters.hpp>
@@ -83,6 +84,55 @@ public:
     rmf_utils::impl_ptr<Implementation> _pimpl;
   };
 
+  /// The Options class contains planning parameters that can change between
+  /// each planning attempt.
+  class Options
+  {
+  public:
+
+    /// Constructor
+    ///
+    /// \param[in] greedy
+    ///   If true, a greedy approach will be used to solve for the task
+    ///   assignments. Optimality is not guaranteed but the solution time may be
+    ///   faster. If false, an A* based approach will be used within the planner
+    ///   which guarantees optimality but may take longer to solve.
+    ///
+    /// \param[in] interrupter
+    ///   A function that can determine whether the planning should be interrupted.
+    ///
+    /// \param[in] finishing_request
+    ///   A request factory that generates a tailored task for each agent/AGV
+    ///   to perform at the end of their assignments
+    Options(
+      bool greedy,
+      std::function<bool()> interrupter = nullptr,
+      ConstRequestFactoryPtr finishing_request = nullptr);
+
+    /// Set whether a greedy approach should be used
+    Options& greedy(bool value);
+
+    /// Get whether a greedy approach will be used
+    bool greedy() const;
+
+    /// Set an interrupter callback that will indicate to the planner if it
+    /// should stop trying to plan
+    Options& interrupter(std::function<bool()> interrupter);
+
+    /// Get the interrupter that will be used in this Options
+    const std::function<bool()>& interrupter() const;
+
+    /// Set the request factory that will generate a finishing task
+    Options& finishing_request(ConstRequestFactoryPtr finishing_request);
+
+    /// Get the request factory that will generate a finishing task
+    ConstRequestFactoryPtr finishing_request() const;
+
+    class Implementation;
+  private:
+    rmf_utils::impl_ptr<Implementation> _pimpl;
+  };
+
   class Assignment
   {
   public:
@@ -139,30 +189,60 @@ public:
   /// Constructor
   ///
   /// \param[in] configuration
-  /// The configuration for the planner
-  TaskPlanner(const Configuration& configuration);
+  ///   The configuration for the planner
+  ///
+  /// \param[in] default_options
+  ///   Default options for the task planner to use when solving for assignments.
+  ///   These options can be overriden each time a plan is requested.
+  TaskPlanner(
+    Configuration configuration,
+    Options default_options);
 
-  /// Get the configuration of this task planner
+  /// Get a const reference to configuration of this task planner
   const Configuration& configuration() const;
 
-  /// Get the greedy planner based assignments for a set of initial states and
-  /// requests
-  Result greedy_plan(
+  /// Get a const reference to the default planning options.
+  const Options& default_options() const;
+
+  /// Get a mutable reference to the default planning options.
+  Options& default_options();
+
+  /// Generate assignments for requests among available agents. The default
+  /// Options of this TaskPlanner instance will be used.
+  ///
+  /// \param[in] time_now
+  ///   The current time when this plan is requested
+  ///
+  /// \param[in] agents
+  ///   The initial states of the agents/AGVs that can undertake the requests
+  ///
+  /// \param[in] requests
+  ///   The set of requests that need to be assigned among the agents/AGVs
+  Result plan(
     rmf_traffic::Time time_now,
     std::vector<State> agents,
     std::vector<ConstRequestPtr> requests);
 
-  /// Get the optimal planner based assignments for a set of initial states and
-  /// requests
-  /// \note When the number of requests exceed 10 for the same start time
-  /// segment, this plan may take a while to be generated. Hence, it is
-  /// recommended to call greedy_plan() method and use the greedy solution for bidding.
-  /// If a bid is awarded, the optimal solution may be used for assignments.
-  Result optimal_plan(
+  /// Generate assignments for requests among available agents. Override the
+  /// default parameters
+  ///
+  /// \param[in] time_now
+  ///   The current time when this plan is requested
+  ///
+  /// \param[in] agents
+  ///   The initial states of the agents/AGVs that can undertake the requests
+  ///
+  /// \param[in] requests
+  ///   The set of requests that need to be assigned among the agents/AGVs
+  ///
+  /// \param[in] options
+  ///   The options to use for this plan. This overrides the default Options of
+  ///   the TaskPlanner instance
+  Result plan(
     rmf_traffic::Time time_now,
     std::vector<State> agents,
     std::vector<ConstRequestPtr> requests,
-    std::function<bool()> interrupter);
+    Options options);
 
   /// Compute the cost of a set of assignments
   double compute_cost(const Assignments& assignments) const;

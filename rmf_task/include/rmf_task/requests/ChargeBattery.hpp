@@ -36,18 +36,24 @@ namespace rmf_task {
 namespace requests {
 
 //==============================================================================
+/// A class that generates a Request which requires an AGV to return to its
+/// desginated charging_waypoint as specified in its agv::State and wait till
+/// its battery charges up to the recharge_soc confugred in agv::Constraints
 class ChargeBattery
 {
 public:
 
+  // Forward declare the model for this request
   class Model;
 
   class Description : public Request::Description
   {
   public:
 
+    /// Generate the description for this request
     static DescriptionPtr make();
 
+    /// Documentation inherited
     std::shared_ptr<Request::Model> make_model(
       rmf_traffic::Time earliest_start_time,
       const agv::Parameters& parameters) const final;
@@ -58,9 +64,20 @@ public:
     rmf_utils::impl_ptr<Implementation> _pimpl;
   };
 
+  /// Generate a chargebattery request
+  ///
+  /// \param[in] earliest_start_time
+  ///   The desired start time for this request
+  ///
+  /// \param[in] priority
+  ///   The priority for this request
+  ///
+  /// \param[in] automatic
+  ///   True if this request is auto-generated
   static ConstRequestPtr make(
     rmf_traffic::Time earliest_start_time,
-    ConstPriorityPtr priority = nullptr);
+    ConstPriorityPtr priority = nullptr,
+    bool automatic = true);
 };
 
 } // namespace requests

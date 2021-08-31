@@ -23,6 +23,9 @@
 #include <rmf_task/requests/ChargeBattery.hpp>
 #include <rmf_task/requests/Loop.hpp>
 
+#include <rmf_task/requests/ChargeBatteryFactory.hpp>
+#include <rmf_task/requests/ParkRobotFactory.hpp>
+
 #include <rmf_task/BinaryPriorityScheme.hpp>
 
 #include <rmf_traffic/agv/Graph.hpp>
@@ -172,12 +175,12 @@ SCENARIO("Grid World")
   const rmf_traffic::agv::VehicleTraits traits(
     {1.0, 0.7}, {0.6, 0.5}, profile);
   rmf_traffic::schedule::Database database;
-  const auto default_options = rmf_traffic::agv::Planner::Options{
+  const auto default_planner_options = rmf_traffic::agv::Planner::Options{
     nullptr};
 
   auto planner = std::make_shared<rmf_traffic::agv::Planner>(
     rmf_traffic::agv::Planner::Configuration{graph, traits},
-    default_options);
+    default_planner_options);
 
   auto battery_system_optional = BatterySystem::make(24.0, 40.0, 8.8);
   REQUIRE(battery_system_optional);
@@ -209,6 +212,17 @@ SCENARIO("Grid World")
     parameters,
     constraints,
     cost_calculator};
+
+  // But default we use the optimal solver
+  const auto default_options = TaskPlanner::Options{
+    false,
+    nullptr,
+    nullptr};
+
+  const auto greedy_options = TaskPlanner::Options{
+    true,
+    nullptr,
+    nullptr};
 
   // Duration for loading/unloading items for delivery tasks
   const auto delivery_wait = rmf_traffic::time::from_seconds(0);
@@ -255,11 +269,11 @@ SCENARIO("Grid World")
     };
 
 
-    TaskPlanner task_planner(task_config);
+    TaskPlanner task_planner(task_config, default_options);
 
     auto start_time = std::chrono::steady_clock::now();
-    const auto greedy_result = task_planner.greedy_plan(
-      now, initial_states, requests);
+    const auto greedy_result = task_planner.plan(
+      now, initial_states, requests, greedy_options);
     const auto greedy_assignments = std::get_if<
       TaskPlanner::Assignments>(&greedy_result);
     REQUIRE(greedy_assignments);
@@ -276,10 +290,10 @@ SCENARIO("Grid World")
 
     // Create new TaskPlanner to reset cache so that measured run times
     // remain independent of one another
-    task_planner = TaskPlanner(task_config);
+    task_planner = TaskPlanner(task_config, default_options);
     start_time = std::chrono::steady_clock::now();
-    const auto optimal_result = task_planner.optimal_plan(
-      now, initial_states, requests, nullptr);
+    const auto optimal_result = task_planner.plan(
+      now, initial_states, requests);
     const auto optimal_assignments = std::get_if<
       TaskPlanner::Assignments>(&optimal_result);
     const double optimal_cost = task_planner.compute_cost(*optimal_assignments);
@@ -401,11 +415,11 @@ SCENARIO("Grid World")
         now + rmf_traffic::time::from_seconds(60000))
     };
 
-    TaskPlanner task_planner(task_config);
+    TaskPlanner task_planner(task_config, default_options);
 
     auto start_time = std::chrono::steady_clock::now();
-    const auto greedy_result = task_planner.greedy_plan(
-      now, initial_states, requests);
+    const auto greedy_result = task_planner.plan(
+      now, initial_states, requests, greedy_options);
     const auto greedy_assignments = std::get_if<
       TaskPlanner::Assignments>(&greedy_result);
     REQUIRE(greedy_assignments);
@@ -422,10 +436,10 @@ SCENARIO("Grid World")
 
     // Create new TaskPlanner to reset cache so that measured run times
     // remain independent of one another
-    task_planner = TaskPlanner(task_config);
+    task_planner = TaskPlanner(task_config, default_options);
     start_time = std::chrono::steady_clock::now();
-    const auto optimal_result = task_planner.optimal_plan(
-      now, initial_states, requests, nullptr);
+    const auto optimal_result = task_planner.plan(
+      now, initial_states, requests);
     const auto optimal_assignments = std::get_if<
       TaskPlanner::Assignments>(&optimal_result);
     const double optimal_cost = task_planner.compute_cost(*optimal_assignments);
@@ -492,11 +506,11 @@ SCENARIO("Grid World")
         now + rmf_traffic::time::from_seconds(50000))
     };
 
-    TaskPlanner task_planner(task_config);
+    TaskPlanner task_planner(task_config, default_options);
 
     auto start_time = std::chrono::steady_clock::now();
-    const auto greedy_result = task_planner.greedy_plan(
-      now, initial_states, requests);
+    const auto greedy_result = task_planner.plan(
+      now, initial_states, requests, greedy_options);
     const auto greedy_assignments = std::get_if<
       TaskPlanner::Assignments>(&greedy_result);
     REQUIRE(greedy_assignments);
@@ -513,10 +527,10 @@ SCENARIO("Grid World")
 
     // Create new TaskPlanner to reset cache so that measured run times
     // remain independent of one another
-    task_planner = TaskPlanner(task_config);
+    task_planner = TaskPlanner(task_config, default_options);
     start_time = std::chrono::steady_clock::now();
-    const auto optimal_result = task_planner.optimal_plan(
-      now, initial_states, requests, nullptr);
+    const auto optimal_result = task_planner.plan(
+      now, initial_states, requests);
     const auto optimal_assignments = std::get_if<
       TaskPlanner::Assignments>(&optimal_result);
     const double optimal_cost = task_planner.compute_cost(*optimal_assignments);
@@ -648,11 +662,11 @@ SCENARIO("Grid World")
         now + rmf_traffic::time::from_seconds(70000))
     };
 
-    TaskPlanner task_planner(task_config);
+    TaskPlanner task_planner(task_config, default_options);
 
     auto start_time = std::chrono::steady_clock::now();
-    const auto greedy_result = task_planner.greedy_plan(
-      now, initial_states, requests);
+    const auto greedy_result = task_planner.plan(
+      now, initial_states, requests, greedy_options);
     const auto greedy_assignments = std::get_if<
       TaskPlanner::Assignments>(&greedy_result);
     REQUIRE(greedy_assignments);
@@ -669,10 +683,10 @@ SCENARIO("Grid World")
 
     // Create new TaskPlanner to reset cache so that measured run times
     // remain independent of one another
-    task_planner = TaskPlanner(task_config);
+    task_planner = TaskPlanner(task_config, default_options);
     start_time = std::chrono::steady_clock::now();
-    const auto optimal_result = task_planner.optimal_plan(
-      now, initial_states, requests, nullptr);
+    const auto optimal_result = task_planner.plan(
+      now, initial_states, requests);
     const auto optimal_assignments = std::get_if<
       TaskPlanner::Assignments>(&optimal_result);
     const double optimal_cost = task_planner.compute_cost(*optimal_assignments);
@@ -711,9 +725,9 @@ SCENARIO("Grid World")
         now)
     };
 
-    TaskPlanner task_planner(task_config);
+    TaskPlanner task_planner(task_config, default_options);
 
-    const auto greedy_result = task_planner.greedy_plan(
+    const auto greedy_result = task_planner.plan(
       now, initial_states, requests);
     const auto greedy_assignments = std::get_if<
       TaskPlanner::Assignments>(&greedy_result);
@@ -724,9 +738,9 @@ SCENARIO("Grid World")
 
     // Create new TaskPlanner to reset cache so that measured run times
     // remain independent of one another
-    task_planner = TaskPlanner(task_config);
-    const auto optimal_result = task_planner.optimal_plan(
-      now, initial_states, requests, nullptr);
+    task_planner = TaskPlanner(task_config, default_options);
+    const auto optimal_result = task_planner.plan(
+      now, initial_states, requests);
     const auto optimal_assignments = std::get_if<
       TaskPlanner::Assignments>(&optimal_result);
     REQUIRE_FALSE(optimal_assignments);
@@ -757,10 +771,10 @@ SCENARIO("Grid World")
         now)
     };
 
-    TaskPlanner task_planner(task_config);
+    TaskPlanner task_planner(task_config, default_options);
 
-    const auto greedy_result = task_planner.greedy_plan(
-      now, initial_states, requests);
+    const auto greedy_result = task_planner.plan(
+      now, initial_states, requests, greedy_options);
     const auto greedy_assignments = std::get_if<
       TaskPlanner::Assignments>(&greedy_result);
     REQUIRE_FALSE(greedy_assignments);
@@ -770,9 +784,9 @@ SCENARIO("Grid World")
 
     // Create new TaskPlanner to reset cache so that measured run times
     // remain independent of one another
-    task_planner = TaskPlanner(task_config);
-    const auto optimal_result = task_planner.optimal_plan(
-      now, initial_states, requests, nullptr);
+    task_planner = TaskPlanner(task_config, default_options);
+    const auto optimal_result = task_planner.plan(
+      now, initial_states, requests);
     const auto optimal_assignments = std::get_if<
       TaskPlanner::Assignments>(&optimal_result);
     REQUIRE_FALSE(optimal_assignments);
@@ -821,11 +835,11 @@ SCENARIO("Grid World")
         now + rmf_traffic::time::from_seconds(0))
     };
 
-    TaskPlanner task_planner(task_config);
+    TaskPlanner task_planner(task_config, default_options);
 
     auto start_time = std::chrono::steady_clock::now();
-    const auto optimal_result = task_planner.optimal_plan(
-      now, initial_states, requests, nullptr);
+    const auto optimal_result = task_planner.plan(
+      now, initial_states, requests);
     const auto optimal_assignments_ptr = std::get_if<
       TaskPlanner::Assignments>(&optimal_result);
     REQUIRE(optimal_assignments_ptr);
@@ -857,10 +871,10 @@ SCENARIO("Grid World")
     }
 
     // Reset the planner cache
-    task_planner = TaskPlanner(task_config);
+    task_planner = TaskPlanner(task_config, default_options);
     start_time = std::chrono::steady_clock::now();
-    const auto new_optimal_result = task_planner.optimal_plan(
-      now, initial_states, requests, nullptr);
+    const auto new_optimal_result = task_planner.plan(
+      now, initial_states, requests);
     const auto new_optimal_assignments_ptr = std::get_if<
       TaskPlanner::Assignments>(&new_optimal_result);
     REQUIRE(new_optimal_assignments_ptr);
@@ -923,11 +937,11 @@ SCENARIO("Grid World")
         rmf_task::BinaryPriorityScheme::make_high_priority())
     };
 
-    TaskPlanner task_planner(task_config);
+    TaskPlanner task_planner(task_config, default_options);
 
     auto start_time = std::chrono::steady_clock::now();
-    const auto optimal_result = task_planner.optimal_plan(
-      now, initial_states, requests, nullptr);
+    const auto optimal_result = task_planner.plan(
+      now, initial_states, requests);
     const auto optimal_assignments_ptr = std::get_if<
       TaskPlanner::Assignments>(&optimal_result);
     REQUIRE(optimal_assignments_ptr);
@@ -996,11 +1010,11 @@ SCENARIO("Grid World")
         rmf_task::BinaryPriorityScheme::make_high_priority())
     };
 
-    TaskPlanner task_planner(task_config);
+    TaskPlanner task_planner(task_config, default_options);
 
     auto start_time = std::chrono::steady_clock::now();
-    const auto optimal_result = task_planner.optimal_plan(
-      now, initial_states, requests, nullptr);
+    const auto optimal_result = task_planner.plan(
+      now, initial_states, requests);
     const auto optimal_assignments_ptr = std::get_if<
       TaskPlanner::Assignments>(&optimal_result);
     REQUIRE(optimal_assignments_ptr);
@@ -1078,11 +1092,11 @@ SCENARIO("Grid World")
         rmf_task::BinaryPriorityScheme::make_high_priority())
     };
 
-    TaskPlanner task_planner(task_config);
+    TaskPlanner task_planner(task_config, default_options);
 
     auto start_time = std::chrono::steady_clock::now();
-    const auto optimal_result = task_planner.optimal_plan(
-      now, initial_states, requests, nullptr);
+    const auto optimal_result = task_planner.plan(
+      now, initial_states, requests);
     const auto optimal_assignments_ptr = std::get_if<
       TaskPlanner::Assignments>(&optimal_result);
     REQUIRE(optimal_assignments_ptr);
@@ -1160,11 +1174,11 @@ SCENARIO("Grid World")
         now + rmf_traffic::time::from_seconds(0))
     };
 
-    TaskPlanner task_planner(task_config);
+    TaskPlanner task_planner(task_config, default_options);
 
     auto start_time = std::chrono::steady_clock::now();
-    const auto optimal_result = task_planner.optimal_plan(
-      now, initial_states, requests, nullptr);
+    const auto optimal_result = task_planner.plan(
+      now, initial_states, requests);
     const auto optimal_assignments_ptr = std::get_if<
       TaskPlanner::Assignments>(&optimal_result);
     REQUIRE(optimal_assignments_ptr);
@@ -1227,8 +1241,8 @@ SCENARIO("Grid World")
       };
 
       auto start_time = std::chrono::steady_clock::now();
-      const auto optimal_result = task_planner.optimal_plan(
-        now, initial_states, requests, nullptr);
+      const auto optimal_result = task_planner.plan(
+        now, initial_states, requests);
       const auto optimal_assignments_ptr = std::get_if<
         TaskPlanner::Assignments>(&optimal_result);
       REQUIRE(optimal_assignments_ptr);
@@ -1305,11 +1319,11 @@ SCENARIO("Grid World")
         now + rmf_traffic::time::from_seconds(0))
     };
 
-    TaskPlanner task_planner(task_config);
+    TaskPlanner task_planner(task_config, default_options);
 
     auto start_time = std::chrono::steady_clock::now();
-    const auto optimal_result = task_planner.optimal_plan(
-      now, initial_states, requests, nullptr);
+    const auto optimal_result = task_planner.plan(
+      now, initial_states, requests);
     const auto optimal_assignments_ptr = std::get_if<
       TaskPlanner::Assignments>(&optimal_result);
     REQUIRE(optimal_assignments_ptr);
@@ -1381,8 +1395,8 @@ SCENARIO("Grid World")
       };
 
       auto start_time = std::chrono::steady_clock::now();
-      const auto optimal_result = task_planner.optimal_plan(
-        now, initial_states, requests, nullptr);
+      const auto optimal_result = task_planner.plan(
+        now, initial_states, requests);
       const auto optimal_assignments_ptr = std::get_if<
         TaskPlanner::Assignments>(&optimal_result);
       REQUIRE(optimal_assignments_ptr);
@@ -1473,11 +1487,11 @@ SCENARIO("Grid World")
         now + rmf_traffic::time::from_seconds(50000))
     };
 
-    TaskPlanner task_planner(new_task_config);
+    TaskPlanner task_planner(new_task_config, default_options);
 
     auto start_time = std::chrono::steady_clock::now();
-    const auto greedy_result = task_planner.greedy_plan(
-      now, initial_states, requests);
+    const auto greedy_result = task_planner.plan(
+      now, initial_states, requests, greedy_options);
     const auto greedy_assignments = std::get_if<
       TaskPlanner::Assignments>(&greedy_result);
     REQUIRE(greedy_assignments);
@@ -1494,10 +1508,10 @@ SCENARIO("Grid World")
 
     // Create new TaskPlanner to reset cache so that measured run times
     // remain independent of one another
-    task_planner = TaskPlanner(new_task_config);
+    task_planner = TaskPlanner(new_task_config, default_options);
     start_time = std::chrono::steady_clock::now();
-    const auto optimal_result = task_planner.optimal_plan(
-      now, initial_states, requests, nullptr);
+    const auto optimal_result = task_planner.plan(
+      now, initial_states, requests);
     const auto optimal_assignments = std::get_if<
       TaskPlanner::Assignments>(&optimal_result);
     const double optimal_cost = task_planner.compute_cost(*optimal_assignments);
@@ -1565,10 +1579,10 @@ SCENARIO("Grid World")
         start_time),
     };
 
-    TaskPlanner task_planner(task_config);
+    TaskPlanner task_planner(task_config, default_options);
 
-    const auto optimal_result = task_planner.optimal_plan(
-      now, initial_states, requests, nullptr);
+    const auto optimal_result = task_planner.plan(
+      now, initial_states, requests);
     const auto optimal_assignments_ptr = std::get_if<
       TaskPlanner::Assignments>(&optimal_result);
     REQUIRE(optimal_assignments_ptr);
@@ -1641,11 +1655,11 @@ SCENARIO("Grid World")
         now + rmf_traffic::time::from_seconds(50000))
     };
 
-    TaskPlanner task_planner(new_task_config);
+    TaskPlanner task_planner(new_task_config, default_options);
 
     auto start_time = std::chrono::steady_clock::now();
-    const auto optimal_result = task_planner.optimal_plan(
-      now, initial_states, requests, nullptr);
+    const auto optimal_result = task_planner.plan(
+      now, initial_states, requests);
     auto finish_time = std::chrono::steady_clock::now();
     const auto optimal_assignments_ptr = std::get_if<
       TaskPlanner::Assignments>(&optimal_result);
@@ -1666,6 +1680,222 @@ SCENARIO("Grid World")
       display_solution("Optimal", optimal_assignments, optimal_cost);
     }
 
+  }
+
+  WHEN("Planning without and with ChargeBatteryFactory")
+  {
+    const auto now = std::chrono::steady_clock::now();
+    const double default_orientation = 0.0;
+
+    rmf_traffic::agv::Plan::Start first_location{now, 13, default_orientation};
+    rmf_traffic::agv::Plan::Start second_location{now, 1, default_orientation};
+
+    std::vector<rmf_task::agv::State> initial_states =
+    {
+      rmf_task::agv::State{first_location, 13, 1.0},
+      rmf_task::agv::State{second_location, 1, 1.0},
+    };
+
+    std::vector<rmf_task::ConstRequestPtr> requests =
+    {
+      rmf_task::requests::Loop::make(
+        0,
+        15,
+        1,
+        "Loop1",
+        now),
+      rmf_task::requests::Loop::make(
+        0,
+        14,
+        1,
+        "Loop2",
+        now),
+      rmf_task::requests::Loop::make(
+        3,
+        4,
+        1,
+        "Loop3",
+        now),
+    };
+
+    TaskPlanner task_planner(task_config, default_options);
+
+    THEN("When ChargeBatteryFactory is not supplied during planning")
+    {
+      auto start_time = std::chrono::steady_clock::now();
+      const auto optimal_result = task_planner.plan(
+        now, initial_states, requests);
+      const auto optimal_assignments_ptr = std::get_if<
+        TaskPlanner::Assignments>(&optimal_result);
+      REQUIRE(optimal_assignments_ptr);
+      const auto& optimal_assignments = *optimal_assignments_ptr;
+      const double optimal_cost =
+        task_planner.compute_cost(optimal_assignments);
+      auto finish_time = std::chrono::steady_clock::now();
+      CHECK_TIMES(optimal_assignments, now);
+
+      if (display_solutions)
+      {
+        std::cout << "Optimal solution found in: "
+                  << (finish_time - start_time).count() / 1e9 << std::endl;
+        display_solution("Optimal", optimal_assignments, optimal_cost);
+      }
+
+      // Check that the last assignment for each agent is not a ChargeBattery request
+      for (const auto& agent : optimal_assignments)
+      {
+        const auto last_assignment = agent.back();
+        auto is_charge_request =
+          std::dynamic_pointer_cast<
+          const rmf_task::requests::ChargeBattery::Description>(
+          last_assignment.request()->description());
+        CHECK_FALSE(is_charge_request);
+      }
+    }
+
+    THEN("When ChargeBatteryFactory is supplied during planning")
+    {
+      const auto finishing_request =
+        std::make_shared<rmf_task::requests::ChargeBatteryFactory>();
+      task_planner.default_options().finishing_request(finishing_request);
+      REQUIRE(task_planner.default_options().finishing_request() != nullptr);
+
+      auto start_time = std::chrono::steady_clock::now();
+      const auto optimal_result = task_planner.plan(
+        now, initial_states, requests);
+      const auto optimal_assignments_ptr = std::get_if<
+        TaskPlanner::Assignments>(&optimal_result);
+      REQUIRE(optimal_assignments_ptr);
+      const auto& optimal_assignments = *optimal_assignments_ptr;
+      const double optimal_cost =
+        task_planner.compute_cost(optimal_assignments);
+      auto finish_time = std::chrono::steady_clock::now();
+      CHECK_TIMES(optimal_assignments, now);
+
+      if (display_solutions)
+      {
+        std::cout << "Optimal solution found in: "
+                  << (finish_time - start_time).count() / 1e9 << std::endl;
+        display_solution("Optimal", optimal_assignments, optimal_cost);
+      }
+
+      // Check that the last assignment for each agent is a ChargeBattery request
+      for (const auto& agent : optimal_assignments)
+      {
+        const auto last_assignment = agent.back();
+        auto is_charge_request =
+          std::dynamic_pointer_cast<
+          const rmf_task::requests::ChargeBattery::Description>(
+          last_assignment.request()->description());
+        CHECK(is_charge_request);
+      }
+    }
+  }
+
+  WHEN("Planning without and with ParkRobotFactory")
+  {
+    const auto now = std::chrono::steady_clock::now();
+    const double default_orientation = 0.0;
+
+    rmf_traffic::agv::Plan::Start first_location{now, 13, default_orientation};
+    rmf_traffic::agv::Plan::Start second_location{now, 1, default_orientation};
+
+    std::vector<rmf_task::agv::State> initial_states =
+    {
+      rmf_task::agv::State{first_location, 13, 1.0},
+      rmf_task::agv::State{second_location, 1, 1.0},
+    };
+
+    std::vector<rmf_task::ConstRequestPtr> requests =
+    {
+      rmf_task::requests::Loop::make(
+        0,
+        15,
+        1,
+        "Loop1",
+        now),
+      rmf_task::requests::Loop::make(
+        0,
+        14,
+        1,
+        "Loop2",
+        now),
+      rmf_task::requests::Loop::make(
+        3,
+        4,
+        1,
+        "Loop3",
+        now),
+    };
+
+    TaskPlanner task_planner(task_config, default_options);
+
+    THEN("When ParkRobotFactory is not supplied during planning")
+    {
+      auto start_time = std::chrono::steady_clock::now();
+      const auto optimal_result = task_planner.plan(
+        now, initial_states, requests);
+      const auto optimal_assignments_ptr = std::get_if<
+        TaskPlanner::Assignments>(&optimal_result);
+      REQUIRE(optimal_assignments_ptr);
+      const auto& optimal_assignments = *optimal_assignments_ptr;
+      const double optimal_cost =
+        task_planner.compute_cost(optimal_assignments);
+      auto finish_time = std::chrono::steady_clock::now();
+      CHECK_TIMES(optimal_assignments, now);
+
+      if (display_solutions)
+      {
+        std::cout << "Optimal solution found in: "
+                  << (finish_time - start_time).count() / 1e9 << std::endl;
+        display_solution("Optimal", optimal_assignments, optimal_cost);
+      }
+
+      // Check that the final location for each agent is not its charging waypoint
+      for (const auto& agent : optimal_assignments)
+      {
+        const auto last_assignment = agent.back();
+        CHECK_FALSE(last_assignment.request()->automatic());
+        const auto& state = last_assignment.state();
+        CHECK_FALSE(state.location().waypoint() == state.charging_waypoint());
+      }
+    }
+
+    THEN("When ParkRobotFactory is supplied during planning")
+    {
+      const auto finishing_request =
+        std::make_shared<rmf_task::requests::ParkRobotFactory>();
+      task_planner.default_options().finishing_request(finishing_request);
+      REQUIRE(task_planner.default_options().finishing_request() != nullptr);
+
+      auto start_time = std::chrono::steady_clock::now();
+      const auto optimal_result = task_planner.plan(
+        now, initial_states, requests);
+      const auto optimal_assignments_ptr = std::get_if<
+        TaskPlanner::Assignments>(&optimal_result);
+      REQUIRE(optimal_assignments_ptr);
+      const auto& optimal_assignments = *optimal_assignments_ptr;
+      const double optimal_cost =
+        task_planner.compute_cost(optimal_assignments);
+      auto finish_time = std::chrono::steady_clock::now();
+      CHECK_TIMES(optimal_assignments, now);
+
+      if (display_solutions)
+      {
+        std::cout << "Optimal solution found in: "
+                  << (finish_time - start_time).count() / 1e9 << std::endl;
+        display_solution("Optimal", optimal_assignments, optimal_cost);
+      }
+
+      // Check that the final location for each agent is its charging waypoint
+      for (const auto& agent : optimal_assignments)
+      {
+        const auto last_assignment = agent.back();
+        CHECK(last_assignment.request()->automatic());
+        const auto& state = last_assignment.state();
+        CHECK(state.location().waypoint() == state.charging_waypoint());
+      }
+    }
   }
 
 }

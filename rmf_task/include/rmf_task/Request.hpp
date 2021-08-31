@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef RMF_TASK__TASK_HPP
-#define RMF_TASK__TASK_HPP
+#ifndef RMF_TASK__REQUEST_HPP
+#define RMF_TASK__REQUEST_HPP
 
 #include <memory>
 
@@ -36,6 +36,8 @@ namespace rmf_task {
 class Request
 {
 public:
+  /// An abstract interface for computing the estimate and invariant durations
+  /// of this request
   class Model
   {
   public:
@@ -53,10 +55,21 @@ public:
     virtual ~Model() = default;
   };
 
+  /// An abstract interface to define the specifics of this request. This
+  /// implemented description will differentiate this request from others.
   class Description
   {
   public:
 
+    /// Generate a Model for this request based on the unique traits of this
+    /// description
+    ///
+    /// \param[in] earliest_start_time
+    ///   The earliest time this request should begin execution. This is usually the
+    ///   requested start time for the request.
+    ///
+    /// \param[in] parameters
+    ///   The parameters that describe this AGV
     virtual std::shared_ptr<Model> make_model(
       rmf_traffic::Time earliest_start_time,
       const agv::Parameters& parameters) const = 0;
@@ -69,8 +82,7 @@ public:
   /// Constructor
   ///
   /// \param[in] earliest_start_time
-  ///   The earliest time this request should begin execution. This is usually the
-  ///   requested start time for the request.
+  ///   The desired start time for this request
   ///
   /// \param[in] priority
   ///   The priority for this request. This is provided by the Priority Scheme. For
@@ -78,11 +90,15 @@ public:
   ///
   /// \param[in] description
   ///   The description for this request
+  ///
+  /// \param[in] automatic
+  ///   True if this request is auto-generated
   Request(
     const std::string& id,
     rmf_traffic::Time earliest_start_time,
     ConstPriorityPtr priority,
-    DescriptionPtr description);
+    DescriptionPtr description,
+    bool automatic = false);
 
   /// The unique id for this request
   const std::string& id() const;
@@ -95,6 +111,9 @@ public:
 
   /// Get the description of this request
   const DescriptionPtr& description() const;
+
+  // Returns true if this request was automatically generated
+  bool automatic() const;
 
   class Implementation;
 private:

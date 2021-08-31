@@ -24,6 +24,8 @@ namespace rmf_task {
 
 //==============================================================================
 // Forward declare abstract interface. The definition will remain as internal detail.
+/// A class that is used within the TaskPlanner to compute the cost of a set of
+/// assignments.
 class CostCalculator;
 
 using CostCalculatorPtr = std::shared_ptr<CostCalculator>;

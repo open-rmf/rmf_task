@@ -38,21 +38,26 @@ namespace rmf_task {
 namespace requests {
 
 //==============================================================================
+/// A class that generates a Request which requires an AGV to repeatedly travel
+/// between two locations
 class Loop
 {
 public:
 
+  // Forward declare the Model for this request
   class Model;
 
   class Description : public Request::Description
   {
   public:
 
+    /// Generate the description for this request
     static DescriptionPtr make(
       std::size_t start_waypoint,
       std::size_t finish_waypoint,
       std::size_t num_loops);
 
+    /// Documentation inherited
     std::shared_ptr<Request::Model> make_model(
       rmf_traffic::Time earliest_start_time,
       const agv::Parameters& parameters) const final;
@@ -73,13 +78,37 @@ public:
     rmf_utils::impl_ptr<Implementation> _pimpl;
   };
 
+  /// Generate a loop request
+  ///
+  /// \param[in] start_waypoint
+  ///   The graph index for the starting waypoint of the loop
+  ///
+  /// \param[in] finish_waypoint
+  ///   The graph index for the finishing waypoint of the loop
+  ///
+  /// \param[in] num_loops
+  ///   The number of times the AGV should loop between the start_waypoint and
+  ///   finish_waypoint
+  ///
+  /// \param[in] id
+  ///   A unique id for this request
+  ///
+  /// \param[in] earliest_start_time
+  ///   The desired start time for this request
+  ///
+  /// \param[in] priority
+  ///   The priority for this request
+  ///
+  /// \param[in] automatic
+  ///   True if this request is auto-generated
   static ConstRequestPtr make(
     std::size_t start_waypoint,
     std::size_t finish_waypoint,
     std::size_t num_loops,
     const std::string& id,
     rmf_traffic::Time earliest_start_time,
-    ConstPriorityPtr priority = nullptr);
+    ConstPriorityPtr priority = nullptr,
+    bool automatic = false);
 };
 
 } // namespace tasks

@@ -28,30 +28,34 @@
 namespace rmf_task {
 
 //==============================================================================
-/// Estimates for requests
+/// A class to store the time that the AGV should wait till before executing the
+/// request and the state of the AGV after finishing the request.
+/// Note: The wait time is different from the earliest_start_time specified in
+/// the request definition. The wait time may be earlier to ensure that the AGV
+/// arrvies at the first location of the request by the earliest_start_time
 class Estimate
 {
 public:
 
-  /// Constructor of an estimate of a task request.
+  /// Constructor of an estimate of the request.
   ///
   /// \param[in] finish_state
-  ///   Finish state of the robot once it completes the task request.
+  ///   Finish state of the robot once it completes the request.
   ///
   /// \param[in] wait_until
-  ///   The ideal time the robot starts executing this task.
+  ///   The ideal time the robot starts executing this request.
   Estimate(agv::State finish_state, rmf_traffic::Time wait_until);
 
-  /// Finish state of the robot once it completes the task request.
+  /// Finish state of the robot once it completes the request.
   agv::State finish_state() const;
 
   /// Sets a new finish state for the robot.
   Estimate& finish_state(agv::State new_finish_state);
 
-  /// The ideal time the robot starts executing this task.
+  /// The ideal time the robot starts executing this request.
   rmf_traffic::Time wait_until() const;
 
-  /// Sets a new starting time for the robot to execute the task request.
+  /// Sets a new starting time for the robot to execute the request.
   Estimate& wait_until(rmf_traffic::Time new_wait_until);
 
   class Implementation;
@@ -60,7 +64,7 @@ private:
 };
 
 //==============================================================================
-/// Stores computed estimates between pairs of waypoints
+/// A class to cache the computed estimates between pairs of waypoints
 class EstimateCache
 {
 public:

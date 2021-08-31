@@ -32,6 +32,7 @@ find_package(rmf_cmake_uncrustify QUIET)
 file(GLOB lib_srcs
   "src/rmf_task/agv/*.cpp"
   "src/rmf_task/requests/*.cpp"
+  "src/rmf_task/requests/factory/*.cpp"
   "src/rmf_task/*.cpp"
 )
 

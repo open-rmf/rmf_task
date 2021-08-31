@@ -99,6 +99,72 @@ auto TaskPlanner::Configuration::cost_calculator(
 }
 
 //==============================================================================
+class TaskPlanner::Options::Implementation
+{
+public:
+
+  bool greedy;
+  std::function<bool()> interrupter;
+  ConstRequestFactoryPtr finishing_request;
+};
+
+//==============================================================================
+TaskPlanner::Options::Options(
+  bool greedy,
+  std::function<bool()> interrupter,
+  ConstRequestFactoryPtr finishing_request)
+: _pimpl(rmf_utils::make_impl<Implementation>(
+      Implementation{
+        std::move(greedy),
+        std::move(interrupter),
+        std::move(finishing_request)
+      }))
+{
+  // Do nothing
+}
+
+//==============================================================================
+auto TaskPlanner::Options::greedy(bool value) -> Options&
+{
+  _pimpl->greedy = value;
+  return *this;
+}
+
+//==============================================================================
+bool TaskPlanner::Options::greedy() const
+{
+  return _pimpl->greedy;
+}
+
+//==============================================================================
+auto TaskPlanner::Options::interrupter(std::function<bool()> interrupter)
+-> Options&
+{
+  _pimpl->interrupter = std::move(interrupter);
+  return *this;
+}
+
+//==============================================================================
+const std::function<bool()>& TaskPlanner::Options::interrupter() const
+{
+  return _pimpl->interrupter;
+}
+
+//==============================================================================
+auto TaskPlanner::Options::finishing_request(
+  ConstRequestFactoryPtr finishing_request) -> Options&
+{
+  _pimpl->finishing_request = std::move(finishing_request);
+  return *this;
+}
+
+//==============================================================================
+ConstRequestFactoryPtr TaskPlanner::Options::finishing_request() const
+{
+  return _pimpl->finishing_request;
+}
+
+//==============================================================================
 class TaskPlanner::Assignment::Implementation
 {
 public:
@@ -306,6 +372,7 @@ class TaskPlanner::Implementation
 public:
 
   Configuration config;
+  Options default_options;
   std::shared_ptr<EstimateCache> estimate_cache;
   bool check_priority = false;
   ConstCostCalculatorPtr cost_calculator = nullptr;
@@ -352,11 +419,91 @@ public:
     return node;
   }
 
+  void append_finishing_request(
+    const RequestFactory& factory,
+    TaskPlanner::Assignments& complete_assignments)
+  {
+    for (auto& agent : complete_assignments)
+    {
+      if (agent.empty())
+      {
+        continue;
+      }
+
+      const auto& state = agent.back().state();
+      const auto request = factory.make_request(state);
+
+      // TODO(YV) Currently we are unable to recursively call complete_solve()
+      // here as the prune_assignments() function will remove any ChargeBattery
+      // requests at the back of the assignments. But the finishing factory
+      // could be a ChargeBattery request and hence this approach does not work.
+      // When we fix the logic with unnecessary ChargeBattery tasks, we should
+      // revist making this a recursive call.
+      auto model = request->description()->make_model(
+        state.finish_time(),
+        config.parameters());
+      auto estimate = model->estimate_finish(
+        state, config.constraints(), *estimate_cache);
+      if (estimate.has_value())
+      {
+        agent.push_back(
+          Assignment
+          {
+            request,
+            estimate.value().finish_state(),
+            estimate.value().wait_until()
+          });
+      }
+      else
+      {
+        // Insufficient battery to perform the finishing request. We check if
+        // adding a ChargeBattery task before will allow for it to be performed
+        const auto charging_request =
+          make_charging_request(state.finish_time());
+        const auto charge_battery_model =
+          charging_request->description()->make_model(
+          state.finish_time(),
+          config.parameters());
+        const auto charge_battery_estimate =
+          charge_battery_model->estimate_finish(
+          state, config.constraints(), *estimate_cache);
+        if (charge_battery_estimate.has_value())
+        {
+          model = request->description()->make_model(
+            charge_battery_estimate.value().finish_state().finish_time(),
+            config.parameters());
+          estimate = model->estimate_finish(
+            charge_battery_estimate.value().finish_state(),
+            config.constraints(),
+            *estimate_cache);
+          if (estimate.has_value())
+          {
+            // Append the ChargeBattery and finishing request
+            agent.push_back(
+              Assignment{
+                charging_request,
+                charge_battery_estimate.value().finish_state(),
+                charge_battery_estimate.value().wait_until()
+              });
+            agent.push_back(
+              Assignment
+              {
+                request,
+                estimate.value().finish_state(),
+                estimate.value().wait_until()
+              });
+          }
+        }
+      }
+    }
+  }
+
   Result complete_solve(
     rmf_traffic::Time time_now,
     std::vector<State>& initial_states,
     const std::vector<ConstRequestPtr>& requests,
     const std::function<bool()> interrupter,
+    ConstRequestFactoryPtr finishing_request,
     bool greedy)
   {
 
@@ -410,7 +557,13 @@ public:
 
       if (node->unassigned_tasks.empty())
       {
-        return prune_assignments(complete_assignments);
+        auto pruned_assignments = prune_assignments(complete_assignments);
+        if (finishing_request != nullptr)
+        {
+          append_finishing_request(*finishing_request, pruned_assignments);
+        }
+
+        return pruned_assignments;
       }
 
       std::vector<ConstRequestPtr> new_tasks;
@@ -438,6 +591,13 @@ public:
       if (!node)
         return error;
       initial_states = estimates;
+    }
+
+    // If a finishing_request is present, accommodate the request at the end of
+    // the assignments for each agent
+    if (finishing_request != nullptr)
+    {
+      append_finishing_request(*finishing_request, complete_assignments);
     }
 
     return complete_assignments;
@@ -922,10 +1082,12 @@ public:
 
 // ============================================================================
 TaskPlanner::TaskPlanner(
-  const rmf_task::agv::TaskPlanner::Configuration& configuration)
+  Configuration configuration,
+  Options default_options)
 : _pimpl(rmf_utils::make_impl<Implementation>(
       Implementation{
         configuration,
+        default_options,
         std::make_shared<EstimateCache>(
           configuration.parameters().planner()->
           get_configuration().graph().num_waypoints())
@@ -935,7 +1097,7 @@ TaskPlanner::TaskPlanner(
 }
 
 // ============================================================================
-auto TaskPlanner::greedy_plan(
+auto TaskPlanner::plan(
   rmf_traffic::Time time_now,
   std::vector<State> agents,
   std::vector<ConstRequestPtr> requests) -> Result
@@ -944,23 +1106,25 @@ auto TaskPlanner::greedy_plan(
     time_now,
     agents,
     requests,
-    nullptr,
-    true);
+    _pimpl->default_options.interrupter(),
+    _pimpl->default_options.finishing_request(),
+    _pimpl->default_options.greedy());
 }
 
 // ============================================================================
-auto TaskPlanner::optimal_plan(
+auto TaskPlanner::plan(
   rmf_traffic::Time time_now,
   std::vector<State> agents,
   std::vector<ConstRequestPtr> requests,
-  std::function<bool()> interrupter) -> Result
+  Options options) -> Result
 {
   return _pimpl->complete_solve(
     time_now,
     agents,
     requests,
-    interrupter,
-    false);
+    options.interrupter(),
+    options.finishing_request(),
+    options.greedy());
 }
 
 // ============================================================================
@@ -986,6 +1150,18 @@ const rmf_task::agv::TaskPlanner::Configuration& TaskPlanner::configuration()
 const
 {
   return _pimpl->config;
+}
+
+// ============================================================================
+auto TaskPlanner::default_options() const -> const Options&
+{
+  return _pimpl->default_options;
+}
+
+// ============================================================================
+auto TaskPlanner::default_options() -> Options&
+{
+  return _pimpl->default_options;
 }
 
 } // namespace agv

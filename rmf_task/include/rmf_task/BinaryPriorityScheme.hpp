@@ -26,15 +26,16 @@
 namespace rmf_task {
 
 //==============================================================================
-/// This is for a binary prioritization scheme. Tasks are assigned either high priority or low priority.
+/// A class that serves as a binary prioritization scheme by genrating either
+/// high or low Priority objects for requests.
 class BinaryPriorityScheme
 {
 public:
 
   /// Use these to assign the task priority
-  // In the current implementation this returns a nullptr.
+  /// In the current implementation this returns a nullptr.
   static std::shared_ptr<Priority> make_low_priority();
-  // Get a shared pointer to a high priority object of the binary prioritization scheme
+  /// Get a shared pointer to a high priority object of the binary prioritization scheme
   static std::shared_ptr<Priority> make_high_priority();
 
   /// Use this to give the appropriate cost calculator to the task planner

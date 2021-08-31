@@ -15,19 +15,31 @@
  *
 */
 
-#ifndef RMF_TASK__PRIORITY_HPP
-#define RMF_TASK__PRIORITY_HPP
-
-#include <memory>
+#include <rmf_task/requests/ChargeBatteryFactory.hpp>
+#include <rmf_task/requests/ChargeBattery.hpp>
 
 namespace rmf_task {
+namespace requests {
 
 //==============================================================================
-// Forward declare abstract interface. The definition will remain as internal detail.
-/// A class to specify the priority for a request
-class Priority;
-using PriorityPtr = std::shared_ptr<Priority>;
-using ConstPriorityPtr = std::shared_ptr<const Priority>;
+class ChargeBatteryFactory::Implementation
+{
 
+};
+
+//==============================================================================
+ChargeBatteryFactory::ChargeBatteryFactory()
+: _pimpl(rmf_utils::make_impl<Implementation>(Implementation()))
+{
+  // Do nothing
+}
+
+//==============================================================================
+ConstRequestPtr ChargeBatteryFactory::make_request(
+  const agv::State& state) const
+{
+  return ChargeBattery::make(state.finish_time());
+}
+
+} // namespace requests
 } // namespace rmf_task
-# endif // RMF_TASK__PRIORITY_HPP

@@ -37,21 +37,26 @@ namespace rmf_task {
 namespace requests {
 
 //==============================================================================
+/// A class that generates a Request which requires an AGV to perform a cleaning
+/// operation at a location
 class Clean
 {
 public:
 
+  // Forward declare the model for this request
   class Model;
 
   class Description : public Request::Description
   {
   public:
 
+    /// Generate the description for this request
     static DescriptionPtr make(
       std::size_t start_waypoint,
       std::size_t end_waypoint,
       const rmf_traffic::Trajectory& cleaning_path);
 
+    /// Documentation inherited
     std::shared_ptr<Request::Model> make_model(
       rmf_traffic::Time earliest_start_time,
       const agv::Parameters& parameters) const final;
@@ -68,13 +73,40 @@ public:
     rmf_utils::impl_ptr<Implementation> _pimpl;
   };
 
+  /// Generate a clean request
+  ///
+  /// \param[in] start_waypoint
+  ///   The graph index for the location where the AGV should begin its cleaning
+  ///   operation
+  ///
+  /// \param[in] end_waypoint
+  ///   The graph index for the location where the AGV ends up after its cleaning
+  ///   operation
+  ///
+  /// \param[in] cleaning_path
+  ///   A trajectory that describes the motion of the AGV during the cleaning
+  ///   operation. This is used to determine the process duration and expected
+  ///   battery drain
+  ///
+  /// \param[in] id
+  ///   A unique id for this request
+  ///
+  /// \param[in] earliest_start_time
+  ///   The desired start time for this request
+  ///
+  /// \param[in] priority
+  ///   The priority for this request
+  ///
+  /// \param[in] automatic
+  ///   True if this request is auto-generated
   static ConstRequestPtr make(
     std::size_t start_waypoint,
     std::size_t end_waypoint,
     const rmf_traffic::Trajectory& cleaning_path,
     const std::string& id,
     rmf_traffic::Time earliest_start_time,
-    ConstPriorityPtr priority = nullptr);
+    ConstPriorityPtr priority = nullptr,
+    bool automatic = false);
 };
 
 } // namespace requests

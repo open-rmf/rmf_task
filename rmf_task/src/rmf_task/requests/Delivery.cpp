@@ -358,7 +358,8 @@ ConstRequestPtr Delivery::make(
   rmf_traffic::Duration dropoff_wait,
   const std::string& id,
   rmf_traffic::Time earliest_start_time,
-  ConstPriorityPtr priority)
+  ConstPriorityPtr priority,
+  bool automatic)
 {
   const auto description = Description::make(
     pickup_waypoint,
@@ -367,7 +368,7 @@ ConstRequestPtr Delivery::make(
     dropoff_wait);
 
   return std::make_shared<Request>(
-    id, earliest_start_time, std::move(priority), description);
+    id, earliest_start_time, std::move(priority), description, automatic);
 }
 
 } // namespace requests
