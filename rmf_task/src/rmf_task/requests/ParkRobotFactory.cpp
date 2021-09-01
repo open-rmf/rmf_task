@@ -67,7 +67,7 @@ ParkRobotFactory::ParkRobotFactory(
 ConstRequestPtr ParkRobotFactory::make_request(
   const agv::State& state) const
 {
-  std::string id = "ReturnToCharger" + generate_uuid();
+  std::string id = "ParkRobot" + generate_uuid();
   const auto start_waypoint = state.location().waypoint();
   const auto finish_waypoint = _pimpl->parking_waypoint.has_value() ?
     _pimpl->parking_waypoint.value() : state.charging_waypoint();
