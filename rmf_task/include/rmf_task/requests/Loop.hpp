@@ -30,7 +30,7 @@
 
 #include <rmf_utils/impl_ptr.hpp>
 
-#include <rmf_task/agv/State.hpp>
+#include <rmf_task/State.hpp>
 #include <rmf_task/Request.hpp>
 #include <rmf_task/Estimate.hpp>
 
@@ -60,7 +60,7 @@ public:
     /// Documentation inherited
     std::shared_ptr<Request::Model> make_model(
       rmf_traffic::Time earliest_start_time,
-      const agv::Parameters& parameters) const final;
+      const Parameters& parameters) const final;
 
     /// Get the start waypoint of the loop in this request
     std::size_t start_waypoint() const;

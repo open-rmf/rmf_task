@@ -19,7 +19,6 @@
 #include <rmf_task/requests/ChargeBattery.hpp>
 
 namespace rmf_task {
-namespace agv {
 
 // ============================================================================
 void Candidates::update_map()
@@ -193,7 +192,7 @@ PendingTask::PendingTask(
 // ============================================================================
 std::shared_ptr<PendingTask> PendingTask::make(
   const rmf_traffic::Time start_time,
-  const std::vector<rmf_task::agv::State>& initial_states,
+  const std::vector<rmf_task::State>& initial_states,
   const Constraints& constraints,
   const Parameters& parameters,
   const ConstRequestPtr request_,
@@ -218,5 +217,4 @@ std::shared_ptr<PendingTask> PendingTask::make(
   return pending_task;
 }
 
-} // namespace agv
 } // namespace rmf_task

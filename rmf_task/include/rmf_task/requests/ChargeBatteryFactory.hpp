@@ -19,7 +19,7 @@
 #define RMF_TASK__REQUESTS__FACTORY__CHARGEBATTERYFACTORY_HPP
 
 #include <rmf_task/RequestFactory.hpp>
-#include <rmf_task/agv/State.hpp>
+#include <rmf_task/State.hpp>
 
 #include <rmf_utils/impl_ptr.hpp>
 
@@ -39,7 +39,7 @@ public:
 
   /// Documentation inherited
   ConstRequestPtr make_request(
-    const agv::State& state) const final;
+    const State& state) const final;
 
   class Implementation;
 

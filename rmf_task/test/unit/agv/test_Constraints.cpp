@@ -18,41 +18,41 @@
 #include <chrono>
 #include <memory>
 
-#include <rmf_task/agv/Constraints.hpp>
+#include <rmf_task/Constraints.hpp>
 
 #include <rmf_utils/catch.hpp>
 
 SCENARIO("Test Constraints")
 {
-  std::unique_ptr<rmf_task::agv::Constraints> constraints;
+  std::unique_ptr<rmf_task::Constraints> constraints;
 
   WHEN("Minimum battery threshold")
   {
     CHECK_NOTHROW(
-      constraints.reset(new rmf_task::agv::Constraints{0.0}));
+      constraints.reset(new rmf_task::Constraints{0.0}));
   }
 
   WHEN("Maximum battery threshold")
   {
     CHECK_NOTHROW(
-      constraints.reset(new rmf_task::agv::Constraints{1.0}));
+      constraints.reset(new rmf_task::Constraints{1.0}));
   }
 
   WHEN("Half battery threshold")
   {
     CHECK_NOTHROW(
-      constraints.reset(new rmf_task::agv::Constraints{0.5}));
+      constraints.reset(new rmf_task::Constraints{0.5}));
   }
 
   WHEN("Below minimum battery threshold")
   {
     CHECK_THROWS(
-      constraints.reset(new rmf_task::agv::Constraints{0.0 - 1e-4}));
+      constraints.reset(new rmf_task::Constraints{0.0 - 1e-4}));
   }
 
   WHEN("Above maximum battery threshold")
   {
     CHECK_THROWS(
-      constraints.reset(new rmf_task::agv::Constraints{1.0 + 1e-4}));
+      constraints.reset(new rmf_task::Constraints{1.0 + 1e-4}));
   }
 }

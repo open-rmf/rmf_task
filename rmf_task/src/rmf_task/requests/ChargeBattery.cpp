@@ -52,26 +52,26 @@ class ChargeBattery::Model : public Request::Model
 public:
 
   std::optional<Estimate> estimate_finish(
-    const agv::State& initial_state,
-    const agv::Constraints& task_planning_constraints,
+    const State& initial_state,
+    const Constraints& task_planning_constraints,
     EstimateCache& estimate_cache) const final;
 
   rmf_traffic::Duration invariant_duration() const final;
 
   Model(
     const rmf_traffic::Time earliest_start_time,
-    agv::Parameters parameters);
+    Parameters parameters);
 
 private:
   rmf_traffic::Time _earliest_start_time;
-  agv::Parameters _parameters;
+  Parameters _parameters;
   rmf_traffic::Duration _invariant_duration;
 };
 
 //==============================================================================
 ChargeBattery::Model::Model(
   const rmf_traffic::Time earliest_start_time,
-  agv::Parameters parameters)
+  Parameters parameters)
 : _earliest_start_time(earliest_start_time),
   _parameters(parameters)
 {
@@ -81,8 +81,8 @@ ChargeBattery::Model::Model(
 //==============================================================================
 std::optional<rmf_task::Estimate>
 ChargeBattery::Model::estimate_finish(
-  const agv::State& initial_state,
-  const agv::Constraints& task_planning_constraints,
+  const State& initial_state,
+  const Constraints& task_planning_constraints,
   EstimateCache& estimate_cache) const
 {
   // Important to return nullopt if a charging task is not needed. In the task
@@ -101,7 +101,7 @@ ChargeBattery::Model::estimate_finish(
     initial_state.finish_time(),
     initial_state.charging_waypoint(),
     initial_state.location().orientation()};
-  agv::State state{
+  State state{
     std::move(final_plan_start),
     initial_state.charging_waypoint(),
     initial_state.battery_soc()};
@@ -216,7 +216,7 @@ ChargeBattery::Description::Description()
 //==============================================================================
 std::shared_ptr<Request::Model> ChargeBattery::Description::make_model(
   rmf_traffic::Time earliest_start_time,
-  const agv::Parameters& parameters) const
+  const Parameters& parameters) const
 {
   return std::make_shared<ChargeBattery::Model>(
     earliest_start_time,

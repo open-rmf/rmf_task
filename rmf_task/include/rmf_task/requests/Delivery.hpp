@@ -28,7 +28,7 @@
 #include <rmf_battery/MotionPowerSink.hpp>
 #include <rmf_battery/DevicePowerSink.hpp>
 
-#include <rmf_task/agv/State.hpp>
+#include <rmf_task/State.hpp>
 #include <rmf_task/Request.hpp>
 #include <rmf_task/Estimate.hpp>
 
@@ -61,7 +61,7 @@ public:
     /// Documentation inherited
     std::shared_ptr<Request::Model> make_model(
       rmf_traffic::Time earliest_start_time,
-      const agv::Parameters& parameters) const final;
+      const Parameters& parameters) const final;
 
     /// Get the pickup waypoint in this request
     std::size_t pickup_waypoint() const;

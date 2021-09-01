@@ -220,7 +220,7 @@ double BinaryPriorityCostCalculator::compute_cost(
 
 //==============================================================================
 double BinaryPriorityCostCalculator::compute_cost(
-  rmf_task::agv::TaskPlanner::Assignments assignments) const
+  rmf_task::TaskPlanner::Assignments assignments) const
 {
   return compute_g(assignments);
 }

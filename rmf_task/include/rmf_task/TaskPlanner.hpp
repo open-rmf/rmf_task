@@ -21,8 +21,9 @@
 #include <rmf_task/Request.hpp>
 #include <rmf_task/RequestFactory.hpp>
 #include <rmf_task/CostCalculator.hpp>
-#include <rmf_task/agv/Constraints.hpp>
-#include <rmf_task/agv/Parameters.hpp>
+#include <rmf_task/Constraints.hpp>
+#include <rmf_task/Parameters.hpp>
+#include <rmf_task/State.hpp>
 
 #include <rmf_utils/impl_ptr.hpp>
 
@@ -32,7 +33,6 @@
 #include <variant>
 
 namespace rmf_task {
-namespace agv {
 
 //==============================================================================
 class TaskPlanner
@@ -257,7 +257,6 @@ private:
 
 };
 
-} // namespace agv
 } // namespace rmf_task
 
 #endif // RMF_TASK__AGV__TASKPLANNER_HPP

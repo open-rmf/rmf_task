@@ -21,7 +21,6 @@
 #include <rmf_utils/impl_ptr.hpp>
 
 namespace rmf_task {
-namespace agv {
 
 //==============================================================================
 /// A class that describes constraints that are common among the agents/AGVs
@@ -73,7 +72,6 @@ private:
   rmf_utils::impl_ptr<Implementation> _pimpl;
 };
 
-} // namespace agv
 } // namespace rmf_task
 
 #endif // RMF_TASK__AGV__CONSTRAINTS_HPP

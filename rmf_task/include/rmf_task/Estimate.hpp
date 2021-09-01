@@ -21,7 +21,7 @@
 #include <optional>
 #include <utility>
 
-#include <rmf_task/agv/State.hpp>
+#include <rmf_task/State.hpp>
 #include <rmf_traffic/Time.hpp>
 #include <rmf_utils/impl_ptr.hpp>
 
@@ -44,13 +44,13 @@ public:
   ///
   /// \param[in] wait_until
   ///   The ideal time the robot starts executing this request.
-  Estimate(agv::State finish_state, rmf_traffic::Time wait_until);
+  Estimate(State finish_state, rmf_traffic::Time wait_until);
 
   /// Finish state of the robot once it completes the request.
-  agv::State finish_state() const;
+  State finish_state() const;
 
   /// Sets a new finish state for the robot.
-  Estimate& finish_state(agv::State new_finish_state);
+  Estimate& finish_state(State new_finish_state);
 
   /// The ideal time the robot starts executing this request.
   rmf_traffic::Time wait_until() const;

@@ -27,7 +27,6 @@
 #include <rmf_utils/impl_ptr.hpp>
 
 namespace rmf_task {
-namespace agv {
 
 //==============================================================================
 /// A class that containts parameters that are common among the agents/AGVs
@@ -103,7 +102,6 @@ private:
 
 };
 
-} // namespace agv
 } // namespace rmf_task
 
 #endif // RMF_TASK__AGV__PARAMETERS_HPP

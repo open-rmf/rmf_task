@@ -17,10 +17,9 @@
 
 #include <stdexcept>
 
-#include <rmf_task/agv/Constraints.hpp>
+#include <rmf_task/Constraints.hpp>
 
 namespace rmf_task {
-namespace agv {
 
 //==============================================================================
 class Constraints::Implementation
@@ -117,5 +116,4 @@ auto Constraints::drain_battery(
   return *this;
 }
 
-} // namespace agv
 } // namespace rmf_task

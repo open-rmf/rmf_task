@@ -28,22 +28,22 @@ class Clean::Model : public Request::Model
 public:
 
   std::optional<Estimate> estimate_finish(
-    const agv::State& initial_state,
-    const agv::Constraints& task_planning_constraints,
+    const State& initial_state,
+    const Constraints& task_planning_constraints,
     EstimateCache& estimate_cache) const final;
 
   rmf_traffic::Duration invariant_duration() const final;
 
   Model(
     const rmf_traffic::Time earliest_start_time,
-    const agv::Parameters& parameters,
+    const Parameters& parameters,
     const rmf_traffic::Trajectory& cleaning_path,
     std::size_t start_waypoint,
     std::size_t end_waypoint);
 
 private:
   rmf_traffic::Time _earliest_start_time;
-  agv::Parameters _parameters;
+  Parameters _parameters;
   std::size_t _start_waypoint;
   std::size_t _end_waypoint;
 
@@ -54,7 +54,7 @@ private:
 //==============================================================================
 Clean::Model::Model(
   const rmf_traffic::Time earliest_start_time,
-  const agv::Parameters& parameters,
+  const Parameters& parameters,
   const rmf_traffic::Trajectory& cleaning_path,
   std::size_t start_waypoint,
   std::size_t end_waypoint)
@@ -85,15 +85,15 @@ Clean::Model::Model(
 
 //==============================================================================
 std::optional<rmf_task::Estimate> Clean::Model::estimate_finish(
-  const agv::State& initial_state,
-  const agv::Constraints& task_planning_constraints,
+  const State& initial_state,
+  const Constraints& task_planning_constraints,
   EstimateCache& estimate_cache) const
 {
   rmf_traffic::agv::Plan::Start final_plan_start{
     initial_state.finish_time(),
     _end_waypoint,
     initial_state.location().orientation()};
-  agv::State state{
+  State state{
     std::move(final_plan_start),
     initial_state.charging_waypoint(),
     initial_state.battery_soc()};
@@ -296,7 +296,7 @@ Clean::Description::Description()
 //==============================================================================
 std::shared_ptr<Request::Model> Clean::Description::make_model(
   rmf_traffic::Time earliest_start_time,
-  const agv::Parameters& parameters) const
+  const Parameters& parameters) const
 {
   if (parameters.tool_sink() == nullptr)
   {

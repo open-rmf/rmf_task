@@ -20,9 +20,9 @@
 
 #include <memory>
 
-#include <rmf_task/agv/Constraints.hpp>
-#include <rmf_task/agv/Parameters.hpp>
-#include <rmf_task/agv/State.hpp>
+#include <rmf_task/Constraints.hpp>
+#include <rmf_task/Parameters.hpp>
+#include <rmf_task/State.hpp>
 #include <rmf_task/Estimate.hpp>
 #include <rmf_task/Priority.hpp>
 
@@ -42,11 +42,11 @@ public:
   {
   public:
 
-    /// Estimate the state of the robot when the request is finished along with the
-    /// time the robot has to wait before commencing the request
+    /// Estimate the state of the robot when the request is finished along with
+    /// the time the robot has to wait before commencing the request
     virtual std::optional<Estimate> estimate_finish(
-      const agv::State& initial_state,
-      const agv::Constraints& task_planning_constraints,
+      const State& initial_state,
+      const Constraints& task_planning_constraints,
       EstimateCache& estimate_cache) const = 0;
 
     /// Estimate the invariant component of the request's duration
@@ -65,14 +65,14 @@ public:
     /// description
     ///
     /// \param[in] earliest_start_time
-    ///   The earliest time this request should begin execution. This is usually the
-    ///   requested start time for the request.
+    ///   The earliest time this request should begin execution. This is usually
+    ///   the requested start time for the request.
     ///
     /// \param[in] parameters
     ///   The parameters that describe this AGV
     virtual std::shared_ptr<Model> make_model(
       rmf_traffic::Time earliest_start_time,
-      const agv::Parameters& parameters) const = 0;
+      const Parameters& parameters) const = 0;
 
     virtual ~Description() = default;
   };
@@ -85,8 +85,8 @@ public:
   ///   The desired start time for this request
   ///
   /// \param[in] priority
-  ///   The priority for this request. This is provided by the Priority Scheme. For
-  ///   requests that do not have any priority this is a nullptr.
+  ///   The priority for this request. This is provided by the Priority Scheme.
+  ///   For requests that do not have any priority this is a nullptr.
   ///
   /// \param[in] description
   ///   The description for this request

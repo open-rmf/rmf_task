@@ -27,7 +27,6 @@ namespace rmf_task {
 class CostCalculator
 {
 public:
-  using Node = agv::Node;
 
   /// Compute the total cost of a node while factoring in the prioritization scheme
   virtual double compute_cost(
@@ -37,7 +36,7 @@ public:
 
   /// Compute the cost of assignments
   virtual double compute_cost(
-    rmf_task::agv::TaskPlanner::Assignments assignments) const = 0;
+    rmf_task::TaskPlanner::Assignments assignments) const = 0;
 
   virtual ~CostCalculator() = default;
 };

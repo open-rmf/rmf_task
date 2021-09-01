@@ -16,7 +16,7 @@
 */
 
 #include <rmf_task/Estimate.hpp>
-#include <rmf_task/agv/State.hpp>
+#include <rmf_task/State.hpp>
 #include <rmf_task/BinaryPriorityScheme.hpp>
 #include <rmf_task/requests/ChargeBattery.hpp>
 
@@ -28,7 +28,6 @@
 #include <queue>
 
 namespace rmf_task {
-namespace agv {
 
 //==============================================================================
 class TaskPlanner::Configuration::Implementation
@@ -1146,7 +1145,7 @@ const std::shared_ptr<EstimateCache>& TaskPlanner::estimate_cache() const
 }
 
 // ============================================================================
-const rmf_task::agv::TaskPlanner::Configuration& TaskPlanner::configuration()
+const rmf_task::TaskPlanner::Configuration& TaskPlanner::configuration()
 const
 {
   return _pimpl->config;
@@ -1164,5 +1163,4 @@ auto TaskPlanner::default_options() -> Options&
   return _pimpl->default_options;
 }
 
-} // namespace agv
 } // namespace rmf_task

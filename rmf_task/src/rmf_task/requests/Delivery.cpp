@@ -28,15 +28,15 @@ class Delivery::Model : public Request::Model
 public:
 
   std::optional<Estimate> estimate_finish(
-    const agv::State& initial_state,
-    const agv::Constraints& task_planning_constraints,
+    const State& initial_state,
+    const Constraints& task_planning_constraints,
     EstimateCache& estimate_cache) const final;
 
   rmf_traffic::Duration invariant_duration() const final;
 
   Model(
     const rmf_traffic::Time earliest_start_time,
-    const agv::Parameters& parameters,
+    const Parameters& parameters,
     std::size_t pickup_waypoint,
     rmf_traffic::Duration pickup_wait,
     std::size_t dropoff_waypoint,
@@ -44,7 +44,7 @@ public:
 
 private:
   rmf_traffic::Time _earliest_start_time;
-  agv::Parameters _parameters;
+  Parameters _parameters;
   std::size_t _pickup_waypoint;
   rmf_traffic::Duration _pickup_wait;
   std::size_t _dropoff_waypoint;
@@ -57,7 +57,7 @@ private:
 //==============================================================================
 Delivery::Model::Model(
   const rmf_traffic::Time earliest_start_time,
-  const agv::Parameters& parameters,
+  const Parameters& parameters,
   std::size_t pickup_waypoint,
   rmf_traffic::Duration pickup_wait,
   std::size_t dropoff_waypoint,
@@ -107,15 +107,15 @@ Delivery::Model::Model(
 
 //==============================================================================
 std::optional<rmf_task::Estimate> Delivery::Model::estimate_finish(
-  const agv::State& initial_state,
-  const agv::Constraints& task_planning_constraints,
+  const State& initial_state,
+  const Constraints& task_planning_constraints,
   EstimateCache& estimate_cache) const
 {
   rmf_traffic::agv::Plan::Start final_plan_start{
     initial_state.finish_time(),
     _dropoff_waypoint,
     initial_state.location().orientation()};
-  agv::State state{
+  State state{
     std::move(final_plan_start),
     initial_state.charging_waypoint(),
     initial_state.battery_soc()};
@@ -315,7 +315,7 @@ Delivery::Description::Description()
 //==============================================================================
 std::shared_ptr<Request::Model> Delivery::Description::make_model(
   rmf_traffic::Time earliest_start_time,
-  const agv::Parameters& parameters) const
+  const Parameters& parameters) const
 {
   return std::make_shared<Delivery::Model>(
     earliest_start_time,

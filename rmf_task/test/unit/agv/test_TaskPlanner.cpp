@@ -15,10 +15,10 @@
  *
 */
 
-#include <rmf_task/agv/TaskPlanner.hpp>
-#include <rmf_task/agv/State.hpp>
-#include <rmf_task/agv/Constraints.hpp>
-#include <rmf_task/agv/Parameters.hpp>
+#include <rmf_task/TaskPlanner.hpp>
+#include <rmf_task/State.hpp>
+#include <rmf_task/Constraints.hpp>
+#include <rmf_task/Parameters.hpp>
 #include <rmf_task/requests/Delivery.hpp>
 #include <rmf_task/requests/ChargeBattery.hpp>
 #include <rmf_task/requests/Loop.hpp>
@@ -46,7 +46,7 @@
 
 #include <iostream>
 
-using TaskPlanner = rmf_task::agv::TaskPlanner;
+using TaskPlanner = rmf_task::TaskPlanner;
 
 //==============================================================================
 inline void CHECK_TIMES(const TaskPlanner::Assignments& assignments,
@@ -201,8 +201,8 @@ SCENARIO("Grid World")
   const auto cost_calculator =
     rmf_task::BinaryPriorityScheme::make_cost_calculator();
 
-  const rmf_task::agv::Constraints constraints{0.2, 1.0, drain_battery};
-  const rmf_task::agv::Parameters parameters{
+  const rmf_task::Constraints constraints{0.2, 1.0, drain_battery};
+  const rmf_task::Parameters parameters{
     planner,
     battery_system,
     motion_sink,
@@ -235,10 +235,10 @@ SCENARIO("Grid World")
     rmf_traffic::agv::Plan::Start first_location{now, 13, default_orientation};
     rmf_traffic::agv::Plan::Start second_location{now, 2, default_orientation};
 
-    std::vector<rmf_task::agv::State> initial_states =
+    std::vector<rmf_task::State> initial_states =
     {
-      rmf_task::agv::State{first_location, 13, 1.0},
-      rmf_task::agv::State{second_location, 2, 1.0}
+      rmf_task::State{first_location, 13, 1.0},
+      rmf_task::State{second_location, 2, 1.0}
     };
 
     std::vector<rmf_task::ConstRequestPtr> requests =
@@ -318,10 +318,10 @@ SCENARIO("Grid World")
     rmf_traffic::agv::Plan::Start first_location{now, 13, default_orientation};
     rmf_traffic::agv::Plan::Start second_location{now, 2, default_orientation};
 
-    std::vector<rmf_task::agv::State> initial_states =
+    std::vector<rmf_task::State> initial_states =
     {
-      rmf_task::agv::State{first_location, 13, 1.0},
-      rmf_task::agv::State{second_location, 2, 1.0}
+      rmf_task::State{first_location, 13, 1.0},
+      rmf_task::State{second_location, 2, 1.0}
     };
 
     std::vector<rmf_task::ConstRequestPtr> requests =
@@ -465,10 +465,10 @@ SCENARIO("Grid World")
     rmf_traffic::agv::Plan::Start first_location{now, 13, default_orientation};
     rmf_traffic::agv::Plan::Start second_location{now, 2, default_orientation};
 
-    std::vector<rmf_task::agv::State> initial_states =
+    std::vector<rmf_task::State> initial_states =
     {
-      rmf_task::agv::State{first_location, 13, initial_soc},
-      rmf_task::agv::State{second_location, 2, initial_soc}
+      rmf_task::State{first_location, 13, initial_soc},
+      rmf_task::State{second_location, 2, initial_soc}
     };
 
     std::vector<rmf_task::ConstRequestPtr> requests =
@@ -565,10 +565,10 @@ SCENARIO("Grid World")
     rmf_traffic::agv::Plan::Start first_location{now, 13, default_orientation};
     rmf_traffic::agv::Plan::Start second_location{now, 2, default_orientation};
 
-    std::vector<rmf_task::agv::State> initial_states =
+    std::vector<rmf_task::State> initial_states =
     {
-      rmf_task::agv::State{first_location, 9, 1.0},
-      rmf_task::agv::State{second_location, 2, 1.0}
+      rmf_task::State{first_location, 9, 1.0},
+      rmf_task::State{second_location, 2, 1.0}
     };
 
     std::vector<rmf_task::ConstRequestPtr> requests =
@@ -710,9 +710,9 @@ SCENARIO("Grid World")
 
     rmf_traffic::agv::Plan::Start first_location{now, 13, default_orientation};
 
-    std::vector<rmf_task::agv::State> initial_states =
+    std::vector<rmf_task::State> initial_states =
     {
-      rmf_task::agv::State{first_location, 13, 1.0},
+      rmf_task::State{first_location, 13, 1.0},
     };
 
     std::vector<rmf_task::ConstRequestPtr> requests =
@@ -756,9 +756,9 @@ SCENARIO("Grid World")
 
     rmf_traffic::agv::Plan::Start first_location{now, 9, default_orientation};
 
-    std::vector<rmf_task::agv::State> initial_states =
+    std::vector<rmf_task::State> initial_states =
     {
-      rmf_task::agv::State{first_location, 13, 0.0},
+      rmf_task::State{first_location, 13, 0.0},
     };
 
     std::vector<rmf_task::ConstRequestPtr> requests =
@@ -803,9 +803,9 @@ SCENARIO("Grid World")
 
     rmf_traffic::agv::Plan::Start first_location{now, 13, default_orientation};
 
-    std::vector<rmf_task::agv::State> initial_states =
+    std::vector<rmf_task::State> initial_states =
     {
-      rmf_task::agv::State{first_location, 13, 1.0},
+      rmf_task::State{first_location, 13, 1.0},
     };
 
     std::vector<rmf_task::ConstRequestPtr> requests =
@@ -902,9 +902,9 @@ SCENARIO("Grid World")
 
     rmf_traffic::agv::Plan::Start first_location{now, 13, default_orientation};
 
-    std::vector<rmf_task::agv::State> initial_states =
+    std::vector<rmf_task::State> initial_states =
     {
-      rmf_task::agv::State{first_location, 13, 1.0},
+      rmf_task::State{first_location, 13, 1.0},
     };
 
     std::vector<rmf_task::ConstRequestPtr> requests =
@@ -968,9 +968,9 @@ SCENARIO("Grid World")
 
     rmf_traffic::agv::Plan::Start first_location{now, 13, default_orientation};
 
-    std::vector<rmf_task::agv::State> initial_states =
+    std::vector<rmf_task::State> initial_states =
     {
-      rmf_task::agv::State{first_location, 13, 1.0},
+      rmf_task::State{first_location, 13, 1.0},
     };
 
     std::vector<rmf_task::ConstRequestPtr> requests =
@@ -1050,9 +1050,9 @@ SCENARIO("Grid World")
 
     rmf_traffic::agv::Plan::Start first_location{now, 13, default_orientation};
 
-    std::vector<rmf_task::agv::State> initial_states =
+    std::vector<rmf_task::State> initial_states =
     {
-      rmf_task::agv::State{first_location, 13, 1.0},
+      rmf_task::State{first_location, 13, 1.0},
     };
 
     std::vector<rmf_task::ConstRequestPtr> requests =
@@ -1133,10 +1133,10 @@ SCENARIO("Grid World")
     rmf_traffic::agv::Plan::Start first_location{now, 13, default_orientation};
     rmf_traffic::agv::Plan::Start second_location{now, 1, default_orientation};
 
-    std::vector<rmf_task::agv::State> initial_states =
+    std::vector<rmf_task::State> initial_states =
     {
-      rmf_task::agv::State{first_location, 13, 1.0},
-      rmf_task::agv::State{second_location, 1, 1.0}
+      rmf_task::State{first_location, 13, 1.0},
+      rmf_task::State{second_location, 1, 1.0}
     };
 
     std::vector<rmf_task::ConstRequestPtr> requests =
@@ -1277,11 +1277,11 @@ SCENARIO("Grid World")
     rmf_traffic::agv::Plan::Start second_location{now, 1, default_orientation};
     rmf_traffic::agv::Plan::Start third_location{now, 5, default_orientation};
 
-    std::vector<rmf_task::agv::State> initial_states =
+    std::vector<rmf_task::State> initial_states =
     {
-      rmf_task::agv::State{first_location, 13, 1.0},
-      rmf_task::agv::State{second_location, 1, 1.0},
-      rmf_task::agv::State{third_location, 5, 1.0}
+      rmf_task::State{first_location, 13, 1.0},
+      rmf_task::State{second_location, 1, 1.0},
+      rmf_task::State{third_location, 5, 1.0}
     };
 
     std::vector<rmf_task::ConstRequestPtr> requests =
@@ -1436,9 +1436,9 @@ SCENARIO("Grid World")
     const double default_orientation = 0.0;
     const double initial_soc = 0.3;
     const double recharge_soc = 0.9;
-    rmf_task::agv::Constraints new_constraints{0.2, recharge_soc,
+    rmf_task::Constraints new_constraints{0.2, recharge_soc,
       drain_battery};
-    rmf_task::agv::TaskPlanner::Configuration new_task_config{
+    rmf_task::TaskPlanner::Configuration new_task_config{
       parameters,
       new_constraints,
       cost_calculator};
@@ -1446,10 +1446,10 @@ SCENARIO("Grid World")
     rmf_traffic::agv::Plan::Start first_location{now, 13, default_orientation};
     rmf_traffic::agv::Plan::Start second_location{now, 2, default_orientation};
 
-    std::vector<rmf_task::agv::State> initial_states =
+    std::vector<rmf_task::State> initial_states =
     {
-      rmf_task::agv::State{first_location, 13, initial_soc},
-      rmf_task::agv::State{second_location, 2, initial_soc}
+      rmf_task::State{first_location, 13, initial_soc},
+      rmf_task::State{second_location, 2, initial_soc}
     };
 
     std::vector<rmf_task::ConstRequestPtr> requests =
@@ -1549,9 +1549,9 @@ SCENARIO("Grid World")
 
     rmf_traffic::agv::Plan::Start first_location{now, 13, default_orientation};
 
-    std::vector<rmf_task::agv::State> initial_states =
+    std::vector<rmf_task::State> initial_states =
     {
-      rmf_task::agv::State{first_location, 13, 1.0},
+      rmf_task::State{first_location, 13, 1.0},
     };
 
     const auto start_time =
@@ -1606,18 +1606,18 @@ SCENARIO("Grid World")
     const double default_orientation = 0.0;
     const double initial_soc = 0.3;
     const double recharge_soc = 1.0;
-    rmf_task::agv::Constraints new_constraints{0.2, recharge_soc,
+    rmf_task::Constraints new_constraints{0.2, recharge_soc,
       drain_battery};
-    rmf_task::agv::TaskPlanner::Configuration new_task_config{
+    rmf_task::TaskPlanner::Configuration new_task_config{
       parameters,
       new_constraints,
       cost_calculator};
 
     rmf_traffic::agv::Plan::Start first_location{now, 13, default_orientation};
 
-    std::vector<rmf_task::agv::State> initial_states =
+    std::vector<rmf_task::State> initial_states =
     {
-      rmf_task::agv::State{first_location, 13, initial_soc},
+      rmf_task::State{first_location, 13, initial_soc},
     };
 
     std::vector<rmf_task::ConstRequestPtr> requests =
@@ -1690,10 +1690,10 @@ SCENARIO("Grid World")
     rmf_traffic::agv::Plan::Start first_location{now, 13, default_orientation};
     rmf_traffic::agv::Plan::Start second_location{now, 1, default_orientation};
 
-    std::vector<rmf_task::agv::State> initial_states =
+    std::vector<rmf_task::State> initial_states =
     {
-      rmf_task::agv::State{first_location, 13, 1.0},
-      rmf_task::agv::State{second_location, 1, 1.0},
+      rmf_task::State{first_location, 13, 1.0},
+      rmf_task::State{second_location, 1, 1.0},
     };
 
     std::vector<rmf_task::ConstRequestPtr> requests =
@@ -1800,10 +1800,10 @@ SCENARIO("Grid World")
     rmf_traffic::agv::Plan::Start first_location{now, 13, default_orientation};
     rmf_traffic::agv::Plan::Start second_location{now, 1, default_orientation};
 
-    std::vector<rmf_task::agv::State> initial_states =
+    std::vector<rmf_task::State> initial_states =
     {
-      rmf_task::agv::State{first_location, 13, 1.0},
-      rmf_task::agv::State{second_location, 1, 1.0},
+      rmf_task::State{first_location, 13, 1.0},
+      rmf_task::State{second_location, 1, 1.0},
     };
 
     std::vector<rmf_task::ConstRequestPtr> requests =

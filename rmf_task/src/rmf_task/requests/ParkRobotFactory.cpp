@@ -65,7 +65,7 @@ ParkRobotFactory::ParkRobotFactory(
 
 //==============================================================================
 ConstRequestPtr ParkRobotFactory::make_request(
-  const agv::State& state) const
+  const State& state) const
 {
   std::string id = "ParkRobot" + generate_uuid();
   const auto start_waypoint = state.location().waypoint();

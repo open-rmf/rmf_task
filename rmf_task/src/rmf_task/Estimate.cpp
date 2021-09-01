@@ -27,30 +27,30 @@ class Estimate::Implementation
 {
 public:
 
-  Implementation(agv::State finish_state, rmf_traffic::Time wait_until)
+  Implementation(State finish_state, rmf_traffic::Time wait_until)
   : _finish_state(std::move(finish_state)),
     _wait_until(std::move(wait_until))
   {}
 
-  agv::State _finish_state;
+  State _finish_state;
   rmf_traffic::Time _wait_until;
 };
 
 //==============================================================================
-Estimate::Estimate(agv::State finish_state, rmf_traffic::Time wait_until)
+Estimate::Estimate(State finish_state, rmf_traffic::Time wait_until)
 : _pimpl(rmf_utils::make_impl<Implementation>(
       std::move(finish_state), std::move(wait_until)))
 {
 }
 
 //==============================================================================
-agv::State Estimate::finish_state() const
+State Estimate::finish_state() const
 {
   return _pimpl->_finish_state;
 }
 
 //==============================================================================
-Estimate& Estimate::finish_state(agv::State new_finish_state)
+Estimate& Estimate::finish_state(State new_finish_state)
 {
   _pimpl->_finish_state = std::move(new_finish_state);
   return *this;

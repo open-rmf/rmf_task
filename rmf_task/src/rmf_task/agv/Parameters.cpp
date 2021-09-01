@@ -15,10 +15,9 @@
  *
 */
 
-#include <rmf_task/agv/Parameters.hpp>
+#include <rmf_task/Parameters.hpp>
 
 namespace rmf_task {
-namespace agv {
 
 //==============================================================================
 class Parameters::Implementation
@@ -125,5 +124,4 @@ auto Parameters::tool_sink(
   return *this;
 }
 
-} // namespace agv
 } // namespace task

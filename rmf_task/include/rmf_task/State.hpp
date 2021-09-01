@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef RMF_TASK__AGV__STATE_HPP
-#define RMF_TASK__AGV__STATE_HPP
+#ifndef RMF_TASK__STATE_HPP
+#define RMF_TASK__STATE_HPP
 
 #include <chrono>
 
@@ -26,7 +26,6 @@
 #include <rmf_traffic/agv/Planner.hpp>
 
 namespace rmf_task {
-namespace agv {
 
 //==============================================================================
 /// A class that is used to describe the state of an AGV
@@ -90,7 +89,6 @@ private:
   rmf_utils::impl_ptr<Implementation> _pimpl;
 };
 
-} // namespace agv
 } // namespace rmf_task
 
 #endif // RMF_TASK__AGV__STATE_HPP

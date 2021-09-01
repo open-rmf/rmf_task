@@ -26,22 +26,22 @@ class Loop::Model : public Request::Model
 public:
 
   std::optional<Estimate> estimate_finish(
-    const agv::State& initial_state,
-    const agv::Constraints& task_planning_constraints,
+    const State& initial_state,
+    const Constraints& task_planning_constraints,
     EstimateCache& estimate_cache) const final;
 
   rmf_traffic::Duration invariant_duration() const final;
 
   Model(
     const rmf_traffic::Time earliest_start_time,
-    const agv::Parameters& parameters,
+    const Parameters& parameters,
     std::size_t start_waypoint,
     std::size_t finish_waypoint,
     std::size_t num_loops);
 
 private:
   rmf_traffic::Time _earliest_start_time;
-  agv::Parameters _parameters;
+  Parameters _parameters;
   std::size_t _start_waypoint;
   std::size_t _finish_waypoint;
 
@@ -52,7 +52,7 @@ private:
 //==============================================================================
 Loop::Model::Model(
   const rmf_traffic::Time earliest_start_time,
-  const agv::Parameters& parameters,
+  const Parameters& parameters,
   std::size_t start_waypoint,
   std::size_t finish_waypoint,
   std::size_t num_loops)
@@ -105,8 +105,8 @@ Loop::Model::Model(
 
 //==============================================================================
 std::optional<rmf_task::Estimate> Loop::Model::estimate_finish(
-  const agv::State& initial_state,
-  const agv::Constraints& task_planning_constraints,
+  const State& initial_state,
+  const Constraints& task_planning_constraints,
   EstimateCache& estimate_cache) const
 {
   rmf_traffic::Duration variant_duration(0);
@@ -261,7 +261,7 @@ std::optional<rmf_task::Estimate> Loop::Model::estimate_finish(
     state_finish_time,
     _finish_waypoint,
     initial_state.location().orientation()};
-  agv::State state{
+  State state{
     std::move(location),
     initial_state.charging_waypoint(),
     battery_soc};
@@ -312,7 +312,7 @@ Loop::Description::Description()
 //==============================================================================
 std::shared_ptr<Request::Model> Loop::Description::make_model(
   rmf_traffic::Time earliest_start_time,
-  const agv::Parameters& parameters) const
+  const Parameters& parameters) const
 {
   return std::make_shared<Loop::Model>(
     earliest_start_time,

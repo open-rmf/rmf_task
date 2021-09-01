@@ -17,10 +17,9 @@
 
 #include <stdexcept>
 
-#include <rmf_task/agv/State.hpp>
+#include <rmf_task/State.hpp>
 
 namespace rmf_task {
-namespace agv {
 
 //==============================================================================
 class State::Implementation
@@ -132,6 +131,4 @@ State& State::finish_time(rmf_traffic::Time new_finish_time)
   return *this;
 }
 
-//==============================================================================
-} // namespace agv
 } // namespace rmf_task

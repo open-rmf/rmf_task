@@ -18,7 +18,7 @@
 #ifndef SRC__RMF_TASK__AGV__INTERNAL_TASK_PLANNING_HPP
 #define SRC__RMF_TASK__AGV__INTERNAL_TASK_PLANNING_HPP
 
-#include <rmf_task/agv/TaskPlanner.hpp>
+#include <rmf_task/TaskPlanner.hpp>
 
 #include <map>
 #include <set>
@@ -27,7 +27,6 @@
 #include <limits>
 
 namespace rmf_task {
-namespace agv {
 
 // ============================================================================
 struct Invariant
@@ -113,7 +112,7 @@ public:
 
   static std::shared_ptr<PendingTask> make(
     const rmf_traffic::Time start_time,
-    const std::vector<rmf_task::agv::State>& initial_states,
+    const std::vector<rmf_task::State>& initial_states,
     const Constraints& constraints,
     const Parameters& parameters,
     const ConstRequestPtr request_,
@@ -212,7 +211,6 @@ struct LowestCostEstimate
   }
 };
 
-} // namespace agv
 } // namespace rmf_task
 
 #endif // SRC__RMF_TASK__AGV__INTERNAL_TASK_PLANNING_HPP
