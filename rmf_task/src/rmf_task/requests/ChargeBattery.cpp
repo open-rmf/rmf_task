@@ -93,22 +93,25 @@ ChargeBattery::Model::estimate_finish(
   // returning.
   const auto recharge_soc = task_planning_constraints.recharge_soc();
   if (initial_state.battery_soc() >= recharge_soc - 1e-3
-    && initial_state.waypoint() == initial_state.charging_waypoint())
+    && initial_state.waypoint().value()
+    == initial_state.dedicated_charging_waypoint().value())
+  {
     return std::nullopt;
+  }
 
   // Compute time taken to reach charging waypoint from current location
   rmf_traffic::agv::Plan::Start final_plan_start{
-    initial_state.finish_time(),
-    initial_state.charging_waypoint(),
-    initial_state.location().orientation()};
-  State state{
+    initial_state.time().value(),
+    initial_state.dedicated_charging_waypoint().value(),
+    initial_state.orientation().value()};
+  auto state = State().load_basic(
     std::move(final_plan_start),
-    initial_state.charging_waypoint(),
-    initial_state.battery_soc()};
+    initial_state.dedicated_charging_waypoint().value(),
+    initial_state.battery_soc().value());
 
-  const auto start_time = initial_state.finish_time();
+  const auto start_time = initial_state.time().value();
 
-  double battery_soc = initial_state.battery_soc();
+  double battery_soc = initial_state.battery_soc().value();
   double dSOC_motion = 0.0;
   double dSOC_device = 0.0;
   double variant_battery_drain = 0.0;
@@ -118,10 +121,12 @@ ChargeBattery::Model::estimate_finish(
   const auto& motion_sink = *_parameters.motion_sink();
   const auto& ambient_sink = *_parameters.ambient_sink();
 
-  if (initial_state.waypoint() != initial_state.charging_waypoint())
+  if (initial_state.waypoint() != initial_state.dedicated_charging_waypoint())
   {
-    const auto endpoints = std::make_pair(initial_state.waypoint(),
-        initial_state.charging_waypoint());
+    const auto endpoints = std::make_pair(
+      initial_state.waypoint().value(),
+      initial_state.dedicated_charging_waypoint().value());
+
     const auto& cache_result = estimate_cache.get(endpoints);
     // Use memoized values if possible
     if (cache_result)
@@ -134,7 +139,7 @@ ChargeBattery::Model::estimate_finish(
       // Compute plan to charging waypoint along with battery drain
       rmf_traffic::agv::Planner::Goal goal{endpoints.second};
       const auto result = planner.plan(
-        initial_state.location(), goal);
+        initial_state.extract_plan_start().value(), goal);
       auto itinerary_start_time = start_time;
       for (const auto& itinerary : result->get_itinerary())
       {
@@ -176,8 +181,8 @@ ChargeBattery::Model::estimate_finish(
     (3600 * delta_soc * _parameters.battery_system().capacity()) /
     _parameters.battery_system().charging_current();
 
-  const rmf_traffic::Time wait_until = initial_state.finish_time();
-  state.finish_time(
+  const rmf_traffic::Time wait_until = initial_state.time().value();
+  state.time(
     wait_until + variant_duration +
     rmf_traffic::time::from_seconds(time_to_charge));
 

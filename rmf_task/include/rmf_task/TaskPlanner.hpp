@@ -149,14 +149,14 @@ public:
     ///   The earliest time the agent will begin exececuting this task
     Assignment(
       rmf_task::ConstRequestPtr request,
-      State state,
+      State finish_state,
       rmf_traffic::Time deployment_time);
 
     // Get the request of this task
     const rmf_task::ConstRequestPtr& request() const;
 
     // Get a const reference to the predicted state at the end of the assignment
-    const State& state() const;
+    const State& finish_state() const;
 
     // Get the time when the robot begins executing
     // this assignment

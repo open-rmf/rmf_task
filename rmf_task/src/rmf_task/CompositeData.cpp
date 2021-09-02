@@ -38,6 +38,12 @@ CompositeData::CompositeData()
 }
 
 //==============================================================================
+void CompositeData::clear()
+{
+  _pimpl->data.clear();
+}
+
+//==============================================================================
 std::any* CompositeData::_get(std::type_index type)
 {
   const auto it = _pimpl->data.find(type);
@@ -57,12 +63,15 @@ const std::any* CompositeData::_get(std::type_index type) const
 auto CompositeData::_insert(std::any value, bool or_assign)
 -> InsertResult<std::any>
 {
-  const auto insertion = _pimpl->data.insert({value.type(), std::move(value)});
-  if (!insertion.second && or_assign)
+  if (or_assign)
   {
-    insertion.first->second = std::move(value);
+    const auto insertion =
+      _pimpl->data.insert_or_assign(value.type(), std::move(value));
+
+    return {insertion.second, &insertion.first->second};
   }
 
+  const auto insertion = _pimpl->data.insert({value.type(), std::move(value)});
   return {insertion.second, &insertion.first->second};
 }
 

@@ -25,68 +25,120 @@
 #include <rmf_traffic/Time.hpp>
 #include <rmf_traffic/agv/Planner.hpp>
 
+#include <rmf_task/CompositeData.hpp>
+
 namespace rmf_task {
 
 //==============================================================================
-/// A class that is used to describe the state of an AGV
-class State
+class State : public CompositeData
 {
 public:
 
-  /// Constructor
-  ///
-  /// \param[in] location
-  ///   Current state's location, which includes the time that the robot can
-  ///   feasibly take on a new task, according to the finishing time of any
-  ///   tasks that the robot is currently performing.
-  ///
-  /// \param[in] charging_waypoint
-  ///   The charging waypoint index of this robot.
-  ///
-  /// \param[in] battery_soc
-  ///   Current battery state of charge of the robot. This value needs to be
-  ///   between 0.0 to 1.0.
-  State(
-    rmf_traffic::agv::Plan::Start location,
-    std::size_t charging_waypoint,
-    double battery_soc);
+  /// The current waypoint of the robot state
+  struct CurrentWaypoint
+  {
+    std::size_t value;
 
-  /// The current state's location.
-  rmf_traffic::agv::Plan::Start location() const;
+    CurrentWaypoint(std::size_t input)
+    : value(input) {}
+  };
 
-  /// Sets the state's location.
-  State& location(rmf_traffic::agv::Plan::Start new_location);
+  std::optional<std::size_t> waypoint() const;
+  State& waypoint(std::size_t new_waypoint);
 
-  /// Robot's charging waypoint index.
-  std::size_t charging_waypoint() const;
+  /// The current orientation of the robot state
+  struct CurrentOrientation
+  {
+    double value;
 
-  /// Sets the charging waypoint index.
-  State& charging_waypoint(std::size_t new_charging_waypoint);
+    CurrentOrientation(double input)
+    : value(input) {}
+  };
+
+  std::optional<double> orientation() const;
+  State& orientation(double new_orientation);
+
+  /// The current time for the robot
+  struct CurrentTime
+  {
+    rmf_traffic::Time value;
+
+    CurrentTime(rmf_traffic::Time input)
+    : value(input) {}
+  };
+
+  std::optional<rmf_traffic::Time> time() const;
+  State& time(rmf_traffic::Time new_time);
+
+  /// The dedicated charging point for this robot
+  // TODO(MXG): Consider removing this field and using some kind of
+  // ChargingStrategy abstract interface to determine where and how the robots
+  // should be charging.
+  struct DedicatedChargingPoint
+  {
+    std::size_t value;
+
+    DedicatedChargingPoint(std::size_t input)
+    : value(input) {}
+  };
+
+  std::optional<std::size_t> dedicated_charging_waypoint() const;
+  State& dedicated_charging_waypoint(std::size_t new_charging_waypoint);
 
   /// The current battery state of charge of the robot. This value is between
   /// 0.0 and 1.0.
-  double battery_soc() const;
+  struct CurrentBatterySoC
+  {
+    double value;
 
-  /// Sets a new battery state of charge value. This value needs to be between
-  /// 0.0 and 1.0.
+    CurrentBatterySoC(double input)
+    : value(input) {}
+  };
+
+  std::optional<double> battery_soc() const;
   State& battery_soc(double new_battery_soc);
 
-  /// The current location waypoint index.
-  std::size_t waypoint() const;
+  /// Load the basic state components expected for the planner.
+  ///
+  /// \param[in] location
+  ///   The robot's initial location data.
+  ///
+  /// \param[in] charging_point
+  ///   The robot's dedicated charging point.
+  ///
+  /// \param[in] battery_soc
+  ///   The robot's initial battery state of charge.
+  State& load_basic(
+    const rmf_traffic::agv::Plan::Start& location,
+    std::size_t charging_point,
+    double battery_soc);
 
-  /// Sets the current location waypoint index.
-  State& waypoint(std::size_t new_waypoint);
+  /// Load the plan start into the State. The location info will be split into
+  /// CurrentWaypoint, CurrentOrientation, and CurrentTime data.
+  State& load(const rmf_traffic::agv::Plan::Start& location);
 
-  /// The time which the robot finishes its current task or when it is ready for
-  /// a new task.
-  rmf_traffic::Time finish_time() const;
+  /// Project an rmf_traffic::agv::Plan::Start from this State.
+  ///
+  /// If CurrentWaypoint is unavailable, this will return a std::nullopt. For
+  /// any other components that are unavailable (CurrentOrientation or
+  /// CurrentTime), the given default values will be used.
+  ///
+  /// \param[in] default_orientation
+  ///   The orientation value that will be used if CurrentOrientation is not
+  ///   available in this State.
+  ///
+  /// \param[in] default_time
+  ///   The time value that will be used if default_time is not available in
+  ///   this State.
+  std::optional<rmf_traffic::agv::Plan::Start> project_plan_start(
+    double default_orientation = 0.0,
+    rmf_traffic::Time default_time = rmf_traffic::Time()) const;
 
-  /// Sets the finish time for the robot.
-  State& finish_time(rmf_traffic::Time new_finish_time);
-
-  class Implementation;
-private:
-  rmf_utils::impl_ptr<Implementation> _pimpl;
+  /// Extract an rmf_traffic::agv::Plan::Start from this State.
+  ///
+  /// If any necessary component is missing (i.e. CurrentWaypoint,
+  /// CurrentOrientation, or CurrentTime) then this will return a std::nullopt.
+  std::optional<rmf_traffic::agv::Plan::Start> extract_plan_start() const;
 };
 
 } // namespace rmf_task

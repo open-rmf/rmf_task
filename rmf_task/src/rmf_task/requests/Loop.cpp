@@ -111,8 +111,8 @@ std::optional<rmf_task::Estimate> Loop::Model::estimate_finish(
 {
   rmf_traffic::Duration variant_duration(0);
 
-  const rmf_traffic::Time start_time = initial_state.finish_time();
-  double battery_soc = initial_state.battery_soc();
+  const rmf_traffic::Time start_time = initial_state.time().value();
+  double battery_soc = initial_state.battery_soc().value();
   double dSOC_motion = 0.0;
   double dSOC_device = 0.0;
   const bool drain_battery = task_planning_constraints.drain_battery();
@@ -123,8 +123,10 @@ std::optional<rmf_task::Estimate> Loop::Model::estimate_finish(
   // Check if a plan has to be generated from finish location to start_waypoint
   if (initial_state.waypoint() != _start_waypoint)
   {
-    auto endpoints = std::make_pair(initial_state.waypoint(),
-        _start_waypoint);
+    auto endpoints = std::make_pair(
+      initial_state.waypoint().value(),
+      _start_waypoint);
+
     const auto& cache_result = estimate_cache.get(endpoints);
     // Use previously memoized values if possible
     if (cache_result)
@@ -138,7 +140,7 @@ std::optional<rmf_task::Estimate> Loop::Model::estimate_finish(
       // Compute plan to start_waypoint along with battery drain
       rmf_traffic::agv::Planner::Goal loop_start_goal{endpoints.second};
       const auto plan_to_start = planner.plan(
-        initial_state.location(), loop_start_goal);
+        initial_state.extract_plan_start().value(), loop_start_goal);
       // We assume we can always compute a plan
       auto itinerary_start_time = start_time;
       double variant_battery_drain = 0.0;
@@ -174,16 +176,17 @@ std::optional<rmf_task::Estimate> Loop::Model::estimate_finish(
   // Compute wait_until
   const rmf_traffic::Time ideal_start = _earliest_start_time - variant_duration;
   const rmf_traffic::Time wait_until =
-    initial_state.finish_time() > ideal_start ?
-    initial_state.finish_time() : ideal_start;
+    initial_state.time().value() > ideal_start ?
+    initial_state.time().value() : ideal_start;
 
   // Factor in battery drain while waiting to move to start waypoint. If a robot
   // is initially at a charging waypoint, it is assumed to be continually charging
-  if (drain_battery && wait_until > initial_state.finish_time() &&
-    initial_state.waypoint() != initial_state.charging_waypoint())
+  if (drain_battery && wait_until > initial_state.time().value() &&
+    initial_state.waypoint().value() !=
+    initial_state.dedicated_charging_waypoint().value())
   {
     rmf_traffic::Duration wait_duration(
-      wait_until - initial_state.finish_time());
+      wait_until - initial_state.time().value());
     dSOC_device = ambient_sink.compute_change_in_charge(
       rmf_traffic::time::to_seconds(wait_duration));
     battery_soc = battery_soc - dSOC_device;
@@ -206,10 +209,12 @@ std::optional<rmf_task::Estimate> Loop::Model::estimate_finish(
     if (battery_soc <= task_planning_constraints.threshold_soc())
       return std::nullopt;
 
-    if (_finish_waypoint != initial_state.charging_waypoint())
+    if (_finish_waypoint != initial_state.dedicated_charging_waypoint().value())
     {
-      const auto endpoints = std::make_pair(_finish_waypoint,
-          initial_state.charging_waypoint());
+      const auto endpoints = std::make_pair(
+        _finish_waypoint,
+        initial_state.dedicated_charging_waypoint().value());
+
       const auto& cache_result = estimate_cache.get(endpoints);
       if (cache_result)
       {
@@ -260,11 +265,11 @@ std::optional<rmf_task::Estimate> Loop::Model::estimate_finish(
   rmf_traffic::agv::Planner::Start location{
     state_finish_time,
     _finish_waypoint,
-    initial_state.location().orientation()};
-  State state{
+    initial_state.orientation().value()};
+  auto state = State().load_basic(
     std::move(location),
-    initial_state.charging_waypoint(),
-    battery_soc};
+    initial_state.dedicated_charging_waypoint().value(),
+    battery_soc);
 
   return Estimate(state, wait_until);
 }

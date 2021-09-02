@@ -52,7 +52,7 @@ void Candidates::update_candidate(
   _value_map.erase(it);
   _candidate_map[candidate] = _value_map.insert(
     {
-      state.finish_time(),
+      state.time().value(),
       Entry{candidate, state, wait_until, previous_state, require_charge_battery}
     });
 }
@@ -113,7 +113,7 @@ std::shared_ptr<Candidates> Candidates::make(
     if (finish.has_value())
     {
       initial_map.insert({
-          finish.value().finish_state().finish_time(),
+          finish.value().finish_state().time().value(),
           Entry{
             i,
             finish.value().finish_state(),
@@ -140,7 +140,7 @@ std::shared_ptr<Candidates> Candidates::make(
         if (new_finish.has_value())
         {
           initial_map.insert(
-            {new_finish.value().finish_state().finish_time(),
+            {new_finish.value().finish_state().time().value(),
               Entry{
                 i,
                 new_finish.value().finish_state(),

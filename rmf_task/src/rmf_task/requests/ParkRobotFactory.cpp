@@ -68,15 +68,17 @@ ConstRequestPtr ParkRobotFactory::make_request(
   const State& state) const
 {
   std::string id = "ParkRobot" + generate_uuid();
-  const auto start_waypoint = state.location().waypoint();
+  const auto start_waypoint = state.waypoint().value();
   const auto finish_waypoint = _pimpl->parking_waypoint.has_value() ?
-    _pimpl->parking_waypoint.value() : state.charging_waypoint();
+    _pimpl->parking_waypoint.value() :
+    state.dedicated_charging_waypoint().value();
+
   const auto request = Loop::make(
     start_waypoint,
     finish_waypoint,
     1,
     id,
-    state.finish_time(),
+    state.time().value(),
     nullptr,
     true);
 

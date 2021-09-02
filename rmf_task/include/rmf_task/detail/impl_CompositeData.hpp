@@ -48,6 +48,14 @@ auto CompositeData::insert_or_assign(T&& value) -> InsertResult<T>
 
 //==============================================================================
 template<typename T>
+CompositeData& CompositeData::with(T&& value)
+{
+  insert_or_assign<T>(std::forward<T>(value));
+  return *this;
+}
+
+//==============================================================================
+template<typename T>
 T* CompositeData::get()
 {
   return std::any_cast<T>(_get(typeid(T)));

@@ -57,10 +57,14 @@ inline void CHECK_TIMES(const TaskPlanner::Assignments& assignments,
     for (std::size_t i = 0; i < agent.size(); ++i)
     {
       CHECK(agent[i].deployment_time() >= now);
-      CHECK(agent[i].state().finish_time() >= agent[i].deployment_time());
+      CHECK(agent[i].finish_state().time().value()
+        >= agent[i].deployment_time());
+
       if (i == 0)
         continue;
-      CHECK(agent[i].deployment_time() >= agent[i-1].state().finish_time());
+
+      CHECK(agent[i].deployment_time()
+        >= agent[i-1].finish_state().time().value());
     }
   }
 }
@@ -78,7 +82,7 @@ inline bool check_implicit_charging_task_start(
       continue;
     }
 
-    const auto& s = agent[0].state();
+    const auto& s = agent[0].finish_state();
     auto is_charge_request =
       std::dynamic_pointer_cast<
       const rmf_task::requests::ChargeBattery::Description>(
@@ -110,17 +114,17 @@ inline void display_solution(
     std::cout << "--Agent: " << i << std::endl;
     for (const auto& a : assignments[i])
     {
-      const auto& s = a.state();
+      const auto& s = a.finish_state();
       const double request_seconds =
         a.request()->earliest_start_time().time_since_epoch().count();
       const double start_seconds =
         a.deployment_time().time_since_epoch().count();
-      const rmf_traffic::Time finish_time = s.finish_time();
+      const rmf_traffic::Time finish_time = s.time().value();
       const double finish_seconds = finish_time.time_since_epoch().count();
       std::cout << std::fixed
                 << "    <" << a.request()->id() << ": " << request_seconds
                 << ", " << start_seconds
-                << ", "<< finish_seconds << ", " << 100* s.battery_soc()
+                << ", "<< finish_seconds << ", " << 100*s.battery_soc().value()
                 << "%>" << std::endl;
     }
   }
@@ -237,8 +241,8 @@ SCENARIO("Grid World")
 
     std::vector<rmf_task::State> initial_states =
     {
-      rmf_task::State{first_location, 13, 1.0},
-      rmf_task::State{second_location, 2, 1.0}
+      rmf_task::State().load_basic(first_location, 13, 1.0),
+      rmf_task::State().load_basic(second_location, 2, 1.0)
     };
 
     std::vector<rmf_task::ConstRequestPtr> requests =
@@ -320,8 +324,8 @@ SCENARIO("Grid World")
 
     std::vector<rmf_task::State> initial_states =
     {
-      rmf_task::State{first_location, 13, 1.0},
-      rmf_task::State{second_location, 2, 1.0}
+      rmf_task::State().load_basic(first_location, 13, 1.0),
+      rmf_task::State().load_basic(second_location, 2, 1.0)
     };
 
     std::vector<rmf_task::ConstRequestPtr> requests =
@@ -467,8 +471,8 @@ SCENARIO("Grid World")
 
     std::vector<rmf_task::State> initial_states =
     {
-      rmf_task::State{first_location, 13, initial_soc},
-      rmf_task::State{second_location, 2, initial_soc}
+      rmf_task::State().load_basic(first_location, 13, initial_soc),
+      rmf_task::State().load_basic(second_location, 2, initial_soc)
     };
 
     std::vector<rmf_task::ConstRequestPtr> requests =
@@ -567,8 +571,8 @@ SCENARIO("Grid World")
 
     std::vector<rmf_task::State> initial_states =
     {
-      rmf_task::State{first_location, 9, 1.0},
-      rmf_task::State{second_location, 2, 1.0}
+      rmf_task::State().load_basic(first_location, 9, 1.0),
+      rmf_task::State().load_basic(second_location, 2, 1.0)
     };
 
     std::vector<rmf_task::ConstRequestPtr> requests =
@@ -712,7 +716,7 @@ SCENARIO("Grid World")
 
     std::vector<rmf_task::State> initial_states =
     {
-      rmf_task::State{first_location, 13, 1.0},
+      rmf_task::State().load_basic(first_location, 13, 1.0)
     };
 
     std::vector<rmf_task::ConstRequestPtr> requests =
@@ -758,7 +762,7 @@ SCENARIO("Grid World")
 
     std::vector<rmf_task::State> initial_states =
     {
-      rmf_task::State{first_location, 13, 0.0},
+      rmf_task::State().load_basic(first_location, 13, 0.0)
     };
 
     std::vector<rmf_task::ConstRequestPtr> requests =
@@ -805,7 +809,7 @@ SCENARIO("Grid World")
 
     std::vector<rmf_task::State> initial_states =
     {
-      rmf_task::State{first_location, 13, 1.0},
+      rmf_task::State().load_basic(first_location, 13, 1.0)
     };
 
     std::vector<rmf_task::ConstRequestPtr> requests =
@@ -904,7 +908,7 @@ SCENARIO("Grid World")
 
     std::vector<rmf_task::State> initial_states =
     {
-      rmf_task::State{first_location, 13, 1.0},
+      rmf_task::State().load_basic(first_location, 13, 1.0)
     };
 
     std::vector<rmf_task::ConstRequestPtr> requests =
@@ -970,7 +974,7 @@ SCENARIO("Grid World")
 
     std::vector<rmf_task::State> initial_states =
     {
-      rmf_task::State{first_location, 13, 1.0},
+      rmf_task::State().load_basic(first_location, 13, 1.0)
     };
 
     std::vector<rmf_task::ConstRequestPtr> requests =
@@ -1052,7 +1056,7 @@ SCENARIO("Grid World")
 
     std::vector<rmf_task::State> initial_states =
     {
-      rmf_task::State{first_location, 13, 1.0},
+      rmf_task::State().load_basic(first_location, 13, 1.0)
     };
 
     std::vector<rmf_task::ConstRequestPtr> requests =
@@ -1135,8 +1139,8 @@ SCENARIO("Grid World")
 
     std::vector<rmf_task::State> initial_states =
     {
-      rmf_task::State{first_location, 13, 1.0},
-      rmf_task::State{second_location, 1, 1.0}
+      rmf_task::State().load_basic(first_location, 13, 1.0),
+      rmf_task::State().load_basic(second_location, 1, 1.0)
     };
 
     std::vector<rmf_task::ConstRequestPtr> requests =
@@ -1279,9 +1283,9 @@ SCENARIO("Grid World")
 
     std::vector<rmf_task::State> initial_states =
     {
-      rmf_task::State{first_location, 13, 1.0},
-      rmf_task::State{second_location, 1, 1.0},
-      rmf_task::State{third_location, 5, 1.0}
+      rmf_task::State().load_basic(first_location, 13, 1.0),
+      rmf_task::State().load_basic(second_location, 1, 1.0),
+      rmf_task::State().load_basic(third_location, 5, 1.0)
     };
 
     std::vector<rmf_task::ConstRequestPtr> requests =
@@ -1448,8 +1452,8 @@ SCENARIO("Grid World")
 
     std::vector<rmf_task::State> initial_states =
     {
-      rmf_task::State{first_location, 13, initial_soc},
-      rmf_task::State{second_location, 2, initial_soc}
+      rmf_task::State().load_basic(first_location, 13, initial_soc),
+      rmf_task::State().load_basic(second_location, 2, initial_soc)
     };
 
     std::vector<rmf_task::ConstRequestPtr> requests =
@@ -1535,7 +1539,7 @@ SCENARIO("Grid World")
             const rmf_task::requests::ChargeBattery::Description>(
             assignment.request()->description()))
         {
-          CHECK(assignment.state().battery_soc() == recharge_soc);
+          CHECK(assignment.finish_state().battery_soc() == recharge_soc);
         }
       }
     }
@@ -1551,7 +1555,7 @@ SCENARIO("Grid World")
 
     std::vector<rmf_task::State> initial_states =
     {
-      rmf_task::State{first_location, 13, 1.0},
+      rmf_task::State().load_basic(first_location, 13, 1.0)
     };
 
     const auto start_time =
@@ -1617,7 +1621,7 @@ SCENARIO("Grid World")
 
     std::vector<rmf_task::State> initial_states =
     {
-      rmf_task::State{first_location, 13, initial_soc},
+      rmf_task::State().load_basic(first_location, 13, initial_soc)
     };
 
     std::vector<rmf_task::ConstRequestPtr> requests =
@@ -1692,8 +1696,8 @@ SCENARIO("Grid World")
 
     std::vector<rmf_task::State> initial_states =
     {
-      rmf_task::State{first_location, 13, 1.0},
-      rmf_task::State{second_location, 1, 1.0},
+      rmf_task::State().load_basic(first_location, 13, 1.0),
+      rmf_task::State().load_basic(second_location, 1, 1.0)
     };
 
     std::vector<rmf_task::ConstRequestPtr> requests =
@@ -1802,8 +1806,8 @@ SCENARIO("Grid World")
 
     std::vector<rmf_task::State> initial_states =
     {
-      rmf_task::State{first_location, 13, 1.0},
-      rmf_task::State{second_location, 1, 1.0},
+      rmf_task::State().load_basic(first_location, 13, 1.0),
+      rmf_task::State().load_basic(second_location, 1, 1.0)
     };
 
     std::vector<rmf_task::ConstRequestPtr> requests =
@@ -1856,8 +1860,8 @@ SCENARIO("Grid World")
       {
         const auto last_assignment = agent.back();
         CHECK_FALSE(last_assignment.request()->automatic());
-        const auto& state = last_assignment.state();
-        CHECK_FALSE(state.location().waypoint() == state.charging_waypoint());
+        const auto& state = last_assignment.finish_state();
+        CHECK_FALSE(state.waypoint() == state.dedicated_charging_waypoint());
       }
     }
 
@@ -1892,8 +1896,8 @@ SCENARIO("Grid World")
       {
         const auto last_assignment = agent.back();
         CHECK(last_assignment.request()->automatic());
-        const auto& state = last_assignment.state();
-        CHECK(state.location().waypoint() == state.charging_waypoint());
+        const auto& state = last_assignment.finish_state();
+        CHECK(state.waypoint() == state.dedicated_charging_waypoint());
       }
     }
   }

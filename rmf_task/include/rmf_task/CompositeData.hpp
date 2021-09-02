@@ -65,6 +65,10 @@ public:
   template<typename T>
   InsertResult<T> insert_or_assign(T&& value);
 
+  /// Same as insert_or_assign, but *this is returned instead of the new value.
+  template<typename T>
+  CompositeData& with(T&& value);
+
   /// Get a reference to a data structure of type T if one is available in the
   /// CompositeData. If one is not available, this will return a nullptr.
   template<typename T>
@@ -93,7 +97,6 @@ private:
   bool _erase(std::type_index type);
   rmf_utils::impl_ptr<Implementation> _pimpl;
 };
-
 
 } // namespace rmf_task
 

@@ -195,7 +195,7 @@ const rmf_task::ConstRequestPtr& TaskPlanner::Assignment::request() const
 }
 
 //==============================================================================
-const State& TaskPlanner::Assignment::state() const
+const State& TaskPlanner::Assignment::finish_state() const
 {
   return _pimpl->state;
 }
@@ -429,7 +429,7 @@ public:
         continue;
       }
 
-      const auto& state = agent.back().state();
+      const auto& state = agent.back().finish_state();
       const auto request = factory.make_request(state);
 
       // TODO(YV) Currently we are unable to recursively call complete_solve()
@@ -439,7 +439,7 @@ public:
       // When we fix the logic with unnecessary ChargeBattery tasks, we should
       // revist making this a recursive call.
       auto model = request->description()->make_model(
-        state.finish_time(),
+        state.time().value(),
         config.parameters());
       auto estimate = model->estimate_finish(
         state, config.constraints(), *estimate_cache);
@@ -458,10 +458,10 @@ public:
         // Insufficient battery to perform the finishing request. We check if
         // adding a ChargeBattery task before will allow for it to be performed
         const auto charging_request =
-          make_charging_request(state.finish_time());
+          make_charging_request(state.time().value());
         const auto charge_battery_model =
           charging_request->description()->make_model(
-          state.finish_time(),
+          state.time().value(),
           config.parameters());
         const auto charge_battery_estimate =
           charge_battery_model->estimate_finish(
@@ -469,7 +469,7 @@ public:
         if (charge_battery_estimate.has_value())
         {
           model = request->description()->make_model(
-            charge_battery_estimate.value().finish_state().finish_time(),
+            charge_battery_estimate.value().finish_state().time().value(),
             config.parameters());
           estimate = model->estimate_finish(
             charge_battery_estimate.value().finish_state(),
@@ -575,14 +575,14 @@ public:
         time_now, 0, 0.0};
       estimates.resize(
         node->assigned_tasks.size(),
-        State{empty_new_location, 0, 0.0});
+        State().load_basic(empty_new_location, 0, 0.0));
       for (std::size_t i = 0; i < node->assigned_tasks.size(); ++i)
       {
         const auto& assignments = node->assigned_tasks[i];
         if (assignments.empty())
           estimates[i] = initial_states[i];
         else
-          estimates[i] = assignments.back().assignment.state();
+          estimates[i] = assignments.back().assignment.finish_state();
       }
 
       node = make_initial_node(
@@ -646,8 +646,8 @@ public:
         rmf_traffic::Time latest = rmf_traffic::Time::min();
         for (const auto& s : initial_states)
         {
-          if (latest < s.finish_time())
-            latest = s.finish_time();
+          if (latest < s.time().value())
+            latest = s.time().value();
         }
 
         return latest;
@@ -679,7 +679,9 @@ public:
       if (a.empty())
         continue;
 
-      const auto finish_time = a.back().assignment.state().finish_time();
+      const auto finish_time =
+        a.back().assignment.finish_state().time().value();
+
       if (latest < finish_time)
         latest = finish_time;
     }
@@ -717,7 +719,7 @@ public:
           assignments.back().assignment.request()->description()))
       {
         auto charge_battery = make_charging_request(
-          entry.previous_state.finish_time());
+          entry.previous_state.time().value());
         const auto charge_battery_model =
           charge_battery->description()->make_model(
           charge_battery->earliest_start_time(),
@@ -794,7 +796,9 @@ public:
 
     if (add_charger)
     {
-      auto charge_battery = make_charging_request(entry.state.finish_time());
+      auto charge_battery = make_charging_request(
+        entry.state.time().value());
+
       const auto charge_battery_model =
         charge_battery->description()->make_model(
         charge_battery->earliest_start_time(),
@@ -877,10 +881,10 @@ public:
           const rmf_task::requests::ChargeBattery::Description>(
           assignments.back().assignment.request()->description()))
         return nullptr;
-      state = assignments.back().assignment.state();
+      state = assignments.back().assignment.finish_state();
     }
 
-    auto charge_battery = make_charging_request(state.finish_time());
+    auto charge_battery = make_charging_request(state.time().value());
     const auto charge_battery_model =
       charge_battery->description()->make_model(
       charge_battery->earliest_start_time(),

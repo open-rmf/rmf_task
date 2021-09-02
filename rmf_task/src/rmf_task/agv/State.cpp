@@ -22,72 +22,76 @@
 namespace rmf_task {
 
 //==============================================================================
-class State::Implementation
+std::optional<std::size_t> State::waypoint() const
 {
-public:
+  if (const auto* wp = get<CurrentWaypoint>())
+    return wp->value;
 
-  Implementation(
-    rmf_traffic::agv::Plan::Start location,
-    std::size_t charging_waypoint,
-    double battery_soc)
-  : _location(std::move(location)),
-    _charging_waypoint(charging_waypoint),
-    _battery_soc(battery_soc)
-  {
-    if (_battery_soc < 0.0 || _battery_soc > 1.0)
-    {
-      // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
-      throw std::invalid_argument(
-        "Battery State of Charge needs to be between 0.0 and 1.0.");
-      // *INDENT-ON*
-    }
-  }
-
-  rmf_traffic::agv::Plan::Start _location;
-  std::size_t _charging_waypoint;
-  double _battery_soc;
-};
-
-//==============================================================================
-State::State(
-  rmf_traffic::agv::Plan::Start location,
-  std::size_t charging_waypoint,
-  double battery_soc)
-: _pimpl(rmf_utils::make_impl<Implementation>(
-      Implementation(std::move(location), charging_waypoint, battery_soc)))
-{
+  return std::nullopt;
 }
 
 //==============================================================================
-rmf_traffic::agv::Plan::Start State::location() const
+State& State::waypoint(std::size_t new_waypoint)
 {
-  return _pimpl->_location;
-}
-
-//==============================================================================
-State& State::location(rmf_traffic::agv::Plan::Start new_location)
-{
-  _pimpl->_location = std::move(new_location);
+  with<CurrentWaypoint>(new_waypoint);
   return *this;
 }
 
 //==============================================================================
-std::size_t State::charging_waypoint() const
+std::optional<double> State::orientation() const
 {
-  return _pimpl->_charging_waypoint;
+  if (const auto* ori = get<CurrentOrientation>())
+    return ori->value;
+
+  return std::nullopt;
 }
 
 //==============================================================================
-State& State::charging_waypoint(std::size_t new_charging_waypoint)
+State& State::orientation(double new_orientation)
 {
-  _pimpl->_charging_waypoint = new_charging_waypoint;
+  with<CurrentOrientation>(new_orientation);
   return *this;
 }
 
 //==============================================================================
-double State::battery_soc() const
+std::optional<rmf_traffic::Time> State::time() const
 {
-  return _pimpl->_battery_soc;
+  if (const auto* time = get<CurrentTime>())
+    return time->value;
+
+  return std::nullopt;
+}
+
+//==============================================================================
+State& State::time(rmf_traffic::Time new_time)
+{
+  with<CurrentTime>(new_time);
+  return *this;
+}
+
+//==============================================================================
+std::optional<std::size_t> State::dedicated_charging_waypoint() const
+{
+  if (const auto* p = get<DedicatedChargingPoint>())
+    return p->value;
+
+  return std::nullopt;
+}
+
+//==============================================================================
+State& State::dedicated_charging_waypoint(std::size_t new_charging_waypoint)
+{
+  with<DedicatedChargingPoint>(new_charging_waypoint);
+  return *this;
+}
+
+//==============================================================================
+std::optional<double> State::battery_soc() const
+{
+  if (const auto* b = get<CurrentBatterySoC>())
+    return b->value;
+
+  return std::nullopt;
 }
 
 //==============================================================================
@@ -97,38 +101,72 @@ State& State::battery_soc(double new_battery_soc)
   {
     // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
     throw std::invalid_argument(
-      "Battery State of Charge needs be between 0.0 and 1.0.");
+      "Battery State of Charge needs to be between 0.0 and 1.0.");
     // *INDENT-ON*
   }
 
-  _pimpl->_battery_soc = new_battery_soc;
+  with<CurrentBatterySoC>(new_battery_soc);
   return *this;
 }
 
 //==============================================================================
-std::size_t State::waypoint() const
+State& State::load_basic(
+  const rmf_traffic::agv::Plan::Start& input_location,
+  std::size_t input_charging_point,
+  double input_battery_soc)
 {
-  return _pimpl->_location.waypoint();
-}
-
-//==============================================================================
-State& State::waypoint(std::size_t new_waypoint)
-{
-  _pimpl->_location.waypoint(new_waypoint);
+  load(input_location);
+  dedicated_charging_waypoint(input_charging_point);
+  battery_soc(input_battery_soc);
   return *this;
 }
 
 //==============================================================================
-rmf_traffic::Time State::finish_time() const
+State& State::load(const rmf_traffic::agv::Plan::Start& location)
 {
-  return _pimpl->_location.time();
+  with<CurrentWaypoint>(location.waypoint());
+  with<CurrentOrientation>(location.orientation());
+  with<CurrentTime>(location.time());
+  return *this;
 }
 
 //==============================================================================
-State& State::finish_time(rmf_traffic::Time new_finish_time)
+std::optional<rmf_traffic::agv::Plan::Start> State::project_plan_start(
+  double default_orientation,
+  rmf_traffic::Time default_time) const
 {
-  _pimpl->_location.time(new_finish_time);
-  return *this;
+  const auto* wp = get<CurrentWaypoint>();
+  if (!wp)
+    return std::nullopt;
+
+  rmf_traffic::agv::Plan::Start start(
+    default_time, wp->value, default_orientation);
+
+  if (const auto* ori = get<CurrentOrientation>())
+    start.orientation(ori->value);
+
+  if (const auto* t = get<CurrentTime>())
+    start.time(t->value);
+
+  return start;
+}
+
+//==============================================================================
+std::optional<rmf_traffic::agv::Plan::Start> State::extract_plan_start() const
+{
+  const auto* wp = get<CurrentWaypoint>();
+  if (!wp)
+    return std::nullopt;
+
+  const auto* ori = get<CurrentOrientation>();
+  if (!ori)
+    return std::nullopt;
+
+  const auto* t = get<CurrentTime>();
+  if (!t)
+    return std::nullopt;
+
+  return rmf_traffic::agv::Plan::Start(t->value, wp->value, ori->value);
 }
 
 } // namespace rmf_task
