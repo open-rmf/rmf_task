@@ -35,38 +35,17 @@ class State : public CompositeData
 public:
 
   /// The current waypoint of the robot state
-  struct CurrentWaypoint
-  {
-    std::size_t value;
-
-    CurrentWaypoint(std::size_t input)
-    : value(input) {}
-  };
-
+  RMF_TASK_DEFINE_COMPONENT(std::size_t, CurrentWaypoint);
   std::optional<std::size_t> waypoint() const;
   State& waypoint(std::size_t new_waypoint);
 
   /// The current orientation of the robot state
-  struct CurrentOrientation
-  {
-    double value;
-
-    CurrentOrientation(double input)
-    : value(input) {}
-  };
-
+  RMF_TASK_DEFINE_COMPONENT(double, CurrentOrientation);
   std::optional<double> orientation() const;
   State& orientation(double new_orientation);
 
   /// The current time for the robot
-  struct CurrentTime
-  {
-    rmf_traffic::Time value;
-
-    CurrentTime(rmf_traffic::Time input)
-    : value(input) {}
-  };
-
+  RMF_TASK_DEFINE_COMPONENT(rmf_traffic::Time, CurrentTime);
   std::optional<rmf_traffic::Time> time() const;
   State& time(rmf_traffic::Time new_time);
 
@@ -74,27 +53,13 @@ public:
   // TODO(MXG): Consider removing this field and using some kind of
   // ChargingStrategy abstract interface to determine where and how the robots
   // should be charging.
-  struct DedicatedChargingPoint
-  {
-    std::size_t value;
-
-    DedicatedChargingPoint(std::size_t input)
-    : value(input) {}
-  };
-
+  RMF_TASK_DEFINE_COMPONENT(std::size_t, DedicatedChargingPoint);
   std::optional<std::size_t> dedicated_charging_waypoint() const;
   State& dedicated_charging_waypoint(std::size_t new_charging_waypoint);
 
   /// The current battery state of charge of the robot. This value is between
   /// 0.0 and 1.0.
-  struct CurrentBatterySoC
-  {
-    double value;
-
-    CurrentBatterySoC(double input)
-    : value(input) {}
-  };
-
+  RMF_TASK_DEFINE_COMPONENT(double, CurrentBatterySoC);
   std::optional<double> battery_soc() const;
   State& battery_soc(double new_battery_soc);
 

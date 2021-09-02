@@ -1,0 +1,125 @@
+/*
+ * Copyright (C) 2021 Open Source Robotics Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+*/
+
+#ifndef RMF_TASK__EXECUTE__TASK_HPP
+#define RMF_TASK__EXECUTE__TASK_HPP
+
+#include <rmf_task/execute/Phase.hpp>
+
+#include <memory>
+#include <functional>
+
+namespace rmf_task {
+namespace execute {
+
+//==============================================================================
+/// Pure abstract interface for an executable Task
+class Task
+{
+public:
+
+  /// Descriptions of the phases that have been completed
+  virtual const std::vector<CompletedPhase>& completed_phases() const = 0;
+
+  /// Interface for the phase that is currently active
+  virtual ConstActivePhasePtr active_phase() const = 0;
+
+  /// Descriptions of the phases that are expected in the future
+  virtual std::vector<PendingPhase> pending_phases() const = 0;
+
+  /// The ID of this Task
+  virtual std::string id() const = 0;
+
+  /// The category of this Task
+  virtual std::string category() const = 0;
+
+  /// Human-readable details about this task
+  virtual std::string detail() const = 0;
+
+  /// Estimate the overall finishing time of the task
+  virtual rmf_traffic::Time estimate_finish_time() const = 0;
+
+  /// The Resume class keeps track of when the Task is allowed to Resume.
+  /// You can either call the object's operator() or let the object expire to
+  /// tell the Task that it may resume.
+  class Resume
+  {
+  public:
+
+    /// Call this object to tell the Task to resume.
+    void operator()() const;
+
+    class Implementation;
+  private:
+    rmf_utils::unique_impl_ptr<Implementation> _pimpl;
+  };
+
+  /// Tell this Task that it needs to be interrupted. An interruption means
+  /// the robot may be commanded to do other tasks before this task resumes.
+  ///
+  /// Interruptions may occur to allow operators to take manual control of the
+  /// robot, or to engage automatic behaviors in response to emergencies, e.g.
+  /// fire alarms or code blues.
+  ///
+  /// \param[in] task_is_interrupted
+  ///   This callback will be triggered when the Task has reached a state where
+  ///   it is okay to start issuing other commands to the robot.
+  ///
+  /// \return an object to inform the Task when it is allowed to resume.
+  virtual Resume interrupt(std::function<void()> task_is_interrupted) = 0;
+
+  // TODO(MXG): Should we have a pause() interface? It would be the same as
+  // interrupt() except without the expectation that the robot will do any other
+  // task before resuming.
+
+  /// Tell the Task that it has been canceled. The behavior that follows a
+  /// cancellation will vary between different Tasks, but generally it means
+  /// that the robot should no longer try to complete its Task and should
+  /// instead try to return itself to an unencumbered state as quickly as
+  /// possible.
+  ///
+  /// The Task may continue to perform some phases after being canceled. The
+  /// pending_phases are likely to change after the Task is canceled, being
+  /// replaced with phases that will help to relieve the robot so it can
+  /// return to an unencumbered state.
+  ///
+  /// The Task should continue to be tracked as normal. When its finished
+  /// callback is triggered, the cancellation is complete.
+  virtual void cancel() = 0;
+
+  /// Kill this Task. The behavior that follows a kill will vary between
+  /// different Tasks, but generally it means that the robot should be returned
+  /// to safe idle state as soon as possible, even if it remains encumbered by
+  /// something related to this Task.
+  ///
+  /// The finished callback will be triggered when the Task is fully killed.
+  ///
+  /// The kill() command supersedes the cancel() command. Calling cancel() after
+  /// calling kill() will have no effect.
+  virtual void kill() = 0;
+
+  // Virtual destructor
+  virtual ~Task() = default;
+
+protected:
+  static Resume make_resumer(std::function<void()> callback);
+};
+
+} // namespace execute
+} // namespace rmf_task
+
+#endif // RMF_TASK__TASK_HPP

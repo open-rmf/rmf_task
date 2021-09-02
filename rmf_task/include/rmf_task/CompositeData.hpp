@@ -100,6 +100,13 @@ private:
 
 } // namespace rmf_task
 
+//==============================================================================
+/// Define a component class that is convenient to use in a CompositeData
+/// instance. The defined class will contain only one field whose type is
+/// specified by Type. The name of the class will be Name.
+#define RMF_TASK_DEFINE_COMPONENT(Type, Name) \
+  struct Name { Type value; Name(Type input) : value(input) { } }
+
 #include <rmf_task/detail/impl_CompositeData.hpp>
 
 #endif // RMF_TASK__COMPOSITEDATA_HPP

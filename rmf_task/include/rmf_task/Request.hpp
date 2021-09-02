@@ -78,6 +78,7 @@ public:
   };
 
   using DescriptionPtr = std::shared_ptr<Description>;
+  using ConstDescriptionPtr = std::shared_ptr<const Description>;
 
   /// Constructor
   ///
@@ -97,7 +98,7 @@ public:
     const std::string& id,
     rmf_traffic::Time earliest_start_time,
     ConstPriorityPtr priority,
-    DescriptionPtr description,
+    ConstDescriptionPtr description,
     bool automatic = false);
 
   /// The unique id for this request
@@ -110,7 +111,7 @@ public:
   ConstPriorityPtr priority() const;
 
   /// Get the description of this request
-  const DescriptionPtr& description() const;
+  const ConstDescriptionPtr& description() const;
 
   // Returns true if this request was automatically generated
   bool automatic() const;
