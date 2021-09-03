@@ -53,7 +53,7 @@ public:
   rmf_traffic::Time estimate_finish_time() const final;
 
   // Documentation inherited
-  Resume interrupt(std::function<void ()> task_is_interrupted) final;
+  Resume interrupt(std::function<void()> task_is_interrupted) final;
 
   // Documentation inherited
   void cancel() final;

@@ -53,10 +53,10 @@ public:
   template<typename Description>
   using Activate =
     std::function<
-      execute::ConstActivePhasePtr(
-        const Description& description,
-        std::function<void(execute::ConstConditionPtr)> update,
-        std::function<void(execute::ConstConditionPtr)> finished)
+    execute::ConstActivePhasePtr(
+      const Description& description,
+      std::function<void(execute::ConstConditionPtr)> update,
+      std::function<void(execute::ConstConditionPtr)> finished)
     >;
 
   /// Add a callback to convert from a PhaseDescription into an active phase.
