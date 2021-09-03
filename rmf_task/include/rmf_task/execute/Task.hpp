@@ -19,6 +19,7 @@
 #define RMF_TASK__EXECUTE__TASK_HPP
 
 #include <rmf_task/execute/Phase.hpp>
+#include <rmf_task/Request.hpp>
 
 #include <memory>
 #include <functional>
@@ -49,6 +50,9 @@ public:
 
   /// Human-readable details about this task
   virtual std::string detail() const = 0;
+
+  /// The original task Request that spawned this Task
+  virtual const Request& original_request() const = 0;
 
   /// Estimate the overall finishing time of the task
   virtual rmf_traffic::Time estimate_finish_time() const = 0;
@@ -116,6 +120,12 @@ public:
   virtual ~Task() = default;
 
 protected:
+
+  /// Used by classes that inherit the Task interface to create a Resumer object
+  ///
+  /// \param[in] callback
+  ///   Provide the callback that should be triggered when the Task is allowed
+  ///   to resume
   static Resume make_resumer(std::function<void()> callback);
 };
 

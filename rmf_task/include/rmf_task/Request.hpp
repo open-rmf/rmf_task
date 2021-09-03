@@ -74,6 +74,7 @@ public:
       rmf_traffic::Time earliest_start_time,
       const Parameters& parameters) const = 0;
 
+    // Virtual destructor
     virtual ~Description() = default;
   };
 
