@@ -36,7 +36,7 @@ public:
 
   const std::string& name() const;
   const std::string& detail() const;
-  const std::vector<std::string>& issues() const;
+  const Log::View& log() const;
 
   rmf_traffic::Time start_time() const;
   rmf_traffic::Time original_finish_estimate() const;
