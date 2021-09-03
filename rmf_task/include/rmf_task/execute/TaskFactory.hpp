@@ -15,61 +15,65 @@
  *
 */
 
-#ifndef RMF_TASK__SEQUENCE__PHASEFACTORY_HPP
-#define RMF_TASK__SEQUENCE__PHASEFACTORY_HPP
+#ifndef RMF_TASK__TASKFACTORY_HPP
+#define RMF_TASK__TASKFACTORY_HPP
 
-#include <rmf_task/execute/Phase.hpp>
-#include <rmf_task/sequence/Task.hpp>
-#include <rmf_task/sequence/TaskDescription.hpp>
+#include <rmf_task/Request.hpp>
+#include <rmf_task/execute/Task.hpp>
+
 
 namespace rmf_task {
-namespace sequence {
+namespace execute {
 
 //==============================================================================
-/// A factory for generating execute::Phase instances from descriptions.
-class PhaseFactory
+/// A factory for generating Task instances from requests.
+class TaskFactory
 {
 public:
 
-  /// Construct an empty PhaseFactory
-  PhaseFactory();
+  /// Construct an empty TaskFactory
+  TaskFactory();
 
-  /// Signature for activating a phase
+  /// Signature for activating a task
   ///
   /// \tparam Description
-  ///   A class that implements the sequence::PhaseDescription interface
+  ///   A class that implements the Request::Description interface
+  ///
+  /// \param[in] request
+  ///   An immutable reference to the relevant task request
   ///
   /// \param[in] description
-  ///   An immutable reference to the relevant Description instance
+  ///   The down-casted description of the task
   ///
   /// \param[in] update
-  ///   A callback that will be triggered when the phase has a significant
+  ///   A callback that will be triggered when the task has a significant
   ///   update in its status.
   ///
   /// \param[in] finished
-  ///   A callback that will be triggered when the phase has finished.
+  ///   A callback that will be triggered when the task has finished.
   ///
-  /// \return an active, running instance of the described phase.
+  /// \return an active, running instance of the requested task.
   template<typename Description>
   using Activate =
     std::function<
-    execute::ConstActivePhasePtr(
+    execute::ConstTaskPtr(
+      const Request& request,
       const Description& description,
-      std::function<void(execute::ConstConditionPtr)> update,
-      std::function<void(execute::ConstConditionPtr)> finished)
+      std::function<void(ConstConditionPtr)> update,
+      std::function<void(ConstConditionPtr)> finished)
     >;
 
-  /// Add a callback to convert from a PhaseDescription into an active phase.
+  /// Add a callback to convert from a Request into an active Task.
   ///
   /// \tparam Description
-  ///   A class that implements the sequence::PhaseDescription interface
+  ///   A class that implements the Request::Description interface
   template<typename Description>
   void add_activator(Activate<Description> activator);
 
-  /// Activate a Task object based on a phase sequence description.
+  /// Activate a Task object based on a Request::Description.
   ///
-  /// \param[in] description
-  ///   The description of the phase sequence
+  /// \param[in] request
+  ///   The task request
   ///
   /// \param[in] update
   ///   A callback that will be triggered when the task has a significant update
@@ -77,20 +81,18 @@ public:
   /// \param[in] finished
   ///   A callback that will be triggered when the task has finished
   ///
-  /// \return an active, running instance of the described task.
+  /// \return an active, running instance of the requested task.
   std::shared_ptr<Task> activate(
     const Request& request,
-    ConstTaskDescriptionPtr description,
-    std::function<void(execute::ConstConditionPtr)> update,
-    std::function<void(execute::ConstConditionPtr)> finished) const;
+    std::function<void(ConstConditionPtr)> update,
+    std::function<void(ConstConditionPtr)> finished);
 
   class Implementation;
 private:
   rmf_utils::impl_ptr<Implementation> _pimpl;
 };
 
-
-} // namespace sequence
+} // namespace execute
 } // namespace rmf_task
 
-#endif // RMF_TASK__SEQUENCE__PHASEFACTORY_HPP
+#endif // RMF_TASK__TASKFACTORY_HPP

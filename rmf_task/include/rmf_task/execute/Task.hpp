@@ -129,6 +129,8 @@ protected:
   static Resume make_resumer(std::function<void()> callback);
 };
 
+using ConstTaskPtr = std::shared_ptr<const Task>;
+
 } // namespace execute
 } // namespace rmf_task
 
