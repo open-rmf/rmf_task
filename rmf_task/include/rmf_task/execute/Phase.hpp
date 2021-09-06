@@ -30,16 +30,64 @@ namespace rmf_task {
 namespace execute {
 
 //==============================================================================
-class CompletedPhase
+class Phase
 {
 public:
 
+  class Tag;
+  using ConstTagPtr = std::shared_ptr<const Tag>;
+
+  class Completed;
+  using ConstCompletedPtr = std::shared_ptr<const Completed>;
+
+  class Active;
+  using ConstActivePtr = std::shared_ptr<const Active>;
+
+  class Snapshot;
+  using ConstSnapshotPtr = std::shared_ptr<const Snapshot>;
+
+  class Pending;
+  using ConstPendingPtr = std::shared_ptr<const Pending>;
+};
+
+//==============================================================================
+/// Basic static information about a phase. This information should go
+/// unchanged from the Pending state, through the Active state, and into the
+/// Completed state.
+class Phase::Tag
+{
+public:
+
+  /// Name of the phase
   const std::string& name() const;
+
+  /// Details about the phase
   const std::string& detail() const;
+
+  /// The original (ideal) estimate of how long the phase will last
+  rmf_traffic::Duration original_duration_estimate() const;
+
+  class Implementation;
+private:
+  rmf_utils::impl_ptr<Implementation> _pimpl;
+};
+
+//==============================================================================
+/// Information about a phase that has been completed.
+class Phase::Completed
+{
+public:
+
+  /// Tag of the phase
+  const ConstTagPtr& tag() const;
+
+  /// The final log of the phase
   const Log::View& log() const;
 
+  /// The actual time that the phase started
   rmf_traffic::Time start_time() const;
-  rmf_traffic::Time original_finish_estimate() const;
+
+  /// The actual time that the phase finished.
   rmf_traffic::Time finish_time() const;
 
   class Implementation;
@@ -48,15 +96,12 @@ private:
 };
 
 //==============================================================================
-class ActivePhase
+class Phase::Active
 {
 public:
 
-  /// The name of this phase.
-  virtual std::string name() const = 0;
-
-  /// Details about this phase
-  virtual std::string detail() const = 0;
+  /// Tag of the phase
+  virtual ConstTagPtr tag() const = 0;
 
   /// The condition that needs to be satisfied for this phase to be complete
   virtual ConstConditionPtr finish_condition() const = 0;
@@ -65,19 +110,38 @@ public:
   virtual rmf_traffic::Time estimate_finish_time() const = 0;
 
   // Virtual destructor
-  virtual ~ActivePhase() = default;
+  virtual ~Active() = default;
 };
 
-using ConstActivePhasePtr = std::shared_ptr<const ActivePhase>;
-
 //==============================================================================
-class PendingPhase
+class Phase::Snapshot : public Phase::Active
 {
 public:
 
-  const std::string& name() const;
-  const std::string& detail() const;
-  rmf_traffic::Duration duration_estimate() const;
+  /// Make a snapshot of an Active phase
+  static ConstSnapshotPtr make(const Active& active);
+
+  // Documentation inherited
+  ConstTagPtr tag() const final;
+
+  // Documentation inherited
+  ConstConditionPtr finish_condition() const final;
+
+  // Documentation inherited
+  rmf_traffic::Time estimate_finish_time() const final;
+
+  class Implementation;
+private:
+  rmf_utils::impl_ptr<Implementation> _pimpl;
+};
+
+//==============================================================================
+class Phase::Pending
+{
+public:
+
+  /// Tag of the phase
+  const ConstTagPtr& tag() const;
 
   class Implementation;
 private:

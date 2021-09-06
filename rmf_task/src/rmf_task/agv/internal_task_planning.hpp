@@ -163,7 +163,7 @@ struct Node
     for (const auto& u : unassigned_tasks)
     {
       double earliest_start_time = rmf_traffic::time::to_seconds(
-        u.second.request->earliest_start_time().time_since_epoch());
+        u.second.request->tag()->earliest_start_time().time_since_epoch());
       const auto invariant_duration =
         u.second.model->invariant_duration();
       double earliest_finish_time = earliest_start_time

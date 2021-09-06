@@ -36,6 +36,49 @@ namespace rmf_task {
 class Request
 {
 public:
+
+  class Tag
+  {
+  public:
+
+    /// Constructor
+    ///
+    /// \param[in] id_
+    ///   The identify of the request
+    ///
+    /// \param[in] earliest_start_time_
+    ///   The earliest time that the request may begin
+    ///
+    /// \param[in] priority_
+    ///   The priority of the request
+    ///
+    /// \param[in] automatic_
+    ///   Whether this request was automatically generated
+    Tag(
+      std::string id_,
+      rmf_traffic::Time earliest_start_time_,
+      ConstPriorityPtr priority_,
+      bool automatic_ = false);
+
+    /// The unique id for this request
+    const std::string& id() const;
+
+    /// Get the earliest time that this request may begin
+    rmf_traffic::Time earliest_start_time() const;
+
+    /// Get the priority of this request
+    ConstPriorityPtr priority() const;
+
+    // Returns true if this request was automatically generated
+    bool automatic() const;
+
+    class Implementation;
+  private:
+    rmf_utils::impl_ptr<Implementation> _pimpl;
+  };
+
+  using ConstTagPtr = std::shared_ptr<const Tag>;
+
   /// An abstract interface for computing the estimate and invariant durations
   /// of this request
   class Model
@@ -95,6 +138,8 @@ public:
   ///
   /// \param[in] automatic
   ///   True if this request is auto-generated
+  //
+  // TODO(MXG): Deprecate this constructor?
   Request(
     const std::string& id,
     rmf_traffic::Time earliest_start_time,
@@ -102,20 +147,20 @@ public:
     ConstDescriptionPtr description,
     bool automatic = false);
 
-  /// The unique id for this request
-  const std::string& id() const;
+  /// Constructor
+  ///
+  /// \param[in] tag
+  ///   Tag of the request
+  ///
+  /// \param[in] description
+  ///   Description for this request
+  Request(ConstTagPtr tag, ConstDescriptionPtr description);
 
-  /// Get the earliest time that this request may begin
-  rmf_traffic::Time earliest_start_time() const;
-
-  /// Get the priority of this request
-  ConstPriorityPtr priority() const;
+  /// Get the tag of this request
+  const ConstTagPtr& tag() const;
 
   /// Get the description of this request
   const ConstDescriptionPtr& description() const;
-
-  // Returns true if this request was automatically generated
-  bool automatic() const;
 
   class Implementation;
 private:

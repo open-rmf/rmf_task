@@ -19,6 +19,7 @@
 #define RMF_TASK__EXECUTE__TASK_HPP
 
 #include <rmf_task/execute/Phase.hpp>
+#include <rmf_task/detail/Resume.hpp>
 #include <rmf_task/Request.hpp>
 
 #include <memory>
@@ -33,44 +34,48 @@ class Task
 {
 public:
 
+  /// Basic static information about the task.
+  class Tag
+  {
+  public:
+
+    /// The original request that this Task is carrying out
+    const Request::ConstTagPtr& request() const;
+
+    /// The category of this Task.
+    const std::string& category() const;
+
+    /// Details about this Task.
+    const std::string& detail() const;
+
+    /// The original finish estimate of this Task.
+    rmf_traffic::Time original_finish_estimate() const;
+
+    class Implementation;
+  private:
+    rmf_utils::impl_ptr<Implementation> _pimpl;
+  };
+
   /// Descriptions of the phases that have been completed
-  virtual const std::vector<CompletedPhase>& completed_phases() const = 0;
+  virtual const std::vector<Phase::ConstCompletedPtr>&
+  completed_phases() const = 0;
 
   /// Interface for the phase that is currently active
-  virtual ConstActivePhasePtr active_phase() const = 0;
+  virtual Phase::ConstActivePtr active_phase() const = 0;
 
   /// Descriptions of the phases that are expected in the future
-  virtual std::vector<PendingPhase> pending_phases() const = 0;
+  virtual std::vector<Phase::Pending> pending_phases() const = 0;
 
-  /// The ID of this Task
-  virtual std::string id() const = 0;
-
-  /// The category of this Task
-  virtual std::string category() const = 0;
-
-  /// Human-readable details about this task
-  virtual std::string detail() const = 0;
-
-  /// The original task Request that spawned this Task
-  virtual const Request& original_request() const = 0;
+  /// The request tag of this Task
+  virtual const Request::ConstTagPtr& tag() const = 0;
 
   /// Estimate the overall finishing time of the task
   virtual rmf_traffic::Time estimate_finish_time() const = 0;
 
   /// The Resume class keeps track of when the Task is allowed to Resume.
-  /// You can either call the object's operator() or let the object expire to
-  /// tell the Task that it may resume.
-  class Resume
-  {
-  public:
-
-    /// Call this object to tell the Task to resume.
-    void operator()() const;
-
-    class Implementation;
-  private:
-    rmf_utils::unique_impl_ptr<Implementation> _pimpl;
-  };
+  /// You can either call the Resume object's operator() or let the object
+  /// expire to tell the Task that it may resume.
+  class Resume : public detail::Resume {};
 
   /// Tell this Task that it needs to be interrupted. An interruption means
   /// the robot may be commanded to do other tasks before this task resumes.
@@ -107,10 +112,11 @@ public:
 
   /// Kill this Task. The behavior that follows a kill will vary between
   /// different Tasks, but generally it means that the robot should be returned
-  /// to safe idle state as soon as possible, even if it remains encumbered by
+  /// to a safe idle state as soon as possible, even if it remains encumbered by
   /// something related to this Task.
   ///
-  /// The finished callback will be triggered when the Task is fully killed.
+  /// The Task should continue to be tracked as normal. When its finished
+  /// callback is triggered, the killing is complete.
   ///
   /// The kill() command supersedes the cancel() command. Calling cancel() after
   /// calling kill() will have no effect.

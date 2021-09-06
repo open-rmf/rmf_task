@@ -23,11 +23,8 @@ namespace rmf_task {
 class Request::Implementation
 {
 public:
-  std::string id;
-  rmf_traffic::Time earliest_start_time;
-  rmf_task::ConstPriorityPtr priority;
+  ConstTagPtr tag;
   ConstDescriptionPtr description;
-  bool automatic;
 };
 
 //==============================================================================
@@ -39,44 +36,75 @@ Request::Request(
   bool automatic)
 : _pimpl(rmf_utils::make_impl<Implementation>(
       Implementation {
-        id,
-        earliest_start_time,
-        std::move(priority),
-        std::move(description),
-        automatic
+        std::make_shared<Tag>(
+          id, earliest_start_time, std::move(priority), automatic),
+        std::move(description)
       }))
 {
   // Do nothing
 }
 
 //==============================================================================
-const std::string& Request::id() const
+class Request::Tag::Implementation
+{
+public:
+  std::string id;
+  rmf_traffic::Time earliest_start_time;
+  rmf_task::ConstPriorityPtr priority;
+  bool automatic;
+};
+
+//==============================================================================
+Request::Tag::Tag(
+  std::string id_,
+  rmf_traffic::Time earliest_start_time_,
+  ConstPriorityPtr priority_,
+  bool automatic_)
+: _pimpl(rmf_utils::make_impl<Implementation>(
+      Implementation{
+        std::move(id_),
+        earliest_start_time_,
+        std::move(priority_),
+        automatic_
+      }))
+{
+  // Do nothing
+}
+
+//==============================================================================
+const std::string& Request::Tag::id() const
 {
   return _pimpl->id;
 }
 
 //==============================================================================
-rmf_traffic::Time Request::earliest_start_time() const
+rmf_traffic::Time Request::Tag::earliest_start_time() const
 {
   return _pimpl->earliest_start_time;
 }
 
 //==============================================================================
-ConstPriorityPtr Request::priority() const
+ConstPriorityPtr Request::Tag::priority() const
 {
   return _pimpl->priority;
+}
+
+//==============================================================================
+bool Request::Tag::automatic() const
+{
+  return _pimpl->automatic;
+}
+
+//==============================================================================
+const Request::ConstTagPtr& Request::tag() const
+{
+  return _pimpl->tag;
 }
 
 //==============================================================================
 const Request::ConstDescriptionPtr& Request::description() const
 {
   return _pimpl->description;
-}
-
-//==============================================================================
-bool Request::automatic() const
-{
-  return _pimpl->automatic;
 }
 
 } // namespace rmf_task

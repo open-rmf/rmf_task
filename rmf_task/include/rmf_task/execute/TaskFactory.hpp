@@ -57,7 +57,7 @@ public:
   using Activate =
     std::function<
     execute::ConstTaskPtr(
-      const Request& request,
+      const Request::ConstTagPtr& request,
       const Description& description,
       std::function<void(ConstConditionPtr)> update,
       std::function<void(ConstConditionPtr)> finished)

@@ -201,7 +201,7 @@ std::shared_ptr<PendingTask> PendingTask::make(
 {
   const auto earliest_start_time = std::max(
     start_time,
-    request_->earliest_start_time());
+    request_->tag()->earliest_start_time());
   const auto model = request_->description()->make_model(
     earliest_start_time, parameters);
 

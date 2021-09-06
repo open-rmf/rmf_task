@@ -513,7 +513,7 @@ public:
     // If so the cost function for a node will be modified accordingly.
     for (const auto& request : requests)
     {
-      if (request->priority())
+      if (request->tag()->priority())
       {
         check_priority = true;
         break;
@@ -722,7 +722,7 @@ public:
           entry.previous_state.time().value());
         const auto charge_battery_model =
           charge_battery->description()->make_model(
-          charge_battery->earliest_start_time(),
+          charge_battery->tag()->earliest_start_time(),
           config.parameters());
         auto battery_estimate = charge_battery_model->estimate_finish(
           entry.previous_state, constraints, *estimate_cache);
@@ -801,7 +801,7 @@ public:
 
       const auto charge_battery_model =
         charge_battery->description()->make_model(
-        charge_battery->earliest_start_time(),
+        charge_battery->tag()->earliest_start_time(),
         config.parameters());
       auto battery_estimate = charge_battery_model->estimate_finish(
         entry.state, constraints, *estimate_cache);
@@ -887,7 +887,7 @@ public:
     auto charge_battery = make_charging_request(state.time().value());
     const auto charge_battery_model =
       charge_battery->description()->make_model(
-      charge_battery->earliest_start_time(),
+      charge_battery->tag()->earliest_start_time(),
       config.parameters());
     auto estimate = charge_battery_model->estimate_finish(
       state, config.constraints(), *estimate_cache);

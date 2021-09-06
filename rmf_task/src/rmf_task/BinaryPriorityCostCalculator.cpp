@@ -35,7 +35,7 @@ auto BinaryPriorityCostCalculator::compute_g_assignment(
 
   return rmf_traffic::time::to_seconds(
     assignment.finish_state().time().value()
-    - assignment.request()->earliest_start_time());
+    - assignment.request()->tag()->earliest_start_time());
 }
 
 //==============================================================================
@@ -140,7 +140,7 @@ bool BinaryPriorityCostCalculator::valid_assignment_priority(
     const auto& assignments = node.assigned_tasks[i];
     for (const auto& a : assignments)
     {
-      if (a.assignment.request()->priority() != nullptr)
+      if (a.assignment.request()->tag()->priority() != nullptr)
         priority_count[i] += 1;
     }
   }
@@ -175,7 +175,7 @@ bool BinaryPriorityCostCalculator::valid_assignment_priority(
         return true;
     }
 
-    auto prev_priority = it->assignment.request()->priority();
+    auto prev_priority = it->assignment.request()->tag()->priority();
     ++it;
     for (; it != agent.end(); ++it)
     {
@@ -183,7 +183,7 @@ bool BinaryPriorityCostCalculator::valid_assignment_priority(
           const rmf_task::requests::ChargeBattery::Description>(
           it->assignment.request()->description()))
         continue;
-      auto curr_priority = it->assignment.request()->priority();
+      auto curr_priority = it->assignment.request()->tag()->priority();
       if ((prev_priority == nullptr) && (curr_priority != nullptr))
         return false;
 
