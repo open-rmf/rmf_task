@@ -90,7 +90,7 @@ private:
 //==============================================================================
 class Task::Active
   : public execute::Task,
-    public std::enable_shared_from_this<Active>
+  public std::enable_shared_from_this<Active>
 {
 public:
 
@@ -106,12 +106,6 @@ public:
 
   // Documentation inherited
   const Request::ConstTagPtr& tag() const final;
-
-  // Documentation inherited
-  const std::string& category() const final;
-
-  // Documentation inherited
-  const std::string& detail() const final;
 
   // Documentation inherited
   rmf_traffic::Time estimate_finish_time() const final;

@@ -896,7 +896,8 @@ SCENARIO("Grid World")
     }
 
     // We expect request with task_id:3 to be at the front of the assignment queue
-    CHECK(new_optimal_assignments.front().front().request()->tag()->id() == "3");
+    CHECK(new_optimal_assignments.front().front().request()->tag()->id() ==
+      "3");
   }
 
   WHEN("Planning for one robot, three high priority tasks")
