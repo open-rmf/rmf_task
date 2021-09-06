@@ -43,6 +43,9 @@ public:
 
   class Description;
   using ConstDescriptionPtr = std::shared_ptr<const Description>;
+
+  class Model;
+  using ConstModelPtr = std::shared_ptr<const Model>;
 };
 
 //==============================================================================
@@ -161,25 +164,32 @@ class Phase::Description
 {
 public:
 
-  /// An abstract interface for computing estimates and invariants related to
-  /// this phase.
-  class Model;
-
   /// Generate a Model for this phase based on its description, parameters, and
   /// the invariants of its initial state.
-  virtual std::shared_ptr<Model> make_model(
+  ///
+  /// \param[in] invariant_initial_state
+  ///   A partial state that represents the state components which will
+  ///   definitely be true when this phase begins.
+  ///
+  /// \param[in] parameters
+  ///   The parameters for the robot.
+  ///
+  /// \return a model based on the given start state and parameters.
+  virtual ConstModelPtr make_model(
     State invariant_initial_state,
     const Parameters& parameters) const = 0;
 
   /// Get the human-friendly description of this phase as pending
-  virtual const execute::Phase::Pending& pending() const = 0;
+  virtual execute::Phase::ConstTagPtr make_tag(
+    const State& initial_state,
+    const Parameters& parameters) const = 0;
 
   // Virtual destructor
   virtual ~Description() = default;
 };
 
 //==============================================================================
-class Phase::Description::Model
+class Phase::Model
 {
 public:
 

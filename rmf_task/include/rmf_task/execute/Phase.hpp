@@ -58,6 +58,21 @@ class Phase::Tag
 {
 public:
 
+  /// Constructor
+  ///
+  /// \param[in] name_
+  ///   Name of the phase
+  ///
+  /// \param[in] detail_
+  ///   Details about the phase
+  ///
+  /// \param[in] estimate_
+  ///   The original (ideal) estimate of how long the phase will last
+  Tag(
+    std::string name_,
+    std::string detail_,
+    rmf_traffic::Duration estimate_);
+
   /// Name of the phase
   const std::string& name() const;
 
