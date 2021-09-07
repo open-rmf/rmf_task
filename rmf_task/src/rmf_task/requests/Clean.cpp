@@ -30,7 +30,7 @@ public:
   std::optional<Estimate> estimate_finish(
     const State& initial_state,
     const Constraints& task_planning_constraints,
-    EstimateCache& estimate_cache) const final;
+    const TravelEstimator& estimate_cache) const final;
 
   rmf_traffic::Duration invariant_duration() const final;
 
@@ -87,7 +87,7 @@ Clean::Model::Model(
 std::optional<rmf_task::Estimate> Clean::Model::estimate_finish(
   const State& initial_state,
   const Constraints& task_planning_constraints,
-  EstimateCache& estimate_cache) const
+  const TravelEstimator& estimate_cache) const
 {
   rmf_traffic::agv::Plan::Start final_plan_start{
     initial_state.time().value(),

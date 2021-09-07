@@ -54,7 +54,7 @@ public:
   std::optional<Estimate> estimate_finish(
     const State& initial_state,
     const Constraints& task_planning_constraints,
-    EstimateCache& estimate_cache) const final;
+    const TravelEstimator& travel_estimator) const final;
 
   rmf_traffic::Duration invariant_duration() const final;
 
@@ -80,17 +80,16 @@ ChargeBattery::Model::Model(
 
 //==============================================================================
 std::optional<rmf_task::Estimate>
-ChargeBattery::Model::estimate_finish(
-  const State& initial_state,
+ChargeBattery::Model::estimate_finish(const State& initial_state,
   const Constraints& task_planning_constraints,
-  EstimateCache& estimate_cache) const
+  const TravelEstimator& travel_estimator) const
 {
   // Important to return nullopt if a charging task is not needed. In the task
   // planner, if a charging task is added, the node's latest time may be set to
   // the finishing time of the charging task, and consequently fall below the
-  // segmentation threshold, causing `solve` to return. This may cause an infinite
-  // loop as a new identical charging task is added in each call to `solve` before
-  // returning.
+  // segmentation threshold, causing `solve` to return. This may cause an
+  // infinite loop as a new identical charging task is added in each call to
+  // `solve` before returning.
   const auto recharge_soc = task_planning_constraints.recharge_soc();
   if (initial_state.battery_soc() >= recharge_soc - 1e-3
     && initial_state.waypoint().value()
@@ -109,60 +108,21 @@ ChargeBattery::Model::estimate_finish(
     initial_state.dedicated_charging_waypoint().value(),
     initial_state.battery_soc().value());
 
-  const auto start_time = initial_state.time().value();
-
   double battery_soc = initial_state.battery_soc().value();
-  double dSOC_motion = 0.0;
-  double dSOC_device = 0.0;
-  double variant_battery_drain = 0.0;
   rmf_traffic::Duration variant_duration(0);
-  const bool drain_battery = task_planning_constraints.drain_battery();
-  const auto& planner = *_parameters.planner();
-  const auto& motion_sink = *_parameters.motion_sink();
-  const auto& ambient_sink = *_parameters.ambient_sink();
 
   if (initial_state.waypoint() != initial_state.dedicated_charging_waypoint())
   {
-    const auto endpoints = std::make_pair(
-      initial_state.waypoint().value(),
-      initial_state.dedicated_charging_waypoint().value());
+    const auto travel = travel_estimator.estimate(
+      initial_state.extract_plan_start().value(),
+      rmf_traffic::agv::Plan::Goal(
+        initial_state.dedicated_charging_waypoint().value()));
 
-    const auto& cache_result = estimate_cache.get(endpoints);
-    // Use memoized values if possible
-    if (cache_result)
-    {
-      variant_duration = cache_result->duration;
-      battery_soc = battery_soc - cache_result->dsoc;
-    }
-    else
-    {
-      // Compute plan to charging waypoint along with battery drain
-      rmf_traffic::agv::Planner::Goal goal{endpoints.second};
-      const auto result = planner.plan(
-        initial_state.extract_plan_start().value(), goal);
-      auto itinerary_start_time = start_time;
-      for (const auto& itinerary : result->get_itinerary())
-      {
-        const auto& trajectory = itinerary.trajectory();
-        const auto& finish_time = *trajectory.finish_time();
-        const rmf_traffic::Duration itinerary_duration =
-          finish_time - itinerary_start_time;
+    if (!travel.has_value())
+      return std::nullopt;
 
-        if (drain_battery)
-        {
-          dSOC_motion = motion_sink.compute_change_in_charge(
-            trajectory);
-          dSOC_device = ambient_sink.compute_change_in_charge(
-            rmf_traffic::time::to_seconds(itinerary_duration));
-          variant_battery_drain += dSOC_motion + dSOC_device;
-          battery_soc = battery_soc - dSOC_motion - dSOC_device;
-        }
-        itinerary_start_time = finish_time;
-        variant_duration += itinerary_duration;
-      }
-      estimate_cache.set(endpoints, variant_duration,
-        variant_battery_drain);
-    }
+    variant_duration = travel->duration();
+    battery_soc = battery_soc - travel->change_in_state_of_charge();
 
     // If a robot cannot reach its charging dock given its initial battery soc
     if (battery_soc <= task_planning_constraints.threshold_soc())

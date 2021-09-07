@@ -66,6 +66,15 @@ public:
     /// deal with. Manual intervention is needed to get the task back on track.
     Error,
 
+    /// An operator has instructed this condition to be skipped
+    Skipped,
+
+    /// An operator has instructed this condition to be canceled
+    Canceled,
+
+    /// An operator has instructed this condition to be killed
+    Killed,
+
     /// The condition cannot ever be satisfied, even with manual intervention.
     /// This may mean that the Task cannot be completed if it does not have
     /// an automated way to recover from this failure state.

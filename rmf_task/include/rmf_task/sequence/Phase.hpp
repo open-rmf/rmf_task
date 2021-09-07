@@ -23,6 +23,7 @@
 #include <rmf_task/Parameters.hpp>
 #include <rmf_task/execute/Phase.hpp>
 #include <rmf_task/detail/Resume.hpp>
+#include <rmf_task/detail/Backup.hpp>
 
 namespace rmf_task {
 namespace sequence {
@@ -53,6 +54,18 @@ public:
 class Phase::Active : public execute::Phase::Active
 {
 public:
+
+  /// Backup data for the Phase. The state of the phase is represented by a
+  /// string. The meaning and format of the string is up to the phase
+  /// implementation to decide.
+  ///
+  /// Each Backup is tagged with a sequence number. As the Phase makes progress,
+  /// it can issue new Backups with higher sequence numbers. Only the Backup
+  /// with the highest sequence number will be kept.
+  class Backup : public detail::Backup {};
+
+  /// Get a backup for this Phase
+  virtual Backup backup() const = 0;
 
   /// The Resume class keeps track of when the phase is allowed to Resume.
   /// You can either call the Resume object's operator() or let the object
@@ -109,6 +122,11 @@ class Phase::Activator
   /// \param[in] description
   ///   An immutable reference to the relevant Description instance
   ///
+  /// \param[in] backup_state
+  ///   The serialized backup state of the Phase, if the Phase is being restored
+  ///   from a crash or disconnection. If the Phase is not being restored, a
+  ///   std::nullopt will be passed in here.
+  ///
   /// \param[in] update
   ///   A callback that will be triggered when the phase has a significant
   ///   update in its status. The callback will be given a snapshot of the
@@ -124,8 +142,9 @@ class Phase::Activator
     std::function<
     ActivePtr(
       const Description& description,
+      std::optional<std::string> backup_state,
       std::function<void(execute::Phase::ConstSnapshotPtr)> update,
-      std::function<void()> finished)
+      std::function<void(execute::Phase::ConstCompletedPtr)> finished)
     >;
 
   /// Add a callback to convert from a PhaseDescription into an active phase.
@@ -145,14 +164,37 @@ class Phase::Activator
   ///   The callback will be given a snapshot of the active phase.
   ///
   /// \param[in] finished
-  ///   A callback that will be triggered when the task has finished. A
-  ///   completed
+  ///   A callback that will be triggered when the task has finished. The
+  ///   callback will be given a copy of the completed phase.
   ///
-  /// \return an active, running instance of the described task.
+  /// \return an active, running instance of the described phase.
   ActivePtr activate(
     const Description& description,
     std::function<void(execute::Phase::ConstSnapshotPtr)> update,
-    std::function<void(execute::Phase::Completed)> finished) const;
+    std::function<void(execute::Phase::ConstCompletedPtr)> finished) const;
+
+  /// Restore a phase based on a description of the phase and its backup state.
+  ///
+  /// \param[in] description
+  ///   The description of the phase
+  ///
+  /// \param[in] backup_state
+  ///   The serialized backup state of the phase
+  ///
+  /// \param[in] update
+  ///   A callback that will triggered when the phase has a notable update.
+  ///   The callback will be given a snapshot of the active phase.
+  ///
+  /// \param[in] finished
+  ///   A callback that will be triggered when the task has finished. The
+  ///   callback will be given a copy of the completed phase.
+  ///
+  /// \return an active, running instance of the described phase.
+  ActivePtr restore(
+    const Description& description,
+    const std::string& backup_state,
+    std::function<void(execute::Phase::ConstSnapshotPtr)> update,
+    std::function<void(execute::Phase::ConstCompletedPtr)> finished) const;
 
   class Implementation;
 private:
@@ -179,7 +221,13 @@ public:
     State invariant_initial_state,
     const Parameters& parameters) const = 0;
 
-  /// Get the human-friendly description of this phase as pending
+  /// Get the human-friendly information about this phase
+  ///
+  /// \param[in] initial_state
+  ///   The expected initial state when the phase begins
+  ///
+  /// \param[in] constraints
+  ///   Constraints on the robot during the phase
   virtual execute::Phase::ConstTagPtr make_tag(
     const State& initial_state,
     const Parameters& parameters) const = 0;

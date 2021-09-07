@@ -76,7 +76,7 @@ public:
     const Constraints& constraints,
     const Parameters& parameters,
     const Request::Model& request_model,
-    EstimateCache& estimate_cache,
+    const TravelEstimator& travel_estimator,
     TaskPlanner::TaskPlannerError& error);
 
   Candidates(const Candidates& other);
@@ -116,7 +116,7 @@ public:
     const Constraints& constraints,
     const Parameters& parameters,
     const ConstRequestPtr request_,
-    EstimateCache& estimate_cache,
+    const TravelEstimator& travel_estimator,
     TaskPlanner::TaskPlannerError& error);
 
   rmf_task::ConstRequestPtr request;

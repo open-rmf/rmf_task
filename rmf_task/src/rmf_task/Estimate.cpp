@@ -70,15 +70,104 @@ Estimate& Estimate::wait_until(rmf_traffic::Time new_wait_until)
 }
 
 //==============================================================================
-class EstimateCache::Implementation
+class TravelEstimator::Result::Implementation
 {
 public:
 
-  Implementation(std::size_t N)
-  : _cache(N, PairHash(N))
+  static Result make(
+    rmf_traffic::Duration duration_,
+    double change_in_state_of_charge_)
   {
+    Result output;
+    output._pimpl = rmf_utils::make_impl<Implementation>(
+      Implementation{duration_, change_in_state_of_charge_});
 
+    return output;
   }
+
+  rmf_traffic::Duration duration;
+  double change_in_state_of_charge;
+};
+
+//==============================================================================
+class TravelEstimator::Implementation
+{
+public:
+
+  Implementation(const Parameters& parameters)
+  : planner(parameters.planner()),
+    motion_sink(parameters.motion_sink()),
+    ambient_sink(parameters.ambient_sink()),
+    cache(make_cache(planner))
+  {
+    // Do nothing
+  }
+
+  std::optional<Result> estimate(
+    const rmf_traffic::agv::Plan::Start& start,
+    const rmf_traffic::agv::Plan::Goal& goal) const
+  {
+    std::pair<Cache::iterator, bool> insertion;
+    {
+      std::unique_lock<std::mutex> lock(mutex, std::defer_lock);
+      while (!lock.try_lock()) {}
+
+      Key wps{start.waypoint(), goal.waypoint()};
+      insertion = cache.insert(std::make_pair(wps, Value()));
+    }
+
+    if (!insertion.second)
+      return insertion.first->second;
+
+    auto result = calculate_result(start, goal);
+    {
+      std::unique_lock<std::mutex> lock(mutex, std::defer_lock);
+      while (!lock.try_lock()) {}
+      insertion.first->second = result;
+    }
+
+    return result;
+  }
+
+  std::optional<Result> calculate_result(
+    const rmf_traffic::agv::Plan::Start& start,
+    const rmf_traffic::agv::Plan::Goal& goal) const
+  {
+    const auto plan = planner->plan(start, goal);
+    if (!plan.success())
+      return std::nullopt;
+
+    // We assume we can always compute a plan
+    const auto itinerary_start_time = start.time();
+    double battery_drain = 0.0;
+    for (const auto& itinerary : plan->get_itinerary())
+    {
+      const auto& trajectory = itinerary.trajectory();
+      const auto& finish_time = *trajectory.finish_time();
+      const rmf_traffic::Duration itinerary_duration =
+        finish_time - itinerary_start_time;
+
+      // Compute battery drain
+      const auto dSOC_motion =
+        motion_sink->compute_change_in_charge(trajectory);
+
+      const auto dSOC_device = ambient_sink->compute_change_in_charge(
+        rmf_traffic::time::to_seconds(itinerary_duration));
+
+      battery_drain += dSOC_motion + dSOC_device;
+    }
+
+    const auto duration =
+      plan->get_itinerary().back().trajectory().back().time()
+      - itinerary_start_time;
+
+    return Result::Implementation::make(duration, battery_drain);
+  }
+
+private:
+  std::shared_ptr<const rmf_traffic::agv::Planner> planner;
+  rmf_battery::ConstMotionPowerSinkPtr motion_sink;
+  rmf_battery::ConstDevicePowerSinkPtr ambient_sink;
 
   struct PairHash
   {
@@ -95,38 +184,27 @@ public:
     std::size_t _shift;
   };
 
-  using Cache = std::unordered_map<std::pair<size_t, size_t>,
-      CacheElement, PairHash>;
+  using Key = std::pair<size_t, size_t>;
+  using Value = std::optional<Result>;
+  using Cache = std::unordered_map<Key, std::optional<Result>, PairHash>;
+  mutable Cache cache;
 
-  Cache _cache;
-  mutable std::mutex _mutex;
+  static Cache make_cache(
+    const std::shared_ptr<const rmf_traffic::agv::Planner>& planner)
+  {
+    const auto N = planner->get_configuration().graph().num_waypoints();
+    return Cache(N, PairHash(N));
+  }
+
+  mutable std::mutex mutex;
 };
 
 //==============================================================================
-EstimateCache::EstimateCache(std::size_t N)
-: _pimpl(rmf_utils::make_unique_impl<Implementation>(N))
+auto TravelEstimator::estimate(
+  const rmf_traffic::agv::Plan::Start& start,
+  const rmf_traffic::agv::Plan::Goal& goal) const -> std::optional<Result>
 {
-}
-
-//==============================================================================
-std::optional<EstimateCache::CacheElement> EstimateCache::get(
-  std::pair<size_t, size_t> waypoints) const
-{
-  std::lock_guard<std::mutex> guard(_pimpl->_mutex);
-  auto it = _pimpl->_cache.find(waypoints);
-  if (it != _pimpl->_cache.end())
-  {
-    return it->second;
-  }
-  return std::nullopt;
-}
-
-//==============================================================================
-void EstimateCache::set(std::pair<size_t, size_t> waypoints,
-  rmf_traffic::Duration duration, double dsoc)
-{
-  std::lock_guard<std::mutex> guard(_pimpl->_mutex);
-  _pimpl->_cache[waypoints] = CacheElement{duration, dsoc};
+  return _pimpl->estimate(start, goal);
 }
 
 } // namespace rmf_task

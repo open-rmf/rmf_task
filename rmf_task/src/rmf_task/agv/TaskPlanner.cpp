@@ -372,7 +372,7 @@ public:
 
   Configuration config;
   Options default_options;
-  std::shared_ptr<EstimateCache> estimate_cache;
+  ConstTravelEstimatorPtr travel_estimator;
   bool check_priority = false;
   ConstCostCalculatorPtr cost_calculator = nullptr;
 
@@ -442,7 +442,7 @@ public:
         state.time().value(),
         config.parameters());
       auto estimate = model->estimate_finish(
-        state, config.constraints(), *estimate_cache);
+        state, config.constraints(), *travel_estimator);
       if (estimate.has_value())
       {
         agent.push_back(
@@ -465,7 +465,7 @@ public:
           config.parameters());
         const auto charge_battery_estimate =
           charge_battery_model->estimate_finish(
-          state, config.constraints(), *estimate_cache);
+          state, config.constraints(), *travel_estimator);
         if (charge_battery_estimate.has_value())
         {
           model = request->description()->make_model(
@@ -474,7 +474,7 @@ public:
           estimate = model->estimate_finish(
             charge_battery_estimate.value().finish_state(),
             config.constraints(),
-            *estimate_cache);
+            *travel_estimator);
           if (estimate.has_value())
           {
             // Append the ChargeBattery and finishing request
@@ -623,7 +623,7 @@ public:
         config.constraints(),
         config.parameters(),
         request,
-        *estimate_cache,
+        *travel_estimator,
         error);
 
       if (!pending_task)
@@ -725,7 +725,7 @@ public:
           charge_battery->tag()->earliest_start_time(),
           config.parameters());
         auto battery_estimate = charge_battery_model->estimate_finish(
-          entry.previous_state, constraints, *estimate_cache);
+          entry.previous_state, constraints, *travel_estimator);
         if (battery_estimate.has_value())
         {
           assignments.push_back(
@@ -755,7 +755,7 @@ public:
     {
       const auto finish =
         new_u.second.model->estimate_finish(
-        entry.state, constraints, *estimate_cache);
+        entry.state, constraints, *travel_estimator);
 
       if (finish.has_value())
       {
@@ -804,7 +804,7 @@ public:
         charge_battery->tag()->earliest_start_time(),
         config.parameters());
       auto battery_estimate = charge_battery_model->estimate_finish(
-        entry.state, constraints, *estimate_cache);
+        entry.state, constraints, *travel_estimator);
       if (battery_estimate.has_value())
       {
         new_node->assigned_tasks[entry.candidate].push_back(
@@ -820,7 +820,7 @@ public:
           const auto finish =
             new_u.second.model->estimate_finish(
             battery_estimate.value().finish_state(),
-            constraints, *estimate_cache);
+            constraints, *travel_estimator);
           if (finish.has_value())
           {
             new_u.second.candidates.update_candidate(
@@ -890,7 +890,7 @@ public:
       charge_battery->tag()->earliest_start_time(),
       config.parameters());
     auto estimate = charge_battery_model->estimate_finish(
-      state, config.constraints(), *estimate_cache);
+      state, config.constraints(), *travel_estimator);
     if (estimate.has_value())
     {
       new_node->assigned_tasks[agent].push_back(
@@ -909,7 +909,7 @@ public:
         const auto finish =
           new_u.second.model->estimate_finish(
           estimate.value().finish_state(),
-          config.constraints(), *estimate_cache);
+          config.constraints(), *travel_estimator);
         if (finish.has_value())
         {
           new_u.second.candidates.update_candidate(
@@ -1091,9 +1091,7 @@ TaskPlanner::TaskPlanner(
       Implementation{
         configuration,
         default_options,
-        std::make_shared<EstimateCache>(
-          configuration.parameters().planner()->
-          get_configuration().graph().num_waypoints())
+        std::make_shared<TravelEstimator>(configuration.parameters())
       }))
 {
   // Do nothing
@@ -1139,13 +1137,6 @@ auto TaskPlanner::compute_cost(const Assignments& assignments) const -> double
   const auto cost_calculator =
     rmf_task::BinaryPriorityScheme::make_cost_calculator();
   return cost_calculator->compute_cost(assignments);
-
-}
-
-// ============================================================================
-const std::shared_ptr<EstimateCache>& TaskPlanner::estimate_cache() const
-{
-  return _pimpl->estimate_cache;
 }
 
 // ============================================================================

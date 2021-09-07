@@ -19,6 +19,7 @@
 #define RMF_TASK__EXECUTE__TASK_HPP
 
 #include <rmf_task/execute/Phase.hpp>
+#include <rmf_task/detail/Backup.hpp>
 #include <rmf_task/detail/Resume.hpp>
 #include <rmf_task/Request.hpp>
 
@@ -34,27 +35,17 @@ class Task
 {
 public:
 
-  /// Basic static information about the task.
-  class Tag
-  {
-  public:
+  // Declarations
+  class Tag;
 
-    /// The original request that this Task is carrying out
-    const Request::ConstTagPtr& request() const;
-
-    /// The category of this Task.
-    const std::string& category() const;
-
-    /// Details about this Task.
-    const std::string& detail() const;
-
-    /// The original finish estimate of this Task.
-    rmf_traffic::Time original_finish_estimate() const;
-
-    class Implementation;
-  private:
-    rmf_utils::impl_ptr<Implementation> _pimpl;
-  };
+  /// Backup data for the task. The state of the task is represented by a
+  /// string. The meaning and format of the string is up to the Task
+  /// implementation to decide.
+  ///
+  /// Each Backup is tagged with a sequence number. As the Task makes progress,
+  /// it can issue new Backups with higher sequence numbers. Only the Backup
+  /// with the highest sequence number will be kept.
+  class Backup : public detail::Backup {};
 
   /// Descriptions of the phases that have been completed
   virtual const std::vector<Phase::ConstCompletedPtr>&
@@ -71,6 +62,9 @@ public:
 
   /// Estimate the overall finishing time of the task
   virtual rmf_traffic::Time estimate_finish_time() const = 0;
+
+  /// Get a backup for this Task
+  virtual Backup backup() const = 0;
 
   /// The Resume class keeps track of when the Task is allowed to Resume.
   /// You can either call the Resume object's operator() or let the object
@@ -122,6 +116,27 @@ public:
   /// calling kill() will have no effect.
   virtual void kill() = 0;
 
+  /// Skip a specific phase within the task. This can be issued by operators if
+  /// manual intervention is needed to unblock a task.
+  ///
+  /// If a pending phase is specified, that phase will be skipped when the Task
+  /// reaches it.
+  ///
+  /// \param[in] phase_id
+  ///   The ID of the phase that should be skipped.
+  ///
+  /// \param[in] value
+  ///   True if the phase should be skipped, false otherwise.
+  virtual void skip(uint64_t phase_id, bool value=true) = 0;
+
+  /// Rewind the Task to a specific phase. This can be issued by operators if
+  /// a phase did not actually go as intended and needs to be repeated.
+  ///
+  /// It is possible that the Task will rewind further back than the specified
+  /// phase_id if the specified phase depends on an earlier one. This is up to
+  /// the discretion of the Task implementation.
+  virtual void rewind(uint64_t phase_id) = 0;
+
   // Virtual destructor
   virtual ~Task() = default;
 
@@ -136,6 +151,29 @@ protected:
 };
 
 using ConstTaskPtr = std::shared_ptr<const Task>;
+
+//==============================================================================
+/// Basic static information about the task.
+class Task::Tag
+{
+public:
+
+  /// The original request that this Task is carrying out
+  const Request::ConstTagPtr& request() const;
+
+  /// The category of this Task.
+  const std::string& category() const;
+
+  /// Details about this Task.
+  const std::string& detail() const;
+
+  /// The original finish estimate of this Task.
+  rmf_traffic::Time original_finish_estimate() const;
+
+  class Implementation;
+private:
+  rmf_utils::impl_ptr<Implementation> _pimpl;
+};
 
 } // namespace execute
 } // namespace rmf_task

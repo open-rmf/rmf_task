@@ -247,9 +247,6 @@ public:
   /// Compute the cost of a set of assignments
   double compute_cost(const Assignments& assignments) const;
 
-  /// Retrieve the task planner cache
-  const std::shared_ptr<EstimateCache>& estimate_cache() const;
-
   class Implementation;
 
 private:

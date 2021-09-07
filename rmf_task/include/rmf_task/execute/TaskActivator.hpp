@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef RMF_TASK__TASKFACTORY_HPP
-#define RMF_TASK__TASKFACTORY_HPP
+#ifndef RMF_TASK__TASKACTIVATOR_HPP
+#define RMF_TASK__TASKACTIVATOR_HPP
 
 #include <rmf_task/Request.hpp>
 #include <rmf_task/execute/Task.hpp>
@@ -27,12 +27,12 @@ namespace execute {
 
 //==============================================================================
 /// A factory for generating Task instances from requests.
-class TaskFactory
+class TaskActivator
 {
 public:
 
   /// Construct an empty TaskFactory
-  TaskFactory();
+  TaskActivator();
 
   /// Signature for activating a task
   ///
@@ -44,6 +44,11 @@ public:
   ///
   /// \param[in] description
   ///   The down-casted description of the task
+  ///
+  /// \param[in] backup_state
+  ///   The serialized backup state of the Task, if the Task is being restored
+  ///   from a crash or disconnection. If the Task is not being restored, a
+  ///   std::nullopt will be passed in here.
   ///
   /// \param[in] update
   ///   A callback that will be triggered when the task has a significant
@@ -59,14 +64,19 @@ public:
     execute::ConstTaskPtr(
       const Request::ConstTagPtr& request,
       const Description& description,
-      std::function<void(ConstConditionPtr)> update,
-      std::function<void(ConstConditionPtr)> finished)
+      std::optional<std::string> backup_state,
+      std::function<void(Phase::ConstSnapshotPtr)> update,
+      std::function<void(Phase::ConstCompletedPtr)> phase_finished,
+      std::function<void()> task_finished)
     >;
 
   /// Add a callback to convert from a Request into an active Task.
   ///
   /// \tparam Description
   ///   A class that implements the Request::Description interface
+  ///
+  /// \param[in] activator
+  ///   A callback that activates a Task matching the Description
   template<typename Description>
   void add_activator(Activate<Description> activator);
 
@@ -78,14 +88,43 @@ public:
   /// \param[in] update
   ///   A callback that will be triggered when the task has a significant update
   ///
-  /// \param[in] finished
+  /// \param[in] phase_finished
+  ///   A callback that will be triggered whenever a task phase is finished
+  ///
+  /// \param[in] task_finished
   ///   A callback that will be triggered when the task has finished
   ///
   /// \return an active, running instance of the requested task.
   std::shared_ptr<Task> activate(
     const Request& request,
-    std::function<void(ConstConditionPtr)> update,
-    std::function<void(ConstConditionPtr)> finished);
+    std::function<void(execute::Phase::ConstSnapshotPtr)> update,
+    std::function<void(execute::Phase::ConstCompletedPtr)> phase_finished,
+    std::function<void()> task_finished);
+
+  /// Restore a Task that crashed or disconnected.
+  ///
+  /// \param[in] request
+  ///   The task request
+  ///
+  /// \param[in] backup_state
+  ///   The serialized backup state of the Task
+  ///
+  /// \param[in] update
+  ///   A callback that will be triggered when the task has a significant update
+  ///
+  /// \param[in] phase_finished
+  ///   A callback that will be triggered whenever a task phase is finished
+  ///
+  /// \param[in] task_finished
+  ///   A callback that will be triggered when the task has finished
+  ///
+  /// \return an active, running instance of the requested task.
+  std::shared_ptr<Task> restore(
+    const Request& request,
+    std::string backup_state,
+    std::function<void(execute::Phase::ConstSnapshotPtr)> update,
+    std::function<void(execute::Phase::ConstCompletedPtr)> phase_finished,
+    std::function<void()> task_finished);
 
   class Implementation;
 private:
@@ -95,4 +134,4 @@ private:
 } // namespace execute
 } // namespace rmf_task
 
-#endif // RMF_TASK__TASKFACTORY_HPP
+#endif // RMF_TASK__TASKACTIVATOR_HPP

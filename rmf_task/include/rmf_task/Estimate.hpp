@@ -22,7 +22,9 @@
 #include <utility>
 
 #include <rmf_task/State.hpp>
+#include <rmf_task/Parameters.hpp>
 #include <rmf_traffic/Time.hpp>
+#include <rmf_traffic/agv/Planner.hpp>
 #include <rmf_utils/impl_ptr.hpp>
 
 namespace rmf_task {
@@ -64,36 +66,44 @@ private:
 };
 
 //==============================================================================
-/// A class to cache the computed estimates between pairs of waypoints
-class EstimateCache
+/// A class to estimate the cost of travelling between any two points in a
+/// navigation graph. Results will be memoized for efficiency.
+class TravelEstimator
 {
 public:
-  /// Constructs an EstimateCache
-  ///
-  /// \param[in] N
-  ///   The maximum number of waypoints in the navigation graph
-  EstimateCache(std::size_t N);
 
-  /// Struct containing the estimated duration and charge required to travel between
-  /// a waypoint pair.
-  struct CacheElement
+  /// Constructor
+  ///
+  /// \param[in] parameters
+  ///   The parameters for the robot
+  TravelEstimator(const Parameters& parameters);
+
+  class Result
   {
-    rmf_traffic::Duration duration;
-    double dsoc; // Positive if charge is consumed
+  public:
+
+    rmf_traffic::Duration duration() const;
+
+    double change_in_state_of_charge() const;
+
+    class Implementation;
+  private:
+    Result();
+    rmf_utils::impl_ptr<Implementation> _pimpl;
   };
 
-  /// Returns the saved estimate values for the path between the supplied waypoints,
-  /// if present.
-  std::optional<CacheElement> get(std::pair<size_t, size_t> waypoints) const;
-
-  /// Saves the estimated duration and change in charge between the supplied waypoints.
-  void set(std::pair<size_t, size_t> waypoints,
-    rmf_traffic::Duration duration, double dsoc);
+  /// Estimate the cost of travelling
+  std::optional<Result> estimate(
+    const rmf_traffic::agv::Plan::Start& start,
+    const rmf_traffic::agv::Plan::Goal& goal) const;
 
   class Implementation;
 private:
   rmf_utils::unique_impl_ptr<Implementation> _pimpl;
 };
+
+//==============================================================================
+using ConstTravelEstimatorPtr = std::shared_ptr<const TravelEstimator>;
 
 } // namespace rmf_task
 

@@ -60,6 +60,9 @@ public:
 
   /// Constructor
   ///
+  /// \param[in] id_
+  ///   ID of the phase. This phase ID must be unique within its Task instance.
+  ///
   /// \param[in] name_
   ///   Name of the phase
   ///
@@ -69,9 +72,13 @@ public:
   /// \param[in] estimate_
   ///   The original (ideal) estimate of how long the phase will last
   Tag(
+    uint64_t id_,
     std::string name_,
     std::string detail_,
     rmf_traffic::Duration estimate_);
+
+  /// Unique ID of the phase
+  uint64_t id() const;
 
   /// Name of the phase
   const std::string& name() const;
@@ -157,6 +164,9 @@ public:
 
   /// Tag of the phase
   const ConstTagPtr& tag() const;
+
+  /// Check if this phase is set to be skipped
+  bool will_be_skipped() const;
 
   class Implementation;
 private:

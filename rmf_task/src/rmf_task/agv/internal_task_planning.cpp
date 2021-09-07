@@ -101,7 +101,7 @@ std::shared_ptr<Candidates> Candidates::make(
   const Constraints& constraints,
   const Parameters& parameters,
   const Request::Model& request_model,
-  EstimateCache& estimate_cache,
+  const TravelEstimator& travel_estimator,
   TaskPlanner::TaskPlannerError& error)
 {
   Map initial_map;
@@ -109,7 +109,7 @@ std::shared_ptr<Candidates> Candidates::make(
   {
     const auto& state = initial_states[i];
     const auto finish = request_model.estimate_finish(
-      state, constraints, estimate_cache);
+      state, constraints, travel_estimator);
     if (finish.has_value())
     {
       initial_map.insert({
@@ -130,13 +130,13 @@ std::shared_ptr<Candidates> Candidates::make(
         parameters);
       auto battery_estimate =
         battery_model->estimate_finish(
-        state, constraints, estimate_cache);
+        state, constraints, travel_estimator);
       if (battery_estimate.has_value())
       {
         auto new_finish = request_model.estimate_finish(
           battery_estimate.value().finish_state(),
           constraints,
-          estimate_cache);
+          travel_estimator);
         if (new_finish.has_value())
         {
           initial_map.insert(
@@ -196,7 +196,7 @@ std::shared_ptr<PendingTask> PendingTask::make(
   const Constraints& constraints,
   const Parameters& parameters,
   const ConstRequestPtr request_,
-  EstimateCache& estimate_cache,
+  const TravelEstimator& travel_estimator,
   TaskPlanner::TaskPlannerError& error)
 {
   const auto earliest_start_time = std::max(
@@ -206,8 +206,7 @@ std::shared_ptr<PendingTask> PendingTask::make(
     earliest_start_time, parameters);
 
   const auto candidates = Candidates::make(start_time, initial_states,
-      constraints, parameters, *model, estimate_cache,
-      error);
+      constraints, parameters, *model, travel_estimator, error);
 
   if (!candidates)
     return nullptr;

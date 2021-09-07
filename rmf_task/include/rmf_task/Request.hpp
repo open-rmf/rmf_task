@@ -90,7 +90,7 @@ public:
     virtual std::optional<Estimate> estimate_finish(
       const State& initial_state,
       const Constraints& task_planning_constraints,
-      EstimateCache& estimate_cache) const = 0;
+      const TravelEstimator& travel_estimator) const = 0;
 
     /// Estimate the invariant component of the request's duration
     virtual rmf_traffic::Duration invariant_duration() const = 0;
