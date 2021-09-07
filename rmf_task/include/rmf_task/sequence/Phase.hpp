@@ -21,6 +21,7 @@
 #include <rmf_task/State.hpp>
 #include <rmf_task/Constraints.hpp>
 #include <rmf_task/Parameters.hpp>
+#include <rmf_task/Estimate.hpp>
 #include <rmf_task/execute/Phase.hpp>
 #include <rmf_task/detail/Resume.hpp>
 #include <rmf_task/detail/Backup.hpp>
@@ -229,6 +230,7 @@ public:
   /// \param[in] constraints
   ///   Constraints on the robot during the phase
   virtual execute::Phase::ConstTagPtr make_tag(
+    execute::Phase::Tag::Id id,
     const State& initial_state,
     const Parameters& parameters) const = 0;
 
@@ -252,7 +254,8 @@ public:
   /// \return an estimated state for the robot when the phase is finished.
   virtual std::optional<State> estimate_finish(
     State initial_state,
-    const Constraints& constraints) const = 0;
+    const Constraints& constraints,
+    const TravelEstimator& travel_estimator) const = 0;
 
   /// Estimate the invariant component of the request's duration.
   virtual rmf_traffic::Duration invariant_duration() const = 0;

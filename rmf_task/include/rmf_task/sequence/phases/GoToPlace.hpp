@@ -51,6 +51,7 @@ public:
 
   // Documentation inherited
   execute::Phase::ConstTagPtr make_tag(
+    execute::Phase::Tag::Id id,
     const State& initial_state,
     const Parameters& parameters) const final;
 

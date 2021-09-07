@@ -58,6 +58,8 @@ class Phase::Tag
 {
 public:
 
+  using Id = uint64_t;
+
   /// Constructor
   ///
   /// \param[in] id_
@@ -72,13 +74,13 @@ public:
   /// \param[in] estimate_
   ///   The original (ideal) estimate of how long the phase will last
   Tag(
-    uint64_t id_,
+    Id id_,
     std::string name_,
     std::string detail_,
     rmf_traffic::Duration estimate_);
 
   /// Unique ID of the phase
-  uint64_t id() const;
+  Id id() const;
 
   /// Name of the phase
   const std::string& name() const;

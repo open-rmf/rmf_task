@@ -55,7 +55,8 @@ public:
   // Documentation inherited
   std::optional<State> estimate_finish(
     State initial_state,
-    const Constraints& constraints) const final;
+    const Constraints& constraints,
+    const TravelEstimator& ) const final;
 
   // Documentation inherited
   rmf_traffic::Duration invariant_duration() const final;
@@ -68,12 +69,10 @@ private:
   Model(
     State invariant_finish_state,
     rmf_traffic::Duration invariant_duration,
-    const Parameters& parameters,
     Goal goal);
 
   State _invariant_finish_state;
   rmf_traffic::Duration _invariant_duration;
-  Parameters _parameters;
   Goal _goal;
 };
 
@@ -109,18 +108,62 @@ Phase::ConstModelPtr GoToPlace::Model::make(
     new Model(
       std::move(invariant_finish_state),
       invariant_duration,
-      parameters,
       std::move(goal)));
 }
 
 //==============================================================================
 std::optional<State> GoToPlace::Model::estimate_finish(
   State initial_state,
-  const Constraints& constraints) const
+  const Constraints& constraints,
+  const TravelEstimator& travel_estimator) const
 {
   auto finish = initial_state;
   finish.waypoint(_goal.waypoint());
 
+  const auto travel = travel_estimator.estimate(
+    initial_state.extract_plan_start().value(),
+    _goal);
+
+  if (!travel.has_value())
+    return std::nullopt;
+
+  finish.time(finish.time().value() + travel->duration());
+  auto battery_soc = finish.battery_soc().value();
+
+  if (constraints.drain_battery())
+    battery_soc = battery_soc - travel->change_in_charge();
+
+  finish.battery_soc(battery_soc);
+
+  const auto battery_threshold = constraints.threshold_soc();
+  if (battery_soc <= battery_threshold)
+    return std::nullopt;
+
+  return finish;
+}
+
+//==============================================================================
+rmf_traffic::Duration GoToPlace::Model::invariant_duration() const
+{
+  return _invariant_duration;
+}
+
+//==============================================================================
+State GoToPlace::Model::invariant_finish_state() const
+{
+  return _invariant_finish_state;
+}
+
+//==============================================================================
+GoToPlace::Model::Model(
+  State invariant_finish_state,
+  rmf_traffic::Duration invariant_duration,
+  Goal goal)
+: _invariant_finish_state(std::move(invariant_finish_state)),
+  _invariant_duration(invariant_duration),
+  _goal(std::move(goal))
+{
+  // Do nothing
 }
 
 //==============================================================================
@@ -158,6 +201,7 @@ Phase::ConstModelPtr GoToPlace::Description::make_model(
 
 //==============================================================================
 execute::Phase::ConstTagPtr GoToPlace::Description::make_tag(
+  execute::Phase::Tag::Id id,
   const State& initial_state,
   const Parameters& parameters) const
 {
@@ -193,6 +237,7 @@ execute::Phase::ConstTagPtr GoToPlace::Description::make_tag(
     return nullptr;
 
   return std::make_shared<execute::Phase::Tag>(
+    id,
     "Go to [" + goal_name + "]",
     "Moving the robot from [" + start_name + "] to [" + goal_name + "]",
     *estimate);

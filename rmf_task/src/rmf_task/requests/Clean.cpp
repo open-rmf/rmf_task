@@ -87,12 +87,13 @@ Clean::Model::Model(
 std::optional<rmf_task::Estimate> Clean::Model::estimate_finish(
   const State& initial_state,
   const Constraints& task_planning_constraints,
-  const TravelEstimator& estimate_cache) const
+  const TravelEstimator& travel_estimator) const
 {
   rmf_traffic::agv::Plan::Start final_plan_start{
     initial_state.time().value(),
     _end_waypoint,
     initial_state.orientation().value()};
+
   auto state = State().load_basic(
     std::move(final_plan_start),
     initial_state.dedicated_charging_waypoint().value(),
@@ -101,62 +102,22 @@ std::optional<rmf_task::Estimate> Clean::Model::estimate_finish(
   rmf_traffic::Duration variant_duration(0);
   rmf_traffic::Duration end_duration(0);
 
-  const rmf_traffic::Time start_time = initial_state.time().value();
   double battery_soc = initial_state.battery_soc().value();
-  double dSOC_motion = 0.0;
-  double dSOC_ambient = 0.0;
   const bool drain_battery = task_planning_constraints.drain_battery();
-  const auto& planner = *_parameters.planner();
-  const auto& motion_sink = *_parameters.motion_sink();
   const auto& ambient_sink = *_parameters.ambient_sink();
 
   if (initial_state.waypoint() != _start_waypoint)
   {
-    const auto endpoints = std::make_pair(
-      initial_state.waypoint().value(),
+    const auto travel = travel_estimator.estimate(
+      initial_state.extract_plan_start().value(),
       _start_waypoint);
 
-    const auto& cache_result = estimate_cache.get(endpoints);
-    if (cache_result)
-    {
-      variant_duration = cache_result->duration;
-      if (drain_battery)
-        battery_soc = battery_soc - cache_result->dsoc;
-    }
-    else
-    {
-      rmf_traffic::agv::Planner::Goal goal{endpoints.second};
+    if (!travel.has_value())
+      return std::nullopt;
 
-      const auto result_to_start = planner.plan(
-        initial_state.extract_plan_start().value(), goal);
-      // We assume we can always compute a plan
-      auto itinerary_start_time = start_time;
-      double variant_battery_drain = 0.0;
-      for (const auto& itinerary : result_to_start->get_itinerary())
-      {
-        const auto& trajectory = itinerary.trajectory();
-        const auto& finish_time = *trajectory.finish_time();
-        const rmf_traffic::Duration itinerary_duration =
-          finish_time - itinerary_start_time;
-
-        if (drain_battery)
-        {
-          // Compute battery drain
-          dSOC_motion = motion_sink.compute_change_in_charge(
-            trajectory);
-          dSOC_ambient =
-            ambient_sink.compute_change_in_charge(
-            rmf_traffic::time::to_seconds(itinerary_duration));
-          battery_soc = battery_soc - dSOC_motion - dSOC_ambient;
-          variant_battery_drain += dSOC_motion + dSOC_ambient;
-        }
-        itinerary_start_time = finish_time;
-        variant_duration += itinerary_duration;
-      }
-
-      estimate_cache.set(endpoints, variant_duration,
-        variant_battery_drain);
-    }
+    variant_duration = travel->duration();
+    if (drain_battery)
+      battery_soc = battery_soc - travel->change_in_charge();
 
     if (battery_soc <= task_planning_constraints.threshold_soc())
       return std::nullopt;
@@ -182,7 +143,7 @@ std::optional<rmf_task::Estimate> Clean::Model::estimate_finish(
   {
     rmf_traffic::Duration wait_duration(
       wait_until - initial_state.time().value());
-    dSOC_ambient = ambient_sink.compute_change_in_charge(
+    const double dSOC_ambient = ambient_sink.compute_change_in_charge(
       rmf_traffic::time::to_seconds(wait_duration));
     battery_soc = battery_soc - dSOC_ambient;
 
@@ -203,52 +164,20 @@ std::optional<rmf_task::Estimate> Clean::Model::estimate_finish(
       return std::nullopt;
 
     // Check if the robot has enough charge to head back to nearest charger
-    double retreat_battery_drain = 0.0;
     if (_end_waypoint != state.dedicated_charging_waypoint().value())
     {
-      const auto endpoints = std::make_pair(_end_waypoint,
-          state.dedicated_charging_waypoint().value());
-      const auto& cache_result = estimate_cache.get(endpoints);
-      if (cache_result)
-      {
-        retreat_battery_drain = cache_result->dsoc;
-      }
-      else
-      {
-        rmf_traffic::agv::Planner::Start start{
-          state.time().value(),
-          endpoints.first,
-          0.0};
+      const auto travel = travel_estimator.estimate(
+        state.extract_plan_start().value(),
+        state.dedicated_charging_waypoint().value());
 
-        rmf_traffic::agv::Planner::Goal goal{endpoints.second};
+      if (!travel.has_value())
+        return std::nullopt;
 
-        const auto result_to_charger = planner.plan(start, goal);
-        // We assume we can always compute a plan
-        auto itinerary_start_time = state.time().value();
-        rmf_traffic::Duration retreat_duration(0);
-        for (const auto& itinerary : result_to_charger->get_itinerary())
-        {
-          const auto& trajectory = itinerary.trajectory();
-          const auto& finish_time = *trajectory.finish_time();
-          const rmf_traffic::Duration itinerary_duration =
-            finish_time - itinerary_start_time;
-
-          dSOC_motion = motion_sink.compute_change_in_charge(
-            trajectory);
-          dSOC_ambient = ambient_sink.compute_change_in_charge(
-            rmf_traffic::time::to_seconds(itinerary_duration));
-          retreat_battery_drain += dSOC_motion + dSOC_ambient;
-
-          itinerary_start_time = finish_time;
-          retreat_duration += itinerary_duration;
-        }
-        estimate_cache.set(endpoints, retreat_duration, retreat_battery_drain);
-      }
+      const double retreat_battery_drain = travel->change_in_charge();
+      const double threshold = task_planning_constraints.threshold_soc();
+      if (battery_soc - retreat_battery_drain <= threshold)
+        return std::nullopt;
     }
-
-    if (battery_soc - retreat_battery_drain <=
-      task_planning_constraints.threshold_soc())
-      return std::nullopt;
 
     state.battery_soc(battery_soc);
   }

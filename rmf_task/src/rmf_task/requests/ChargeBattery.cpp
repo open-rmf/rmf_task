@@ -103,6 +103,7 @@ ChargeBattery::Model::estimate_finish(const State& initial_state,
     initial_state.time().value(),
     initial_state.dedicated_charging_waypoint().value(),
     initial_state.orientation().value()};
+
   auto state = State().load_basic(
     std::move(final_plan_start),
     initial_state.dedicated_charging_waypoint().value(),
@@ -122,7 +123,8 @@ ChargeBattery::Model::estimate_finish(const State& initial_state,
       return std::nullopt;
 
     variant_duration = travel->duration();
-    battery_soc = battery_soc - travel->change_in_state_of_charge();
+    if (task_planning_constraints.drain_battery())
+      battery_soc = battery_soc - travel->change_in_charge();
 
     // If a robot cannot reach its charging dock given its initial battery soc
     if (battery_soc <= task_planning_constraints.threshold_soc())

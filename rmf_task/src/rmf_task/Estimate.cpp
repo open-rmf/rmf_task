@@ -86,7 +86,7 @@ public:
   }
 
   rmf_traffic::Duration duration;
-  double change_in_state_of_charge;
+  double change_in_charge;
 };
 
 //==============================================================================
@@ -198,6 +198,31 @@ private:
 
   mutable std::mutex mutex;
 };
+
+//==============================================================================
+TravelEstimator::TravelEstimator(const Parameters& parameters)
+: _pimpl(rmf_utils::make_unique_impl<Implementation>(parameters))
+{
+  // Do nothing
+}
+
+//==============================================================================
+rmf_traffic::Duration TravelEstimator::Result::duration() const
+{
+  return _pimpl->duration;
+}
+
+//==============================================================================
+double TravelEstimator::Result::change_in_charge() const
+{
+  return _pimpl->change_in_charge;
+}
+
+//==============================================================================
+TravelEstimator::Result::Result()
+{
+  // Do nothing
+}
 
 //==============================================================================
 auto TravelEstimator::estimate(

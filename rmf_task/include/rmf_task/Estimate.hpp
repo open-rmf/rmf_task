@@ -78,13 +78,16 @@ public:
   ///   The parameters for the robot
   TravelEstimator(const Parameters& parameters);
 
+  /// The result of a travel estimation
   class Result
   {
   public:
 
+    /// How long the travelling will take
     rmf_traffic::Duration duration() const;
 
-    double change_in_state_of_charge() const;
+    /// How much the battery will drain while travelling
+    double change_in_charge() const;
 
     class Implementation;
   private:
