@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef RMF_TASK__SEQUENCE__PHASES__PICKUP_HPP
-#define RMF_TASK__SEQUENCE__PHASES__PICKUP_HPP
+#ifndef RMF_TASK__SEQUENCE__PHASES__DROPOFF_HPP
+#define RMF_TASK__SEQUENCE__PHASES__DROPOFF_HPP
 
 #include <rmf_traffic/agv/Planner.hpp>
 
@@ -28,9 +28,9 @@ namespace sequence {
 namespace phases {
 
 //==============================================================================
-/// A PickUp phase encompasses going to a location and transferring a payload
-/// into/onto the robot.
-class PickUp
+/// A DropOff phase encompasses going to a location and transferring a payload
+/// off of the robot.
+class DropOff
 {
 public:
 
@@ -43,54 +43,54 @@ public:
 };
 
 //==============================================================================
-class PickUp::Description : public Phase::Description
+class DropOff::Description : public Phase::Description
 {
 public:
 
-  /// Make a PickUp phase description
+  /// Make a DropOff phase description
   ///
-  /// \param[in] pickup_location
-  ///   The location that the robot needs to get to for the pickup
+  /// \param[in] drop_off_location
+  ///   The location that the robot needs to get to for the drop-off
   ///
-  /// \param[in] from_dispenser
-  ///   The dispenser that will take care of loading the items. We will
-  ///   communicate with this dispenser to verify the success of loading the
+  /// \param[in] into_ingestor
+  ///   The ingestor that will take care of unloading the items. We will
+  ///   communicate with this ingestor to verify the success of unloading the
   ///   items.
   ///
   /// \param[in] payload
-  ///   A description of what should be loaded into the robot during the pick-up
+  ///   A description of what should be unloaded from the robot during drop-off
   ///
-  /// \param[in] loading_duration_estimate
-  ///   An estimate for how long it will likely take to load the items.
+  /// \param[in] unloading_duration_estimate
+  ///   An estimate for how long it will likely take to unload the items.
   static DescriptionPtr make(
-    Location pickup_location,
-    std::string from_dispenser,
+    Location drop_off_location,
+    std::string into_ingestor,
     Payload payload,
-    rmf_traffic::Duration loading_duration_estimate);
+    rmf_traffic::Duration unloading_duration_estimate);
 
-  /// Get the pickup location
-  const Location& pickup_location() const;
+  /// Get the drop-off location
+  const Location& drop_off_location() const;
 
-  /// Change the pickup location
-  Description& pickup_location(Location new_location);
+  /// Set the drop-off location
+  Description& drop_off_location(Location new_location);
 
-  /// Get the dispenser to pick up from
-  const std::string& from_dispenser() const;
+  /// Get the ingestor to drop off into
+  const std::string& into_ingestor() const;
 
-  /// Change the dispenser to pick up from
-  Description& from_dispenser(std::string new_dispenser);
+  /// Set the ingestor to drop off into
+  Description& into_ingestor(std::string new_ingestor);
 
-  /// Get the payload to pick up
+  /// Get the Payload to drop off
   const Payload& payload() const;
 
-  /// Change the payload to pick up
+  /// Set the Payload to drop off
   Description& payload(Payload new_payload);
 
-  /// Get the loading duration estimate
-  rmf_traffic::Duration loading_duration_estimate() const;
+  /// Get the unloading duration estimate
+  rmf_traffic::Duration unloading_duration_estimate() const;
 
-  /// Change the loading duration estimate
-  Description& loading_duration_estimate(rmf_traffic::Duration new_duration);
+  /// Set the unloading duration estimate
+  Description& unloading_duration_estimate(rmf_traffic::Duration new_duration);
 
   // Documentation inherited
   Phase::ConstModelPtr make_model(
@@ -113,4 +113,4 @@ private:
 } // namespace sequence
 } // namespace rmf_task
 
-#endif // RMF_TASK__SEQUENCE__PHASES__PICKUP_HPP
+#endif // RMF_TASK__SEQUENCE__PHASES__DROPOFF_HPP

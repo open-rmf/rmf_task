@@ -15,10 +15,10 @@
  *
 */
 
-#ifndef RMF_TASK__SEQUENCE__PHASES__GOTOPLACE_HPP
-#define RMF_TASK__SEQUENCE__PHASES__GOTOPLACE_HPP
+#ifndef RMF_TASK__SEQUENCE__PHASES__WAITFOR_HPP
+#define RMF_TASK__SEQUENCE__PHASES__WAITFOR_HPP
 
-#include <rmf_traffic/agv/Planner.hpp>
+#include <rmf_traffic/Time.hpp>
 
 #include <rmf_task/sequence/Phase.hpp>
 
@@ -27,10 +27,17 @@ namespace sequence {
 namespace phases {
 
 //==============================================================================
-class GoToPlace
+/// A WaitFor phase encompasses having the robot sit in place and wait for a
+/// period of time to pass.
+///
+/// The Model of this phase may be useful for calculating the Models of other
+/// phases that include a period of time where the robot is waiting for a
+/// process to finish. E.g. the PickUp and DropOff Models use WaitFor::Model to
+/// calculate how much the robot's battery drains while waiting for the payload
+/// to be transferred.
+class WaitFor
 {
 public:
-  using Goal = rmf_traffic::agv::Plan::Goal;
 
   class Description;
   using DescriptionPtr = std::shared_ptr<Description>;
@@ -40,12 +47,21 @@ public:
 };
 
 //==============================================================================
-class GoToPlace::Description : public Phase::Description
+class WaitFor::Description : public Phase::Description
 {
 public:
 
-  /// Make a GoToPlace description using a goal.
-  static DescriptionPtr make(Goal goal);
+  /// Make a WaitFor phase description
+  ///
+  /// \param[in] wait_duration
+  ///   The duration of time that the phase should be waiting.
+  static DescriptionPtr make(rmf_traffic::Duration wait_duration);
+
+  /// Get the duration of the wait
+  rmf_traffic::Duration duration() const;
+
+  /// Set the duration of the wait
+  Description& duration(rmf_traffic::Duration new_duration);
 
   // Documentation inherited
   Phase::ConstModelPtr make_model(
@@ -58,16 +74,6 @@ public:
     const State& initial_state,
     const Parameters& parameters) const final;
 
-  /// Get the current goal for this description.
-  const Goal& goal() const;
-
-  /// Set the current goal for this description.
-  Description& goal(Goal new_goal);
-
-  /// Get the name of the goal. If the goal does not have an explicit name, it
-  /// will be referred to as "#x" where "x" is the index number of the waypoint.
-  std::string goal_name(const Parameters& parameters) const;
-
   class Implementation;
 private:
   Description();
@@ -78,4 +84,4 @@ private:
 } // namespace sequence
 } // namespace rmf_task
 
-#endif // RMF_TASK__SEQUENCE__PHASES__GOTOPLACE_HPP
+#endif // RMF_TASK__SEQUENCE__PHASES__WAITFOR_HPP

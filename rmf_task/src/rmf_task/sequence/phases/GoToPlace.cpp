@@ -173,11 +173,23 @@ public:
 
   rmf_traffic::agv::Plan::Goal goal;
 
+  static std::string waypoint_name(
+    const std::size_t index,
+    const Parameters& parameters)
+  {
+    const auto& graph = parameters.planner()->get_configuration().graph();
+    if (index < graph.num_waypoints())
+    {
+      if (const auto* name = graph.get_waypoint(index).name())
+        return *name;
+    }
+
+    return "#" + std::to_string(index);
+  }
 };
 
 //==============================================================================
-auto GoToPlace::Description::make(Goal goal)
--> std::shared_ptr<Description>
+auto GoToPlace::Description::make(Goal goal) -> DescriptionPtr
 {
   auto desc = std::shared_ptr<Description>(new Description);
   desc->_pimpl = rmf_utils::make_impl<Implementation>(
@@ -215,20 +227,12 @@ execute::Phase::ConstTagPtr GoToPlace::Description::make_tag(
   if (graph.num_waypoints() <= start_wp)
     return nullptr;
 
-  auto get_wp_name = [&graph](std::size_t index) -> std::string
-    {
-      if (const auto* name = graph.get_waypoint(index).name())
-        return *name;
-
-      return "#" + std::to_string(index);
-    };
-
-  const auto start_name = get_wp_name(start_wp);
+  const auto start_name = Implementation::waypoint_name(start_wp, parameters);
 
   if (graph.num_waypoints() <= _pimpl->goal.waypoint())
     return nullptr;
 
-  const auto goal_name = get_wp_name(_pimpl->goal.waypoint());
+  const auto goal_name_ = goal_name(parameters);
 
   const auto estimate = estimate_duration(
     parameters.planner(), initial_state, _pimpl->goal);
@@ -238,9 +242,29 @@ execute::Phase::ConstTagPtr GoToPlace::Description::make_tag(
 
   return std::make_shared<execute::Phase::Tag>(
     id,
-    "Go to [" + goal_name + "]",
-    "Moving the robot from [" + start_name + "] to [" + goal_name + "]",
+    "Go to [" + goal_name_ + "]",
+    "Moving the robot from [" + start_name + "] to [" + goal_name_ + "]",
     *estimate);
+}
+
+//==============================================================================
+auto GoToPlace::Description::goal() const -> const Goal&
+{
+  return _pimpl->goal;
+}
+
+//==============================================================================
+auto GoToPlace::Description::goal(Goal new_goal) -> Description&
+{
+  _pimpl->goal = std::move(new_goal);
+  return *this;
+}
+
+//==============================================================================
+std::string GoToPlace::Description::goal_name(
+  const Parameters& parameters) const
+{
+  return Implementation::waypoint_name(_pimpl->goal.waypoint(), parameters);
 }
 
 //==============================================================================

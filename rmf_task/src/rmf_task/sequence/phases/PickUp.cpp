@@ -15,3 +15,119 @@
  *
 */
 
+#include "internal_PayloadTransfer.hpp"
+
+#include <rmf_task/sequence/phases/PickUp.hpp>
+
+namespace rmf_task {
+namespace sequence {
+namespace phases {
+
+//==============================================================================
+class PickUp::Description::Implementation
+{
+public:
+  PayloadTransfer transfer;
+};
+
+//==============================================================================
+auto PickUp::Description::make(
+  Location pickup_location,
+  std::string from_dispenser,
+  Payload payload,
+  rmf_traffic::Duration loading_duration_estimate) -> DescriptionPtr
+{
+  auto output = std::shared_ptr<Description>(new Description);
+  output->_pimpl = rmf_utils::make_unique_impl<Implementation>(
+    Implementation{
+      PayloadTransfer(
+      std::move(pickup_location),
+      std::move(from_dispenser),
+      std::move(payload),
+      loading_duration_estimate)
+    });
+
+  return output;
+}
+
+//==============================================================================
+auto PickUp::Description::pickup_location() const -> const Location&
+{
+  return _pimpl->transfer.go_to_place->goal();
+}
+
+//==============================================================================
+auto PickUp::Description::pickup_location(Location new_location) -> Description&
+{
+  _pimpl->transfer.go_to_place->goal(std::move(new_location));
+  return *this;
+}
+
+//==============================================================================
+const std::string& PickUp::Description::from_dispenser() const
+{
+  return _pimpl->transfer.target;
+}
+
+//==============================================================================
+auto PickUp::Description::from_dispenser(std::string new_dispenser)
+-> Description&
+{
+  _pimpl->transfer.target = std::move(new_dispenser);
+  return *this;
+}
+
+//==============================================================================
+const Payload& PickUp::Description::payload() const
+{
+  return _pimpl->transfer.payload;
+}
+
+//==============================================================================
+auto PickUp::Description::payload(Payload new_payload) -> Description&
+{
+  _pimpl->transfer.payload = std::move(new_payload);
+  return *this;
+}
+
+//==============================================================================
+rmf_traffic::Duration PickUp::Description::loading_duration_estimate() const
+{
+  return _pimpl->transfer.wait_for->duration();
+}
+
+//==============================================================================
+auto PickUp::Description::loading_duration_estimate(
+  const rmf_traffic::Duration new_duration) -> Description&
+{
+  _pimpl->transfer.wait_for->duration(new_duration);
+  return *this;
+}
+
+//==============================================================================
+Phase::ConstModelPtr PickUp::Description::make_model(
+  State invariant_initial_state,
+  const Parameters& parameters) const
+{
+  return _pimpl->transfer.make_model(
+    std::move(invariant_initial_state), parameters);
+}
+
+//==============================================================================
+execute::Phase::ConstTagPtr PickUp::Description::make_tag(
+  execute::Phase::Tag::Id id,
+  const State& initial_state,
+  const Parameters& parameters) const
+{
+  return _pimpl->transfer.make_tag("Pick up", id, initial_state, parameters);
+}
+
+//==============================================================================
+PickUp::Description::Description()
+{
+  // Do nothing
+}
+
+} // namespace phases
+} // namespace sequence
+} // namespace rmf_task

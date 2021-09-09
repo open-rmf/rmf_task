@@ -22,80 +22,45 @@ namespace sequence {
 namespace phases {
 
 //==============================================================================
-Phase::ConstModelPtr PayloadTransfer::Model::make(
-  State invariant_initial_state,
-  const Parameters& parameters,
-  const Phase::ConstDescriptionPtr& go_to_place,
-  rmf_traffic::Duration transfer_duration)
+PayloadTransfer::PayloadTransfer(
+  Location location_,
+  std::string target_,
+  Payload payload_,
+  rmf_traffic::Duration loading_duration_estimate)
+  : target(std::move(target_)),
+    payload(std::move(payload_)),
+    go_to_place(GoToPlace::Description::make(std::move(location_))),
+    wait_for(WaitFor::Description::make(loading_duration_estimate))
 {
-  auto go_to_place_model = go_to_place->make_model(
+  descriptions = {go_to_place, wait_for};
+}
+
+//==============================================================================
+Phase::ConstModelPtr PayloadTransfer::make_model(
+  State invariant_initial_state,
+  const Parameters& parameters) const
+{
+  return Phase::SequenceModel::make(
+    descriptions,
     std::move(invariant_initial_state),
     parameters);
-
-  if (!go_to_place_model)
-    return nullptr;
-
-  const auto transfer_battery_drain =
-    parameters.ambient_sink()->compute_change_in_charge(
-      rmf_traffic::time::to_seconds(transfer_duration));
-
-  return std::shared_ptr<Model>(
-    new Model(
-      std::move(go_to_place_model),
-      transfer_duration,
-      transfer_battery_drain));
 }
 
 //==============================================================================
-std::optional<State> PayloadTransfer::Model::estimate_finish(
-  State initial_state,
-  const Constraints& constraints,
-  const TravelEstimator& travel_estimator) const
+execute::Phase::ConstTagPtr PayloadTransfer::make_tag(
+  const std::string& type,
+  execute::Phase::Tag::Id id,
+  const State& initial_state,
+  const Parameters& parameters) const
 {
-  // TODO(MXG): Consider adding the changed Payload to the state
-  auto finish_state =
-    _go_to_place->estimate_finish(initial_state, constraints, travel_estimator);
+  const auto model = make_model(initial_state, parameters);
 
-  if (!finish_state.has_value())
-    return std::nullopt;
-
-  finish_state->time(finish_state->time().value() + _transfer_duration);
-
-  if (constraints.drain_battery())
-  {
-    finish_state->battery_soc(
-      finish_state->battery_soc().value() - _transfer_battery_drain);
-  }
-
-  const auto battery_threshold = constraints.threshold_soc();
-  if (finish_state->battery_soc().value() <= battery_threshold)
-    return std::nullopt;
-
-  return finish_state;
-}
-
-//==============================================================================
-rmf_traffic::Duration PayloadTransfer::Model::invariant_duration() const
-{
-  return _transfer_duration;
-}
-
-//==============================================================================
-State PayloadTransfer::Model::invariant_finish_state() const
-{
-  return _go_to_place->invariant_finish_state();
-}
-
-//==============================================================================
-PayloadTransfer::Model::Model(
-  Phase::ConstModelPtr go_to_place,
-  rmf_traffic::Duration transfer_duration,
-  double transfer_battery_drain)
-: _go_to_place(std::move(go_to_place)),
-  _transfer_duration(transfer_duration),
-  _transfer_battery_drain(transfer_battery_drain)
-{
-  // Do nothing
+  return std::make_shared<execute::Phase::Tag>(
+    id,
+    type,
+    type + " " + payload.brief("into") + " at "
+      + go_to_place->goal_name(parameters),
+    model->invariant_duration());
 }
 
 } // namespace phases

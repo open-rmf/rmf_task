@@ -48,6 +48,8 @@ public:
 
   class Model;
   using ConstModelPtr = std::shared_ptr<const Model>;
+
+  class SequenceModel;
 };
 
 //==============================================================================
@@ -251,6 +253,8 @@ public:
   /// \param[in] constraints
   ///   Constraints on the robot during the phase
   ///
+  /// \param[in]
+  ///
   /// \return an estimated state for the robot when the phase is finished.
   virtual std::optional<State> estimate_finish(
     State initial_state,
@@ -266,6 +270,53 @@ public:
 
   // Virtual destructor
   virtual ~Model() = default;
+};
+
+//==============================================================================
+/// An implementation of a Phase::Model that models a sequence of
+/// Phase::Descriptions.
+class Phase::SequenceModel : public Phase::Model
+{
+public:
+
+  /// Make a SequenceModel by providing a vector of descriptions and the
+  /// arguments that are given to Phase::Description::make_model(~).
+  ///
+  /// \param[in] descriptions
+  ///   The Phase descriptions that are being modelled. The ordering of the
+  ///   descriptions may impact model outcomes. The order of the descriptions
+  ///   in the vector should reflect the actual order that the phases would
+  ///   occur in.
+  ///
+  /// \param[in] invariant_initial_state
+  ///   A partial state that represents the state components which will
+  ///   definitely be true when this phase begins.
+  ///
+  /// \param[in] parameters
+  ///   The parameters for the robot
+  ///
+  /// \return A Phase::Model implemented as a SequenceModel.
+  static Phase::ConstModelPtr make(
+    const std::vector<Phase::ConstDescriptionPtr>& descriptions,
+    State invariant_initial_state,
+    const Parameters& parameters);
+
+  // Documentation inherited
+  std::optional<State> estimate_finish(
+    State initial_state,
+    const Constraints& constraints,
+    const TravelEstimator& travel_estimator) const final;
+
+  // Documentation inherited
+  rmf_traffic::Duration invariant_duration() const final;
+
+  // Documentation inherited
+  State invariant_finish_state() const final;
+
+  class Implementation;
+private:
+  SequenceModel();
+  rmf_utils::unique_impl_ptr<Implementation> _pimpl;
 };
 
 } // namespace sequence

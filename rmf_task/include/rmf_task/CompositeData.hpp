@@ -26,6 +26,11 @@
 namespace rmf_task {
 
 //==============================================================================
+/// A class that can store and return arbitrary data structures, as long as they
+/// are copyable.
+//
+// TODO(MXG): Should this class move to rmf_utils? It is not very specific to
+// task planning or management.
 class CompositeData
 {
 public:

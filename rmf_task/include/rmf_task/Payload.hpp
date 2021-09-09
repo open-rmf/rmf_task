@@ -18,6 +18,8 @@
 #ifndef RMF_TASK__PAYLOAD_HPP
 #define RMF_TASK__PAYLOAD_HPP
 
+#include <rmf_utils/impl_ptr.hpp>
+
 #include <string>
 #include <vector>
 
@@ -30,17 +32,33 @@ public:
 
   class Component;
 
+  /// Constructor
+  Payload(std::vector<Component> components);
+
   /// Components in the payload
   const std::vector<Component>& components() const;
 
-private:
+  /// A brief human-friendly description of the payload
+  ///
+  /// \param[in] compartment_prefix
+  ///   The prefix to use when describing the compartments
+  std::string brief(const std::string& compartment_prefix = "in") const;
 
+  class Implementation;
+private:
+  rmf_utils::impl_ptr<Implementation> _pimpl;
 };
 
 //==============================================================================
 class Payload::Component
 {
 public:
+
+  /// Constructor
+  Component(
+    std::string sku,
+    uint32_t quantity,
+    std::string compartment);
 
   /// Stock Keeping Unit (SKU) for this component of the payload
   const std::string& sku() const;
@@ -50,6 +68,10 @@ public:
 
   /// The name of the compartment
   const std::string& compartment() const;
+
+  class Implementation;
+private:
+  rmf_utils::impl_ptr<Implementation> _pimpl;
 };
 
 } // namespace rmf_task

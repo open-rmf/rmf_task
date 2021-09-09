@@ -21,6 +21,7 @@
 #include <rmf_task/Payload.hpp>
 #include <rmf_task/sequence/Phase.hpp>
 #include <rmf_task/sequence/phases/GoToPlace.hpp>
+#include <rmf_task/sequence/phases/WaitFor.hpp>
 
 #include <rmf_traffic/agv/Planner.hpp>
 
@@ -36,40 +37,26 @@ public:
   using Location = rmf_traffic::agv::Plan::Goal;
 
   std::string target;
-  rmf_traffic::Duration transfer_duration;
-  Phase::ConstDescriptionPtr go_to_place;
+  Payload payload;
+  GoToPlace::DescriptionPtr go_to_place;
+  WaitFor::DescriptionPtr wait_for;
+  std::vector<Phase::ConstDescriptionPtr> descriptions;
 
-  class Model : public Phase::Model
-  {
-  public:
+  PayloadTransfer(
+    Location location_,
+    std::string target_,
+    Payload payload_,
+    rmf_traffic::Duration loading_duration_estimate);
 
-    static Phase::ConstModelPtr make(
-      State invariant_initial_state,
-      const Parameters& parameters,
-      const Phase::ConstDescriptionPtr& go_to_place,
-      rmf_traffic::Duration transfer_duration);
+  Phase::ConstModelPtr make_model(
+    State invariant_initial_state,
+    const Parameters& parameters) const;
 
-    std::optional<State> estimate_finish(
-      State initial_state,
-      const Constraints& constraints,
-      const TravelEstimator& travel_estimator) const final;
-
-    rmf_traffic::Duration invariant_duration() const final;
-
-    State invariant_finish_state() const final;
-
-  private:
-
-    Model(
-      Phase::ConstModelPtr go_to_place,
-      rmf_traffic::Duration transfer_duration,
-      double transfer_battery_drain);
-
-    Phase::ConstModelPtr _go_to_place;
-    rmf_traffic::Duration _transfer_duration;
-    double _transfer_battery_drain;
-  };
-
+  execute::Phase::ConstTagPtr make_tag(
+    const std::string& type,
+    execute::Phase::Tag::Id id,
+    const State& initial_state,
+    const Parameters& parameters) const;
 };
 
 } // namespace phases
