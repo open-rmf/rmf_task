@@ -116,13 +116,15 @@ inline void display_solution(
     {
       const auto& s = a.finish_state();
       const double request_seconds =
-        a.request()->tag()->earliest_start_time().time_since_epoch().count();
+        a.request()->booking()->earliest_start_time()
+        .time_since_epoch().count();
+
       const double start_seconds =
         a.deployment_time().time_since_epoch().count();
       const rmf_traffic::Time finish_time = s.time().value();
       const double finish_seconds = finish_time.time_since_epoch().count();
       std::cout << std::fixed
-                << "    <" << a.request()->tag()->id() << ": "
+                << "    <" << a.request()->booking()->id() << ": "
                 << request_seconds << ", " << start_seconds
                 << ", "<< finish_seconds << ", " << 100*s.battery_soc().value()
                 << "%>" << std::endl;
@@ -860,7 +862,7 @@ SCENARIO("Grid World")
     }
 
     // We expect request with task_id:3 to be at the back of the assignment queue
-    CHECK(optimal_assignments.front().back().request()->tag()->id() == "3");
+    CHECK(optimal_assignments.front().back().request()->booking()->id() == "3");
 
     THEN("When replanning with high priority for request with task_id:3")
     {
@@ -896,7 +898,7 @@ SCENARIO("Grid World")
     }
 
     // We expect request with task_id:3 to be at the front of the assignment queue
-    CHECK(new_optimal_assignments.front().front().request()->tag()->id() ==
+    CHECK(new_optimal_assignments.front().front().request()->booking()->id() ==
       "3");
   }
 
@@ -963,7 +965,7 @@ SCENARIO("Grid World")
     }
 
     // We expect request with task_id:3 to be at the back of the assignment queue
-    CHECK(optimal_assignments.front().back().request()->tag()->id() == "3");
+    CHECK(optimal_assignments.front().back().request()->booking()->id() == "3");
   }
 
   WHEN("Planning for 1 robot, two high priority and two low priority tasks")
@@ -1040,7 +1042,7 @@ SCENARIO("Grid World")
     const auto& assignments = optimal_assignments.front();
     std::unordered_map<std::string, std::size_t> index_map = {};
     for (std::size_t i = 0; i < assignments.size(); ++i)
-      index_map.insert({assignments[i].request()->tag()->id(), i});
+      index_map.insert({assignments[i].request()->booking()->id(), i});
     CHECK(index_map["1"] < index_map["2"]);
     CHECK(index_map["1"] < index_map["3"]);
     CHECK(index_map["4"] < index_map["2"]);
@@ -1122,7 +1124,7 @@ SCENARIO("Grid World")
     const auto& assignments = optimal_assignments.front();
     std::unordered_map<std::string, std::size_t> index_map = {};
     for (std::size_t i = 0; i < assignments.size(); ++i)
-      index_map.insert({assignments[i].request()->tag()->id(), i});
+      index_map.insert({assignments[i].request()->booking()->id(), i});
     CHECK(index_map["1"] < index_map["2"]);
     CHECK(index_map["1"] < index_map["3"]);
     CHECK(index_map["1"] < index_map["4"]);
@@ -1203,8 +1205,8 @@ SCENARIO("Grid World")
     REQUIRE(optimal_assignments.size() == 2);
     const auto& agent_0_assignments = optimal_assignments[0];
     const auto& agent_1_assignments = optimal_assignments[1];
-    CHECK(agent_0_assignments.front().request()->tag()->id() == "2");
-    CHECK(agent_1_assignments.front().request()->tag()->id() == "1");
+    CHECK(agent_0_assignments.front().request()->booking()->id() == "2");
+    CHECK(agent_1_assignments.front().request()->booking()->id() == "1");
 
     THEN("When task 3 & 4 are assigned high priority")
     {
@@ -1268,8 +1270,8 @@ SCENARIO("Grid World")
       REQUIRE(optimal_assignments.size() == 2);
       const auto& agent_0_assignments = optimal_assignments[0];
       const auto& agent_1_assignments = optimal_assignments[1];
-      CHECK(agent_0_assignments.front().request()->tag()->id() == "4");
-      CHECK(agent_1_assignments.front().request()->tag()->id() == "3");
+      CHECK(agent_0_assignments.front().request()->booking()->id() == "4");
+      CHECK(agent_1_assignments.front().request()->booking()->id() == "3");
     }
   }
 
@@ -1349,7 +1351,7 @@ SCENARIO("Grid World")
     for (const auto& agent : optimal_assignments)
     {
       if (!agent.empty())
-        first_assignments.push_back(agent.front().request()->tag()->id());
+        first_assignments.push_back(agent.front().request()->booking()->id());
     }
     std::size_t id_count = 0;
     for (const auto& id : first_assignments)
@@ -1423,7 +1425,7 @@ SCENARIO("Grid World")
       for (const auto& agent : optimal_assignments)
       {
         if (!agent.empty())
-          first_assignments.push_back(agent.front().request()->tag()->id());
+          first_assignments.push_back(agent.front().request()->booking()->id());
       }
       std::size_t id_count = 0;
       for (const auto& id : first_assignments)
@@ -1860,7 +1862,7 @@ SCENARIO("Grid World")
       for (const auto& agent : optimal_assignments)
       {
         const auto last_assignment = agent.back();
-        CHECK_FALSE(last_assignment.request()->tag()->automatic());
+        CHECK_FALSE(last_assignment.request()->booking()->automatic());
         const auto& state = last_assignment.finish_state();
         CHECK_FALSE(state.waypoint() == state.dedicated_charging_waypoint());
       }
@@ -1896,7 +1898,7 @@ SCENARIO("Grid World")
       for (const auto& agent : optimal_assignments)
       {
         const auto last_assignment = agent.back();
-        CHECK(last_assignment.request()->tag()->automatic());
+        CHECK(last_assignment.request()->booking()->automatic());
         const auto& state = last_assignment.finish_state();
         CHECK(state.waypoint() == state.dedicated_charging_waypoint());
       }

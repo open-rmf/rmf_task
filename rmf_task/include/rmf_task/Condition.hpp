@@ -18,7 +18,7 @@
 #ifndef RMF_TASK__EXECUTE__CONDITION_HPP
 #define RMF_TASK__EXECUTE__CONDITION_HPP
 
-#include <rmf_task/execute/Log.hpp>
+#include <rmf_task/Log.hpp>
 
 #include <rmf_utils/impl_ptr.hpp>
 
@@ -28,7 +28,6 @@
 #include <vector>
 
 namespace rmf_task {
-namespace execute {
 
 class Condition;
 using ConstConditionPtr = std::shared_ptr<const Condition>;
@@ -141,7 +140,6 @@ private:
   rmf_utils::impl_ptr<Implementation> _pimpl;
 };
 
-} // namespace execute
 } // namespace rmf_task
 
 #endif // RMF_TASK__EXECUTE__CONDITION_HPP

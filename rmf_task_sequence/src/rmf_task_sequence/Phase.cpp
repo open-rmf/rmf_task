@@ -15,10 +15,9 @@
  *
 */
 
-#include <rmf_task/sequence/Phase.hpp>
+#include <rmf_task_sequence/Phase.hpp>
 
-namespace rmf_task {
-namespace sequence {
+namespace rmf_task_sequence {
 
 //==============================================================================
 class Phase::SequenceModel::Implementation
@@ -95,5 +94,4 @@ Phase::SequenceModel::SequenceModel()
   // Do nothing
 }
 
-} // namespace sequence
-} // namespace rmf_task
+} // namespace rmf_task_sequence

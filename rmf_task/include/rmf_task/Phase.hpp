@@ -18,7 +18,7 @@
 #ifndef RMF_TASK__EXECUTE__PHASE_HPP
 #define RMF_TASK__EXECUTE__PHASE_HPP
 
-#include <rmf_task/execute/Condition.hpp>
+#include <rmf_task/Condition.hpp>
 
 #include <rmf_traffic/Time.hpp>
 
@@ -27,7 +27,6 @@
 #include <memory>
 
 namespace rmf_task {
-namespace execute {
 
 //==============================================================================
 class Phase
@@ -175,7 +174,6 @@ private:
   rmf_utils::impl_ptr<Implementation> _pimpl;
 };
 
-} // namespace execute
 } // namespace rmf_task
 
 #endif // RMF_TASK__EXECUTE__PHASE_HPP

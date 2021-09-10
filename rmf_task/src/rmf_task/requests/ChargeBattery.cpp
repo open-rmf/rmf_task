@@ -47,7 +47,7 @@ std::string generate_uuid(const std::size_t length = 3)
 
 //==============================================================================
 // Definition for forward declared class
-class ChargeBattery::Model : public Request::Model
+class ChargeBattery::Model : public Task::Model
 {
 public:
 
@@ -166,7 +166,7 @@ class ChargeBattery::Description::Implementation
 };
 
 //==============================================================================
-rmf_task::DescriptionPtr ChargeBattery::Description::make()
+Task::ConstDescriptionPtr ChargeBattery::Description::make()
 {
   std::shared_ptr<Description> description(
     new Description());
@@ -181,7 +181,7 @@ ChargeBattery::Description::Description()
 }
 
 //==============================================================================
-std::shared_ptr<Request::Model> ChargeBattery::Description::make_model(
+Task::ConstModelPtr ChargeBattery::Description::make_model(
   rmf_traffic::Time earliest_start_time,
   const Parameters& parameters) const
 {

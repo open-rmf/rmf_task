@@ -23,7 +23,7 @@ namespace rmf_task {
 namespace requests {
 
 //==============================================================================
-class Delivery::Model : public Request::Model
+class Delivery::Model : public Task::Model
 {
 public:
 
@@ -218,7 +218,7 @@ public:
 };
 
 //==============================================================================
-rmf_task::DescriptionPtr Delivery::Description::make(
+Task::ConstDescriptionPtr Delivery::Description::make(
   std::size_t pickup_waypoint,
   rmf_traffic::Duration pickup_wait,
   std::size_t dropoff_waypoint,
@@ -241,7 +241,7 @@ Delivery::Description::Description()
 }
 
 //==============================================================================
-std::shared_ptr<Request::Model> Delivery::Description::make_model(
+Task::ConstModelPtr Delivery::Description::make_model(
   rmf_traffic::Time earliest_start_time,
   const Parameters& parameters) const
 {

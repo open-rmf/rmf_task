@@ -23,7 +23,7 @@ namespace rmf_task {
 namespace requests {
 
 //==============================================================================
-class Clean::Model : public Request::Model
+class Clean::Model : public Task::Model
 {
 public:
 
@@ -205,7 +205,7 @@ public:
 };
 
 //==============================================================================
-rmf_task::DescriptionPtr Clean::Description::make(
+Task::ConstDescriptionPtr Clean::Description::make(
   std::size_t start_waypoint,
   std::size_t end_waypoint,
   const rmf_traffic::Trajectory& cleaning_path)
@@ -226,7 +226,7 @@ Clean::Description::Description()
 }
 
 //==============================================================================
-std::shared_ptr<Request::Model> Clean::Description::make_model(
+Task::ConstModelPtr Clean::Description::make_model(
   rmf_traffic::Time earliest_start_time,
   const Parameters& parameters) const
 {

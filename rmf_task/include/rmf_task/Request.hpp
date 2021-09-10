@@ -20,13 +20,7 @@
 
 #include <memory>
 
-#include <rmf_task/Constraints.hpp>
-#include <rmf_task/Parameters.hpp>
-#include <rmf_task/State.hpp>
-#include <rmf_task/Estimate.hpp>
-#include <rmf_task/Priority.hpp>
-
-#include <rmf_traffic/Time.hpp>
+#include <rmf_task/Task.hpp>
 
 #include <rmf_utils/impl_ptr.hpp>
 
@@ -36,94 +30,6 @@ namespace rmf_task {
 class Request
 {
 public:
-
-  class Tag
-  {
-  public:
-
-    /// Constructor
-    ///
-    /// \param[in] id_
-    ///   The identify of the request
-    ///
-    /// \param[in] earliest_start_time_
-    ///   The earliest time that the request may begin
-    ///
-    /// \param[in] priority_
-    ///   The priority of the request
-    ///
-    /// \param[in] automatic_
-    ///   Whether this request was automatically generated
-    Tag(
-      std::string id_,
-      rmf_traffic::Time earliest_start_time_,
-      ConstPriorityPtr priority_,
-      bool automatic_ = false);
-
-    /// The unique id for this request
-    const std::string& id() const;
-
-    /// Get the earliest time that this request may begin
-    rmf_traffic::Time earliest_start_time() const;
-
-    /// Get the priority of this request
-    ConstPriorityPtr priority() const;
-
-    // Returns true if this request was automatically generated
-    bool automatic() const;
-
-    class Implementation;
-  private:
-    rmf_utils::impl_ptr<Implementation> _pimpl;
-  };
-
-  using ConstTagPtr = std::shared_ptr<const Tag>;
-
-  /// An abstract interface for computing the estimate and invariant durations
-  /// of this request
-  class Model
-  {
-  public:
-
-    /// Estimate the state of the robot when the request is finished along with
-    /// the time the robot has to wait before commencing the request
-    virtual std::optional<Estimate> estimate_finish(
-      const State& initial_state,
-      const Constraints& task_planning_constraints,
-      const TravelEstimator& travel_estimator) const = 0;
-
-    /// Estimate the invariant component of the request's duration
-    virtual rmf_traffic::Duration invariant_duration() const = 0;
-
-    virtual ~Model() = default;
-  };
-
-  /// An abstract interface to define the specifics of this request. This
-  /// implemented description will differentiate this request from others.
-  class Description
-  {
-  public:
-
-    /// Generate a Model for this request based on the unique traits of this
-    /// description
-    ///
-    /// \param[in] earliest_start_time
-    ///   The earliest time this request should begin execution. This is usually
-    ///   the requested start time for the request.
-    ///
-    /// \param[in] parameters
-    ///   The parameters that describe this AGV
-    virtual std::shared_ptr<Model> make_model(
-      rmf_traffic::Time earliest_start_time,
-      const Parameters& parameters) const = 0;
-
-    // Virtual destructor
-    virtual ~Description() = default;
-  };
-
-  using DescriptionPtr = std::shared_ptr<Description>;
-  using ConstDescriptionPtr = std::shared_ptr<const Description>;
-
   /// Constructor
   ///
   /// \param[in] earliest_start_time
@@ -144,23 +50,25 @@ public:
     const std::string& id,
     rmf_traffic::Time earliest_start_time,
     ConstPriorityPtr priority,
-    ConstDescriptionPtr description,
+    Task::ConstDescriptionPtr description,
     bool automatic = false);
 
   /// Constructor
   ///
-  /// \param[in] tag
-  ///   Tag of the request
+  /// \param[in] booking
+  ///   Booking information for this request
   ///
   /// \param[in] description
   ///   Description for this request
-  Request(ConstTagPtr tag, ConstDescriptionPtr description);
+  Request(
+    Task::ConstBookingPtr booking,
+    Task::ConstDescriptionPtr description);
 
   /// Get the tag of this request
-  const ConstTagPtr& tag() const;
+  const Task::ConstBookingPtr& booking() const;
 
   /// Get the description of this request
-  const ConstDescriptionPtr& description() const;
+  const Task::ConstDescriptionPtr& description() const;
 
   class Implementation;
 private:
@@ -169,8 +77,6 @@ private:
 
 using RequestPtr = std::shared_ptr<Request>;
 using ConstRequestPtr = std::shared_ptr<const Request>;
-using DescriptionPtr = Request::DescriptionPtr;
-using ConstDescriptionPtr = std::shared_ptr<const Request::Description>;
 
 } // namespace rmf_task
 

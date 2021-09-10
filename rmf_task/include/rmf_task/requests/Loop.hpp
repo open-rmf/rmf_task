@@ -47,18 +47,18 @@ public:
   // Forward declare the Model for this request
   class Model;
 
-  class Description : public Request::Description
+  class Description : public Task::Description
   {
   public:
 
     /// Generate the description for this request
-    static DescriptionPtr make(
+    static Task::ConstDescriptionPtr make(
       std::size_t start_waypoint,
       std::size_t finish_waypoint,
       std::size_t num_loops);
 
     /// Documentation inherited
-    std::shared_ptr<Request::Model> make_model(
+    Task::ConstModelPtr make_model(
       rmf_traffic::Time earliest_start_time,
       const Parameters& parameters) const final;
 

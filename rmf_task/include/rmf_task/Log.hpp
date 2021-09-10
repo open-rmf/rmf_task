@@ -25,7 +25,6 @@
 #include <memory>
 
 namespace rmf_task {
-namespace execute {
 
 class Log;
 using ConstLogPtr = std::shared_ptr<const Log>;
@@ -207,7 +206,6 @@ private:
   rmf_utils::impl_ptr<Implementation> _pimpl;
 };
 
-} // namespace execute
 } // namespace rmf_task
 
 #endif // RMF_TASK__EXECUTE__LOG_HPP

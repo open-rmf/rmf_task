@@ -21,7 +21,7 @@ namespace rmf_task {
 namespace requests {
 
 //==============================================================================
-class Loop::Model : public Request::Model
+class Loop::Model : public Task::Model
 {
 public:
 
@@ -220,7 +220,7 @@ public:
 };
 
 //==============================================================================
-DescriptionPtr Loop::Description::make(
+Task::ConstDescriptionPtr Loop::Description::make(
   std::size_t start_waypoint,
   std::size_t finish_waypoint,
   std::size_t num_loops)
@@ -241,7 +241,7 @@ Loop::Description::Description()
 }
 
 //==============================================================================
-std::shared_ptr<Request::Model> Loop::Description::make_model(
+Task::ConstModelPtr Loop::Description::make_model(
   rmf_traffic::Time earliest_start_time,
   const Parameters& parameters) const
 {

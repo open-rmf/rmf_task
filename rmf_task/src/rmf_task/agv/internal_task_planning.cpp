@@ -100,7 +100,7 @@ std::shared_ptr<Candidates> Candidates::make(
   const std::vector<State>& initial_states,
   const Constraints& constraints,
   const Parameters& parameters,
-  const Request::Model& request_model,
+  const Task::Model& task_model,
   const TravelEstimator& travel_estimator,
   TaskPlanner::TaskPlannerError& error)
 {
@@ -108,7 +108,7 @@ std::shared_ptr<Candidates> Candidates::make(
   for (std::size_t i = 0; i < initial_states.size(); ++i)
   {
     const auto& state = initial_states[i];
-    const auto finish = request_model.estimate_finish(
+    const auto finish = task_model.estimate_finish(
       state, constraints, travel_estimator);
     if (finish.has_value())
     {
@@ -133,7 +133,7 @@ std::shared_ptr<Candidates> Candidates::make(
         state, constraints, travel_estimator);
       if (battery_estimate.has_value())
       {
-        auto new_finish = request_model.estimate_finish(
+        auto new_finish = task_model.estimate_finish(
           battery_estimate.value().finish_state(),
           constraints,
           travel_estimator);
@@ -178,9 +178,8 @@ std::shared_ptr<Candidates> Candidates::make(
 }
 
 // ============================================================================
-PendingTask::PendingTask(
-  ConstRequestPtr request_,
-  std::shared_ptr<Request::Model> model_,
+PendingTask::PendingTask(ConstRequestPtr request_,
+  Task::ConstModelPtr model_,
   Candidates candidates_)
 : request(std::move(request_)),
   model(std::move(model_)),
@@ -201,7 +200,7 @@ std::shared_ptr<PendingTask> PendingTask::make(
 {
   const auto earliest_start_time = std::max(
     start_time,
-    request_->tag()->earliest_start_time());
+    request_->booking()->earliest_start_time());
   const auto model = request_->description()->make_model(
     earliest_start_time, parameters);
 

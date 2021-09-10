@@ -15,64 +15,61 @@
  *
 */
 
-#include <rmf_task/execute/Phase.hpp>
+#include <rmf_task/Task.hpp>
 
 namespace rmf_task {
-namespace execute {
+
 
 //==============================================================================
-class Phase::Tag::Implementation
+class Task::Booking::Implementation
 {
 public:
-
-  Id id;
-  std::string name;
-  std::string detail;
-  rmf_traffic::Duration duration;
-
+  std::string id;
+  rmf_traffic::Time earliest_start_time;
+  rmf_task::ConstPriorityPtr priority;
+  bool automatic;
 };
 
 //==============================================================================
-Phase::Tag::Tag(
-  Id id_,
-  std::string name_,
-  std::string detail_,
-  rmf_traffic::Duration estimate_)
+Task::Booking::Booking(
+  std::string id_,
+  rmf_traffic::Time earliest_start_time_,
+  ConstPriorityPtr priority_,
+  bool automatic_)
 : _pimpl(rmf_utils::make_impl<Implementation>(
-    Implementation{
-      id_,
-      std::move(name_),
-      std::move(detail_),
-      estimate_
-    }))
+      Implementation{
+        std::move(id_),
+        earliest_start_time_,
+        std::move(priority_),
+        automatic_
+      }))
 {
   // Do nothing
 }
 
 //==============================================================================
-auto Phase::Tag::id() const -> Id
+const std::string& Task::Booking::id() const
 {
   return _pimpl->id;
 }
 
 //==============================================================================
-const std::string& Phase::Tag::name() const
+rmf_traffic::Time Task::Booking::earliest_start_time() const
 {
-  return _pimpl->name;
+  return _pimpl->earliest_start_time;
 }
 
 //==============================================================================
-const std::string& Phase::Tag::detail() const
+ConstPriorityPtr Task::Booking::priority() const
 {
-  return _pimpl->detail;
+  return _pimpl->priority;
 }
 
 //==============================================================================
-rmf_traffic::Duration Phase::Tag::original_duration_estimate() const
+bool Task::Booking::automatic() const
 {
-  return _pimpl->duration;
+  return _pimpl->automatic;
 }
 
 
-} // namespace execute
 } // namespace rmf_task

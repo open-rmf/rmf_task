@@ -75,7 +75,7 @@ public:
     const std::vector<State>& initial_states,
     const Constraints& constraints,
     const Parameters& parameters,
-    const Request::Model& request_model,
+    const Task::Model& task_model,
     const TravelEstimator& travel_estimator,
     TaskPlanner::TaskPlannerError& error);
 
@@ -120,13 +120,13 @@ public:
     TaskPlanner::TaskPlannerError& error);
 
   rmf_task::ConstRequestPtr request;
-  std::shared_ptr<Request::Model> model;
+  Task::ConstModelPtr model;
   Candidates candidates;
 
 private:
   PendingTask(
     ConstRequestPtr request_,
-    std::shared_ptr<Request::Model> model_,
+    Task::ConstModelPtr model_,
     Candidates candidates_);
 };
 
@@ -163,7 +163,7 @@ struct Node
     for (const auto& u : unassigned_tasks)
     {
       double earliest_start_time = rmf_traffic::time::to_seconds(
-        u.second.request->tag()->earliest_start_time().time_since_epoch());
+        u.second.request->booking()->earliest_start_time().time_since_epoch());
       const auto invariant_duration =
         u.second.model->invariant_duration();
       double earliest_finish_time = earliest_start_time

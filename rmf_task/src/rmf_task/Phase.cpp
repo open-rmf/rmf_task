@@ -15,45 +15,61 @@
  *
 */
 
-#include <rmf_task/Request.hpp>
+#include <rmf_task/Phase.hpp>
 
 namespace rmf_task {
 
 //==============================================================================
-class Request::Implementation
+class Phase::Tag::Implementation
 {
 public:
-  Task::ConstBookingPtr booking;
-  Task::ConstDescriptionPtr description;
+
+  Id id;
+  std::string name;
+  std::string detail;
+  rmf_traffic::Duration duration;
+
 };
 
 //==============================================================================
-Request::Request(
-  const std::string& id,
-  rmf_traffic::Time earliest_start_time,
-  ConstPriorityPtr priority,
-  Task::ConstDescriptionPtr description,
-  bool automatic)
+Phase::Tag::Tag(
+  Id id_,
+  std::string name_,
+  std::string detail_,
+  rmf_traffic::Duration estimate_)
 : _pimpl(rmf_utils::make_impl<Implementation>(
-      Implementation {
-        std::make_shared<Task::Booking>(
-          id, earliest_start_time, std::move(priority), automatic),
-        std::move(description)
-      }))
+    Implementation{
+      id_,
+      std::move(name_),
+      std::move(detail_),
+      estimate_
+    }))
 {
   // Do nothing
 }
 
 //==============================================================================
-const Task::ConstBookingPtr& Request::booking() const
+auto Phase::Tag::id() const -> Id
 {
-  return _pimpl->booking;
+  return _pimpl->id;
 }
 
 //==============================================================================
-const Task::ConstDescriptionPtr& Request::description() const
+const std::string& Phase::Tag::name() const
 {
-  return _pimpl->description;
+  return _pimpl->name;
+}
+
+//==============================================================================
+const std::string& Phase::Tag::detail() const
+{
+  return _pimpl->detail;
+}
+
+//==============================================================================
+rmf_traffic::Duration Phase::Tag::original_duration_estimate() const
+{
+  return _pimpl->duration;
 }
 
 } // namespace rmf_task

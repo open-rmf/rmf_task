@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef RMF_TASK__SEQUENCE__PHASE_HPP
-#define RMF_TASK__SEQUENCE__PHASE_HPP
+#ifndef RMF_TASK_SEQUENCE__PHASE_HPP
+#define RMF_TASK_SEQUENCE__PHASE_HPP
 
 #include <rmf_task/State.hpp>
 #include <rmf_task/Constraints.hpp>
@@ -26,8 +26,7 @@
 #include <rmf_task/detail/Resume.hpp>
 #include <rmf_task/detail/Backup.hpp>
 
-namespace rmf_task {
-namespace sequence {
+namespace rmf_task_sequence {
 
 //==============================================================================
 /// A factory for generating execute::ActivePhase instances from descriptions.
@@ -322,7 +321,6 @@ private:
   rmf_utils::unique_impl_ptr<Implementation> _pimpl;
 };
 
-} // namespace sequence
-} // namespace rmf_task
+} // namespace rmf_task_sequence
 
-#endif // RMF_TASK__SEQUENCE__PHASE_HPP
+#endif // RMF_TASK_SEQUENCE__PHASE_HPP

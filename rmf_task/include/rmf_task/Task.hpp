@@ -18,16 +18,21 @@
 #ifndef RMF_TASK__EXECUTE__TASK_HPP
 #define RMF_TASK__EXECUTE__TASK_HPP
 
-#include <rmf_task/execute/Phase.hpp>
+#include <rmf_task/Phase.hpp>
 #include <rmf_task/detail/Backup.hpp>
 #include <rmf_task/detail/Resume.hpp>
-#include <rmf_task/Request.hpp>
+#include <rmf_task/Constraints.hpp>
+#include <rmf_task/Parameters.hpp>
+#include <rmf_task/State.hpp>
+#include <rmf_task/Estimate.hpp>
+#include <rmf_task/Priority.hpp>
+
+#include <rmf_traffic/Time.hpp>
 
 #include <memory>
 #include <functional>
 
 namespace rmf_task {
-namespace execute {
 
 //==============================================================================
 /// Pure abstract interface for an executable Task
@@ -36,8 +41,134 @@ class Task
 public:
 
   // Declarations
-  class Tag;
+  class Booking;
+  using ConstBookingPtr = std::shared_ptr<const Booking>;
 
+  class Tag;
+  using ConstTagPtr = std::shared_ptr<const Tag>;
+
+  class Model;
+  using ConstModelPtr = std::shared_ptr<const Model>;
+
+  class Description;
+  using ConstDescriptionPtr = std::shared_ptr<const Description>;
+
+  class Active;
+  using ActivePtr = std::shared_ptr<Active>;
+};
+
+//==============================================================================
+class Task::Booking
+{
+public:
+
+  /// Constructor
+  ///
+  /// \param[in] id_
+  ///   The identify of the request
+  ///
+  /// \param[in] earliest_start_time_
+  ///   The earliest time that the request may begin
+  ///
+  /// \param[in] priority_
+  ///   The priority of the request
+  ///
+  /// \param[in] automatic_
+  ///   Whether this request was automatically generated
+  Booking(
+    std::string id_,
+    rmf_traffic::Time earliest_start_time_,
+    ConstPriorityPtr priority_,
+    bool automatic_ = false);
+
+  /// The unique id for this request
+  const std::string& id() const;
+
+  /// Get the earliest time that this request may begin
+  rmf_traffic::Time earliest_start_time() const;
+
+  /// Get the priority of this request
+  ConstPriorityPtr priority() const;
+
+  // Returns true if this request was automatically generated
+  bool automatic() const;
+
+  class Implementation;
+private:
+  rmf_utils::impl_ptr<Implementation> _pimpl;
+};
+
+//==============================================================================
+/// Basic static information about the task.
+class Task::Tag
+{
+public:
+
+  /// The original request that this Task is carrying out
+  const ConstBookingPtr& booking() const;
+
+  /// The category of this Task.
+  const std::string& category() const;
+
+  /// Details about this Task.
+  const std::string& detail() const;
+
+  /// The original finish estimate of this Task.
+  rmf_traffic::Time original_finish_estimate() const;
+
+  class Implementation;
+private:
+  rmf_utils::impl_ptr<Implementation> _pimpl;
+};
+
+//==============================================================================
+/// An abstract interface for computing the estimate and invariant durations
+/// of this request
+class Task::Model
+{
+public:
+
+  /// Estimate the state of the robot when the request is finished along with
+  /// the time the robot has to wait before commencing the request
+  virtual std::optional<Estimate> estimate_finish(
+    const State& initial_state,
+    const Constraints& task_planning_constraints,
+    const TravelEstimator& travel_estimator) const = 0;
+
+  /// Estimate the invariant component of the request's duration
+  virtual rmf_traffic::Duration invariant_duration() const = 0;
+
+  virtual ~Model() = default;
+};
+
+//==============================================================================
+/// An abstract interface to define the specifics of this request. This
+/// implemented description will differentiate this request from others.
+class Task::Description
+{
+public:
+
+  /// Generate a Model for this request based on the unique traits of this
+  /// description
+  ///
+  /// \param[in] earliest_start_time
+  ///   The earliest time this request should begin execution. This is usually
+  ///   the requested start time for the request.
+  ///
+  /// \param[in] parameters
+  ///   The parameters that describe this AGV
+  virtual ConstModelPtr make_model(
+    rmf_traffic::Time earliest_start_time,
+    const Parameters& parameters) const = 0;
+
+  // Virtual destructor
+  virtual ~Description() = default;
+};
+
+//==============================================================================
+class Task::Active
+{
+public:
   /// Backup data for the task. The state of the task is represented by a
   /// string. The meaning and format of the string is up to the Task
   /// implementation to decide.
@@ -57,8 +188,8 @@ public:
   /// Descriptions of the phases that are expected in the future
   virtual std::vector<Phase::Pending> pending_phases() const = 0;
 
-  /// The request tag of this Task
-  virtual const Request::ConstTagPtr& tag() const = 0;
+  /// The tag of this Task
+  virtual const ConstTagPtr& tag() const = 0;
 
   /// Estimate the overall finishing time of the task
   virtual rmf_traffic::Time estimate_finish_time() const = 0;
@@ -138,7 +269,7 @@ public:
   virtual void rewind(uint64_t phase_id) = 0;
 
   // Virtual destructor
-  virtual ~Task() = default;
+  virtual ~Active() = default;
 
 protected:
 
@@ -150,32 +281,6 @@ protected:
   static Resume make_resumer(std::function<void()> callback);
 };
 
-using TaskPtr = std::shared_ptr<Task>;
-
-//==============================================================================
-/// Basic static information about the task.
-class Task::Tag
-{
-public:
-
-  /// The original request that this Task is carrying out
-  const Request::ConstTagPtr& request() const;
-
-  /// The category of this Task.
-  const std::string& category() const;
-
-  /// Details about this Task.
-  const std::string& detail() const;
-
-  /// The original finish estimate of this Task.
-  rmf_traffic::Time original_finish_estimate() const;
-
-  class Implementation;
-private:
-  rmf_utils::impl_ptr<Implementation> _pimpl;
-};
-
-} // namespace execute
 } // namespace rmf_task
 
 #endif // RMF_TASK__TASK_HPP
