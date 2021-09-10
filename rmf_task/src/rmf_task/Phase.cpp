@@ -72,4 +72,33 @@ rmf_traffic::Duration Phase::Tag::original_duration_estimate() const
   return _pimpl->duration;
 }
 
+//==============================================================================
+class Phase::Pending::Implementation
+{
+public:
+
+  ConstTagPtr tag;
+  bool will_be_skipped = false;
+
+};
+
+//==============================================================================
+Phase::Pending::Pending(ConstTagPtr tag)
+: _pimpl(rmf_utils::make_impl<Implementation>(Implementation{std::move(tag)}))
+{
+  // Do nothing
+}
+
+//==============================================================================
+auto Phase::Pending::tag() const -> const ConstTagPtr&
+{
+  return _pimpl->tag;
+}
+
+//==============================================================================
+bool Phase::Pending::will_be_skipped() const
+{
+  return _pimpl->will_be_skipped;
+}
+
 } // namespace rmf_task

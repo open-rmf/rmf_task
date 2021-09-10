@@ -163,6 +163,9 @@ class Phase::Pending
 {
 public:
 
+  /// Constructor
+  Pending(ConstTagPtr tag);
+
   /// Tag of the phase
   const ConstTagPtr& tag() const;
 

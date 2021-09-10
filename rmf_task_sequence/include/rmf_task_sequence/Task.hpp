@@ -19,15 +19,14 @@
 #define RMF_TASK__SEQUENCE__TASK_HPP
 
 #include <rmf_task/Request.hpp>
-#include <rmf_task/execute/Task.hpp>
-#include <rmf_task/execute/TaskActivator.hpp>
-#include <rmf_task/sequence/Phase.hpp>
+#include <rmf_task/Task.hpp>
+#include <rmf_task/Activator.hpp>
+#include <rmf_task_sequence/Phase.hpp>
 
-namespace rmf_task {
-namespace sequence {
+namespace rmf_task_sequence {
 
 //==============================================================================
-class Task
+class Task : public rmf_task::Task
 {
 public:
 
@@ -41,15 +40,18 @@ public:
   class Description;
   using ConstDescriptionPtr = std::shared_ptr<const Description>;
 
-  using Update = std::function<void(execute::Phase::ConstSnapshotPtr snapshot)>;
-  using PhaseFinished = std::function<void(execute::Phase::ConstCompletedPtr)>;
+  class Model;
+
+  using Update = std::function<void(Phase::ConstSnapshotPtr snapshot)>;
+  using PhaseFinished = std::function<void(Phase::ConstCompletedPtr)>;
   using TaskFinished = std::function<void()>;
 
-  /// Activate a phase sequence task
+  /// Make an activator for a phase sequence task. This activator can be given
+  /// to
   ///
   /// \param[in] phase_activator
   ///   A phase activator
-  static execute::TaskActivator::Activate<Description> make_activator(
+  static rmf_task::Activator::Activate<Description> make_activator(
     Phase::ConstActivatorPtr phase_activator);
 
 };
@@ -70,13 +72,21 @@ public:
   /// \param[in] cancellation_sequence
   ///   This phase sequence will be run if the task is cancelled during this
   ///   phase.
-  void add_phase(
+  Builder& add_phase(
     Phase::ConstDescriptionPtr description,
     std::vector<Phase::ConstDescriptionPtr> cancellation_sequence);
 
   /// Generate a TaskDescription instance from the phases that have been given
   /// to the builder.
-  ConstDescriptionPtr build();
+  ///
+  /// \param[in] category
+  ///   Task category information that will go into the Task::Tag
+  ///
+  /// \param[in] detail
+  ///   Any detailed information that will go into the Task::Tag
+  ConstDescriptionPtr build(
+    std::string category,
+    std::string detail);
 
   class Implementation;
 private:
@@ -84,15 +94,14 @@ private:
 };
 
 //==============================================================================
-class Task::Description : public Request::Description
+class Task::Description : public rmf_task::Task::Description
 {
 public:
-  class Model;
 
   // Documentation inherited
-  std::shared_ptr<Request::Model> make_model(
+  Task::ConstModelPtr make_model(
     rmf_traffic::Time earliest_start_time,
-    const Parameters& parameters) const final;
+    const rmf_task::Parameters& parameters) const final;
 
   class Implementation;
 private:
@@ -100,15 +109,15 @@ private:
 };
 
 //==============================================================================
-class Task::Description::Model : public Request::Model
+class Task::Model : public rmf_task::Task::Model
 {
 public:
 
   // Documentation inherited
-  std::optional<Estimate> estimate_finish(
-    const State& initial_state,
-    const Constraints& task_planning_constraints,
-    const TravelEstimator& travel_estimator) const final;
+  std::optional<rmf_task::Estimate> estimate_finish(
+    const rmf_task::State& initial_state,
+    const rmf_task::Constraints& task_planning_constraints,
+    const rmf_task::TravelEstimator& travel_estimator) const final;
 
   // Documentation inherited
   rmf_traffic::Duration invariant_duration() const final;
@@ -118,7 +127,6 @@ private:
   rmf_utils::unique_impl_ptr<Implementation> _pimpl;
 };
 
-} // namespace sequence
-} // namespace rmf_task
+} // namespace rmf_task_sequence
 
 #endif // RMF_TASK__SEQUENCE__TASK_HPP

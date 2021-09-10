@@ -67,32 +67,32 @@ public:
   /// Constructor
   ///
   /// \param[in] id_
-  ///   The identify of the request
+  ///   The identity of the booking
   ///
   /// \param[in] earliest_start_time_
-  ///   The earliest time that the request may begin
+  ///   The earliest time that the task may begin
   ///
   /// \param[in] priority_
-  ///   The priority of the request
+  ///   The priority of the booking
   ///
   /// \param[in] automatic_
-  ///   Whether this request was automatically generated
+  ///   Whether this booking was automatically generated
   Booking(
     std::string id_,
     rmf_traffic::Time earliest_start_time_,
     ConstPriorityPtr priority_,
     bool automatic_ = false);
 
-  /// The unique id for this request
+  /// The unique id for this booking
   const std::string& id() const;
 
-  /// Get the earliest time that this request may begin
+  /// Get the earliest time that this booking may begin
   rmf_traffic::Time earliest_start_time() const;
 
-  /// Get the priority of this request
+  /// Get the priority of this booking
   ConstPriorityPtr priority() const;
 
-  // Returns true if this request was automatically generated
+  // Returns true if this booking was automatically generated
   bool automatic() const;
 
   class Implementation;
@@ -113,7 +113,7 @@ public:
     std::string detail_,
     rmf_traffic::Time original_finish_estimate_);
 
-  /// The original request that this Task is carrying out
+  /// The booking information of the request that this Task is carrying out
   const ConstBookingPtr& booking() const;
 
   /// The category of this Task.
@@ -137,32 +137,32 @@ class Task::Model
 {
 public:
 
-  /// Estimate the state of the robot when the request is finished along with
-  /// the time the robot has to wait before commencing the request
+  /// Estimate the state of the robot when the task is finished along with
+  /// the time the robot has to wait before commencing the task
   virtual std::optional<Estimate> estimate_finish(
     const State& initial_state,
     const Constraints& task_planning_constraints,
     const TravelEstimator& travel_estimator) const = 0;
 
-  /// Estimate the invariant component of the request's duration
+  /// Estimate the invariant component of the task's duration
   virtual rmf_traffic::Duration invariant_duration() const = 0;
 
   virtual ~Model() = default;
 };
 
 //==============================================================================
-/// An abstract interface to define the specifics of this request. This
-/// implemented description will differentiate this request from others.
+/// An abstract interface to define the specifics of this task. This
+/// implemented description will differentiate this task from others.
 class Task::Description
 {
 public:
 
-  /// Generate a Model for this request based on the unique traits of this
+  /// Generate a Model for the task based on the unique traits of this
   /// description
   ///
   /// \param[in] earliest_start_time
-  ///   The earliest time this request should begin execution. This is usually
-  ///   the requested start time for the request.
+  ///   The earliest time this task should begin execution. This is usually
+  ///   the requested start time for the task.
   ///
   /// \param[in] parameters
   ///   The parameters that describe this AGV

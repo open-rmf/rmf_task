@@ -20,10 +20,9 @@
 
 #include <rmf_traffic/agv/Planner.hpp>
 
-#include <rmf_task/sequence/Phase.hpp>
+#include <rmf_task_sequence/Phase.hpp>
 
-namespace rmf_task {
-namespace sequence {
+namespace rmf_task_sequence {
 namespace phases {
 
 //==============================================================================
@@ -49,14 +48,14 @@ public:
 
   // Documentation inherited
   Phase::ConstModelPtr make_model(
-    State invariant_initial_state,
-    const Parameters& parameters) const final;
+    rmf_task::State invariant_initial_state,
+    const rmf_task::Parameters& parameters) const final;
 
   // Documentation inherited
-  execute::Phase::ConstTagPtr make_tag(
-    execute::Phase::Tag::Id id,
-    const State& initial_state,
-    const Parameters& parameters) const final;
+  Phase::ConstTagPtr make_tag(
+    Phase::Tag::Id id,
+    const rmf_task::State& initial_state,
+    const rmf_task::Parameters& parameters) const final;
 
   /// Get the current goal for this description.
   const Goal& goal() const;
@@ -66,7 +65,7 @@ public:
 
   /// Get the name of the goal. If the goal does not have an explicit name, it
   /// will be referred to as "#x" where "x" is the index number of the waypoint.
-  std::string goal_name(const Parameters& parameters) const;
+  std::string goal_name(const rmf_task::Parameters& parameters) const;
 
   class Implementation;
 private:
@@ -75,7 +74,6 @@ private:
 };
 
 } // namespace phases
-} // namespace sequence
-} // namespace rmf_task
+} // namespace rmf_task_sequence
 
 #endif // RMF_TASK__SEQUENCE__PHASES__GOTOPLACE_HPP

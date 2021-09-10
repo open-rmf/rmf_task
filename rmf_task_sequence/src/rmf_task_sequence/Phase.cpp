@@ -24,18 +24,18 @@ class Phase::SequenceModel::Implementation
 {
 public:
   std::vector<Phase::ConstModelPtr> models;
-  State invariant_finish_state;
+  rmf_task::State invariant_finish_state;
   rmf_traffic::Duration invariant_duration;
 };
 
 //==============================================================================
 Phase::ConstModelPtr Phase::SequenceModel::make(
   const std::vector<ConstDescriptionPtr>& descriptions,
-  State invariant_initial_state,
-  const Parameters& parameters)
+  rmf_task::State invariant_initial_state,
+  const rmf_task::Parameters& parameters)
 {
   std::vector<Phase::ConstModelPtr> models;
-  State invariant_finish_state = invariant_initial_state;
+  rmf_task::State invariant_finish_state = invariant_initial_state;
   rmf_traffic::Duration invariant_duration = rmf_traffic::Duration(0);
   for (const auto& desc : descriptions)
   {
@@ -58,12 +58,12 @@ Phase::ConstModelPtr Phase::SequenceModel::make(
 }
 
 //==============================================================================
-std::optional<State> Phase::SequenceModel::estimate_finish(
-  State initial_state,
-  const Constraints& constraints,
-  const TravelEstimator& travel_estimator) const
+std::optional<rmf_task::State> Phase::SequenceModel::estimate_finish(
+  rmf_task::State initial_state,
+  const rmf_task::Constraints& constraints,
+  const rmf_task::TravelEstimator& travel_estimator) const
 {
-  std::optional<State> finish_state = std::move(initial_state);
+  std::optional<rmf_task::State> finish_state = std::move(initial_state);
   for (const auto& model : _pimpl->models)
   {
     finish_state = model->estimate_finish(
@@ -83,7 +83,7 @@ rmf_traffic::Duration Phase::SequenceModel::invariant_duration() const
 }
 
 //==============================================================================
-State Phase::SequenceModel::invariant_finish_state() const
+rmf_task::State Phase::SequenceModel::invariant_finish_state() const
 {
   return _pimpl->invariant_finish_state;
 }

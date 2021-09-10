@@ -15,10 +15,9 @@
  *
 */
 
-#include <rmf_task/sequence/phases/WaitFor.hpp>
+#include <rmf_task_sequence/phases/WaitFor.hpp>
 
-namespace rmf_task {
-namespace sequence {
+namespace rmf_task_sequence {
 namespace phases {
 
 //==============================================================================
@@ -27,21 +26,21 @@ class WaitFor::Model : public Phase::Model
 public:
 
   Model(
-    State invariant_initial_state,
+    rmf_task::State invariant_initial_state,
     rmf_traffic::Duration duration,
-    const Parameters& parameters);
+    const rmf_task::Parameters& parameters);
 
-  std::optional<State> estimate_finish(
-    State initial_state,
-    const Constraints& constraints,
-    const TravelEstimator& travel_estimator) const final;
+  std::optional<rmf_task::State> estimate_finish(
+    rmf_task::State initial_state,
+    const rmf_task::Constraints& constraints,
+    const rmf_task::TravelEstimator& travel_estimator) const final;
 
   rmf_traffic::Duration invariant_duration() const final;
 
-  State invariant_finish_state() const final;
+  rmf_task::State invariant_finish_state() const final;
 
 private:
-  State _invariant_finish_state;
+  rmf_task::State _invariant_finish_state;
   double _invariant_battery_drain;
   rmf_traffic::Duration _duration;
 };
@@ -152,5 +151,4 @@ State WaitFor::Model::invariant_finish_state() const
 }
 
 } // namespace phases
-} // namespace sequence
-} // namespace rmf_task
+} // namespace rmf_task_sequence

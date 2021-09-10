@@ -15,15 +15,14 @@
  *
 */
 
-#ifndef RMF_TASK__SEQUENCE__PHASES__WAITFOR_HPP
-#define RMF_TASK__SEQUENCE__PHASES__WAITFOR_HPP
+#ifndef RMF_TASK_SEQUENCE__PHASES__WAITFOR_HPP
+#define RMF_TASK_SEQUENCE__PHASES__WAITFOR_HPP
 
 #include <rmf_traffic/Time.hpp>
 
-#include <rmf_task/sequence/Phase.hpp>
+#include <rmf_task_sequence/Phase.hpp>
 
-namespace rmf_task {
-namespace sequence {
+namespace rmf_task_sequence {
 namespace phases {
 
 //==============================================================================
@@ -65,14 +64,17 @@ public:
 
   // Documentation inherited
   Phase::ConstModelPtr make_model(
-    State invariant_initial_state,
-    const Parameters& parameters) const final;
+    rmf_task::State invariant_initial_state,
+    const rmf_task::Parameters& parameters) const final;
 
   // Documentation inherited
-  execute::Phase::ConstTagPtr make_tag(
-    execute::Phase::Tag::Id id,
-    const State& initial_state,
-    const Parameters& parameters) const final;
+  Phase::ConstTagPtr make_tag(
+    Phase::Tag::Id id,
+    const rmf_task::State& initial_state,
+    const rmf_task::Parameters& parameters) const final;
+
+  // Documentation inherited
+  YAML::Node serialize() const final;
 
   class Implementation;
 private:
@@ -81,7 +83,6 @@ private:
 };
 
 } // namespace phases
-} // namespace sequence
-} // namespace rmf_task
+} // namespace rmf_task_sequence
 
-#endif // RMF_TASK__SEQUENCE__PHASES__WAITFOR_HPP
+#endif // RMF_TASK_SEQUENCE__PHASES__WAITFOR_HPP

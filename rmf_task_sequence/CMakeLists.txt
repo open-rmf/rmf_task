@@ -29,6 +29,7 @@ find_package(rmf_cmake_uncrustify QUIET)
 # ===== RMF Task Sequence Library
 file(GLOB lib_srcs
   "src/rmf_task_sequence/*.cpp"
+  "src/rmf_task_sequence/phases/*.cpp"
 )
 
 add_library(rmf_task_sequence SHARED
