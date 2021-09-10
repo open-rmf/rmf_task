@@ -20,6 +20,7 @@
 
 #include <rmf_task/Request.hpp>
 #include <rmf_task/execute/Task.hpp>
+#include <rmf_task/execute/TaskActivator.hpp>
 #include <rmf_task/sequence/Phase.hpp>
 
 namespace rmf_task {
@@ -35,7 +36,6 @@ public:
 
   // Declaration
   class Active;
-  using ConstActivePtr = std::shared_ptr<const Active>;
 
   // Declaration
   class Description;
@@ -47,14 +47,10 @@ public:
 
   /// Activate a phase sequence task
   ///
-  /// \param[in] activator
+  /// \param[in] phase_activator
   ///   A phase activator
-  static ConstActivePtr activate(
-    std::shared_ptr<const Phase::Activator> activator,
-    const Description& description,
-    Update update,
-    PhaseFinished phase_finished,
-    TaskFinished task_finished);
+  static execute::TaskActivator::Activate<Description> make_activator(
+    Phase::ConstActivatorPtr phase_activator);
 
 };
 
@@ -88,43 +84,6 @@ private:
 };
 
 //==============================================================================
-class Task::Active
-  : public execute::Task,
-  public std::enable_shared_from_this<Active>
-{
-public:
-
-  // Documentation inherited
-  const std::vector<execute::Phase::ConstCompletedPtr>&
-  completed_phases() const final;
-
-  // Documentation inherited
-  execute::Phase::ConstActivePtr active_phase() const final;
-
-  // Documentation inherited
-  std::vector<execute::Phase::Pending> pending_phases() const final;
-
-  // Documentation inherited
-  const Request::ConstTagPtr& tag() const final;
-
-  // Documentation inherited
-  rmf_traffic::Time estimate_finish_time() const final;
-
-  // Documentation inherited
-  Resume interrupt(std::function<void()> task_is_interrupted) final;
-
-  // Documentation inherited
-  void cancel() final;
-
-  // Documentation inherited
-  void kill() final;
-
-  class Implementation;
-private:
-  rmf_utils::unique_impl_ptr<Implementation> _pimpl;
-};
-
-//==============================================================================
 class Task::Description : public Request::Description
 {
 public:
@@ -149,7 +108,7 @@ public:
   std::optional<Estimate> estimate_finish(
     const State& initial_state,
     const Constraints& task_planning_constraints,
-    EstimateCache& estimate_cache) const final;
+    const TravelEstimator& travel_estimator) const final;
 
   // Documentation inherited
   rmf_traffic::Duration invariant_duration() const final;

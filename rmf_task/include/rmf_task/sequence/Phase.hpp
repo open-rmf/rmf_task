@@ -236,6 +236,9 @@ public:
     const State& initial_state,
     const Parameters& parameters) const = 0;
 
+  /// Serialize this phase description into a string.
+  virtual std::string serialize() const = 0;
+
   // Virtual destructor
   virtual ~Description() = default;
 };

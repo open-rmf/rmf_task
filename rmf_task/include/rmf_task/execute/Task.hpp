@@ -150,7 +150,7 @@ protected:
   static Resume make_resumer(std::function<void()> callback);
 };
 
-using ConstTaskPtr = std::shared_ptr<const Task>;
+using TaskPtr = std::shared_ptr<Task>;
 
 //==============================================================================
 /// Basic static information about the task.

@@ -61,7 +61,7 @@ public:
   template<typename Description>
   using Activate =
     std::function<
-    execute::ConstTaskPtr(
+    execute::TaskPtr(
       const Request::ConstTagPtr& request,
       const Description& description,
       std::optional<std::string> backup_state,
