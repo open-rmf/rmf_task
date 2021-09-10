@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef SRC__RMF_TASK__AGV__INTERNAL_TASK_PLANNING_HPP
-#define SRC__RMF_TASK__AGV__INTERNAL_TASK_PLANNING_HPP
+#ifndef SRC__RMF_TASK__INTERNAL_TASK_PLANNING_HPP
+#define SRC__RMF_TASK__INTERNAL_TASK_PLANNING_HPP
 
 #include <rmf_task/TaskPlanner.hpp>
 
@@ -213,4 +213,4 @@ struct LowestCostEstimate
 
 } // namespace rmf_task
 
-#endif // SRC__RMF_TASK__AGV__INTERNAL_TASK_PLANNING_HPP
+#endif // SRC__RMF_TASK__INTERNAL_TASK_PLANNING_HPP

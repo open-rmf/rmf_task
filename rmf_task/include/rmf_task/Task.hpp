@@ -58,6 +58,8 @@ public:
 };
 
 //==============================================================================
+/// Basic information about how the task was booked, e.g. what its name is,
+/// when it should start, and what its priority is.
 class Task::Booking
 {
 public:
@@ -103,6 +105,13 @@ private:
 class Task::Tag
 {
 public:
+
+  /// Constructor
+  Tag(
+    ConstBookingPtr booking_,
+    std::string category_,
+    std::string detail_,
+    rmf_traffic::Time original_finish_estimate_);
 
   /// The original request that this Task is carrying out
   const ConstBookingPtr& booking() const;
@@ -200,7 +209,7 @@ public:
   /// The Resume class keeps track of when the Task is allowed to Resume.
   /// You can either call the Resume object's operator() or let the object
   /// expire to tell the Task that it may resume.
-  class Resume : public detail::Resume {};
+  using Resume = detail::Resume;
 
   /// Tell this Task that it needs to be interrupted. An interruption means
   /// the robot may be commanded to do other tasks before this task resumes.

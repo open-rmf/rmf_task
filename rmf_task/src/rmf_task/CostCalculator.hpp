@@ -18,7 +18,7 @@
 #ifndef SRC__RMF_TASK__COSTCALCULATOR_HPP
 #define SRC__RMF_TASK__COSTCALCULATOR_HPP
 
-#include "agv/internal_task_planning.hpp"
+#include "internal_task_planning.hpp"
 
 #include <rmf_traffic/Time.hpp>
 

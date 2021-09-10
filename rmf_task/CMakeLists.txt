@@ -30,10 +30,7 @@ find_package(rmf_cmake_uncrustify QUIET)
 
 # ===== RMF Tasks library
 file(GLOB lib_srcs
-  "src/rmf_task/agv/*.cpp"
-  "src/rmf_task/execute/*.cpp"
-  "src/rmf_task/sequence/*.cpp"
-  "src/rmf_task/sequence/phases/*.cpp"
+  "src/rmf_task/detail/*.cpp"
   "src/rmf_task/requests/*.cpp"
   "src/rmf_task/requests/factory/*.cpp"
   "src/rmf_task/*.cpp"

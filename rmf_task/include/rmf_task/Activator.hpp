@@ -15,24 +15,21 @@
  *
 */
 
-#ifndef RMF_TASK__TASKACTIVATOR_HPP
-#define RMF_TASK__TASKACTIVATOR_HPP
+#ifndef RMF_TASK__ACTIVATOR_HPP
+#define RMF_TASK__ACTIVATOR_HPP
 
 #include <rmf_task/Request.hpp>
-#include <rmf_task/execute/Task.hpp>
-
 
 namespace rmf_task {
-namespace execute {
 
 //==============================================================================
-/// A factory for generating Task instances from requests.
-class TaskActivator
+/// A factory for generating Task::Active instances from requests.
+class Activator
 {
 public:
 
   /// Construct an empty TaskFactory
-  TaskActivator();
+  Activator();
 
   /// Signature for activating a task
   ///
@@ -61,8 +58,8 @@ public:
   template<typename Description>
   using Activate =
     std::function<
-    execute::TaskPtr(
-      const Request::ConstTagPtr& request,
+    Task::ActivePtr(
+      const Task::ConstBookingPtr& request,
       const Description& description,
       std::optional<std::string> backup_state,
       std::function<void(Phase::ConstSnapshotPtr)> update,
@@ -97,8 +94,8 @@ public:
   /// \return an active, running instance of the requested task.
   std::shared_ptr<Task> activate(
     const Request& request,
-    std::function<void(execute::Phase::ConstSnapshotPtr)> update,
-    std::function<void(execute::Phase::ConstCompletedPtr)> phase_finished,
+    std::function<void(Phase::ConstSnapshotPtr)> update,
+    std::function<void(Phase::ConstCompletedPtr)> phase_finished,
     std::function<void()> task_finished);
 
   /// Restore a Task that crashed or disconnected.
@@ -122,8 +119,8 @@ public:
   std::shared_ptr<Task> restore(
     const Request& request,
     std::string backup_state,
-    std::function<void(execute::Phase::ConstSnapshotPtr)> update,
-    std::function<void(execute::Phase::ConstCompletedPtr)> phase_finished,
+    std::function<void(Phase::ConstSnapshotPtr)> update,
+    std::function<void(Phase::ConstCompletedPtr)> phase_finished,
     std::function<void()> task_finished);
 
   class Implementation;
@@ -131,7 +128,8 @@ private:
   rmf_utils::impl_ptr<Implementation> _pimpl;
 };
 
-} // namespace execute
+
 } // namespace rmf_task
 
-#endif // RMF_TASK__TASKACTIVATOR_HPP
+
+#endif // RMF_TASK__ACTIVATOR_HPP

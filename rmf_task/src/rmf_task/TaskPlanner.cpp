@@ -20,7 +20,7 @@
 #include <rmf_task/BinaryPriorityScheme.hpp>
 #include <rmf_task/requests/ChargeBattery.hpp>
 
-#include "../BinaryPriorityCostCalculator.hpp"
+#include "BinaryPriorityCostCalculator.hpp"
 
 #include <rmf_traffic/Time.hpp>
 

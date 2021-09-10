@@ -33,6 +33,7 @@ public:
 
   class Implementation;
 private:
+  Resume();
   rmf_utils::unique_impl_ptr<Implementation> _pimpl;
 };
 

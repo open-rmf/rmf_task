@@ -15,10 +15,11 @@
  *
 */
 
+#include "detail/internal_Resume.hpp"
+
 #include <rmf_task/Task.hpp>
 
 namespace rmf_task {
-
 
 //==============================================================================
 class Task::Booking::Implementation
@@ -71,5 +72,61 @@ bool Task::Booking::automatic() const
   return _pimpl->automatic;
 }
 
+//==============================================================================
+class Task::Tag::Implementation
+{
+public:
+  ConstBookingPtr booking;
+  std::string category;
+  std::string detail;
+  rmf_traffic::Time original_finish_estimate;
+};
+
+//==============================================================================
+Task::Tag::Tag(
+  ConstBookingPtr booking_,
+  std::string category_,
+  std::string detail_,
+  rmf_traffic::Time original_finish_estimate_)
+: _pimpl(rmf_utils::make_impl<Implementation>(
+    Implementation{
+      std::move(booking_),
+      std::move(category_),
+      std::move(detail_),
+      original_finish_estimate_
+    }))
+{
+  // Do nothing
+}
+
+//==============================================================================
+auto Task::Tag::booking() const -> const ConstBookingPtr&
+{
+  return _pimpl->booking;
+}
+
+//==============================================================================
+const std::string& Task::Tag::category() const
+{
+  return _pimpl->category;
+}
+
+//==============================================================================
+const std::string& Task::Tag::detail() const
+{
+  return _pimpl->detail;
+}
+
+//==============================================================================
+rmf_traffic::Time Task::Tag::original_finish_estimate() const
+{
+  return _pimpl->original_finish_estimate;
+}
+
+//==============================================================================
+Task::Active::Resume Task::Active::make_resumer(std::function<void()> callback)
+{
+  return detail::Resume::Implementation::make(std::move(callback));
+}
 
 } // namespace rmf_task
