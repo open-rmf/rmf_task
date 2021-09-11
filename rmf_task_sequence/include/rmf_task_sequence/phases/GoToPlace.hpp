@@ -46,6 +46,16 @@ public:
   /// Make a GoToPlace description using a goal.
   static DescriptionPtr make(Goal goal);
 
+  /// Get the current goal for this description.
+  const Goal& goal() const;
+
+  /// Set the current goal for this description.
+  Description& goal(Goal new_goal);
+
+  /// Get the name of the goal. If the goal does not have an explicit name, it
+  /// will be referred to as "#x" where "x" is the index number of the waypoint.
+  std::string goal_name(const rmf_task::Parameters& parameters) const;
+
   // Documentation inherited
   Phase::ConstModelPtr make_model(
     rmf_task::State invariant_initial_state,
@@ -57,15 +67,8 @@ public:
     const rmf_task::State& initial_state,
     const rmf_task::Parameters& parameters) const final;
 
-  /// Get the current goal for this description.
-  const Goal& goal() const;
-
-  /// Set the current goal for this description.
-  Description& goal(Goal new_goal);
-
-  /// Get the name of the goal. If the goal does not have an explicit name, it
-  /// will be referred to as "#x" where "x" is the index number of the waypoint.
-  std::string goal_name(const rmf_task::Parameters& parameters) const;
+  // Documentation inherited
+  YAML::Node serialize() const final;
 
   class Implementation;
 private:

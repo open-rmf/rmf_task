@@ -64,6 +64,9 @@ public:
 
   static Task::ActivePtr make(
     Phase::ConstActivatorPtr phase_activator,
+    std::function<rmf_traffic::Time()> clock,
+    std::function<State()> get_state,
+    const ConstParametersPtr& parameters,
     const ConstBookingPtr& booking,
     const Description& description,
     std::optional<std::string> backup_state,
@@ -74,6 +77,9 @@ public:
     auto task = std::shared_ptr<Active>(
       new Active(
         std::move(phase_activator),
+        std::move(clock),
+        std::move(get_state),
+        parameters,
         booking,
         description,
         std::move(update),
@@ -83,8 +89,8 @@ public:
     // TODO(MXG): Make use of backup_state to fast forward the task to the
     // relevant stage
 
-    task->generate_pending_phases();
-    task->begin_next_stage();
+    task->_generate_pending_phases();
+    task->_begin_next_stage();
 
     return task;
   }
@@ -122,20 +128,31 @@ public:
   // Documentation inherited
   void rewind(uint64_t phase_id) final;
 
+  /// Get a weak reference to this object
+  std::weak_ptr<Active> weak_from_this() const;
+
 private:
 
-  void generate_pending_phases();
+  void _generate_pending_phases();
 
-  void begin_next_stage();
+  void _finish_phase();
+  void _begin_next_stage();
+  void _finish_task();
 
   Active(
     Phase::ConstActivatorPtr phase_activator,
+    std::function<rmf_traffic::Time()> clock,
+    std::function<State()> get_state,
+    const ConstParametersPtr& parameters,
     const ConstBookingPtr& booking,
     const Description& description,
     std::function<void(Phase::ConstSnapshotPtr)> update,
     std::function<void(Phase::ConstCompletedPtr)> phase_finished,
     std::function<void()> task_finished)
     : _phase_activator(std::move(phase_activator)),
+      _clock(std::move(clock)),
+      _get_state(std::move(get_state)),
+      _parameters(parameters),
       _booking(std::move(booking)),
       _update(std::move(update)),
       _phase_finished(std::move(phase_finished)),
@@ -146,6 +163,9 @@ private:
   }
 
   Phase::ConstActivatorPtr _phase_activator;
+  std::function<rmf_traffic::Time()> _clock;
+  std::function<State()> _get_state;
+  ConstParametersPtr _parameters;
   ConstBookingPtr _booking;
   std::function<void(Phase::ConstSnapshotPtr)> _update;
   std::function<void(Phase::ConstCompletedPtr)> _phase_finished;
@@ -156,7 +176,10 @@ private:
 
   ConstStagePtr _active_stage;
   Phase::ActivePtr _active_phase;
+  std::optional<rmf_traffic::Time> _current_phase_start_time;
+
   std::list<ConstStagePtr> _completed_stages;
+  std::vector<Phase::ConstCompletedPtr> _completed_phases;
 
   std::optional<Resume> _resume_interrupted_phase;
   bool _cancelled = false;
@@ -164,26 +187,106 @@ private:
 };
 
 //==============================================================================
-void Task::Active::generate_pending_phases()
+void Task::Active::_generate_pending_phases()
 {
+  auto state = _get_state();
   _pending_phases.reserve(_pending_stages.size());
   for (const auto& s : _pending_stages)
   {
-
+    _pending_phases.push_back(
+      std::make_shared<Phase::Pending>(
+        s->description->make_tag(s->id, state, *_parameters)));
   }
 }
 
 //==============================================================================
-void Task::Active::begin_next_stage()
+void Task::Active::_finish_phase()
 {
+  _completed_stages.push_back(_active_stage);
+  _active_stage = nullptr;
 
+  const auto phase_finish_time = _clock();
+  const auto completed_phase =
+    std::make_shared<Phase::Completed>(
+      _active_phase->tag(),
+      _active_phase->finish_condition()->log(),
+      _current_phase_start_time.value(),
+      phase_finish_time);
+
+  _completed_phases.push_back(completed_phase);
+  _phase_finished(completed_phase);
+
+  _begin_next_stage();
 }
 
 //==============================================================================
-auto Task::make_activator(Phase::ConstActivatorPtr phase_activator)
+void Task::Active::_begin_next_stage()
+{
+  if (_pending_stages.empty())
+    return _finish_task();
+
+  assert(!_pending_phases.empty());
+  _active_stage = _pending_stages.front();
+  assert(_active_stage->id == _pending_phases.front()->tag()->id());
+
+  _pending_stages.pop_front();
+  auto tag = _pending_phases.front()->tag();
+  _pending_phases.erase(_pending_phases.begin());
+
+  _current_phase_start_time = _clock();
+  _active_phase = _phase_activator->activate(
+    _get_state,
+    std::move(tag),
+    *_active_stage->description,
+    [me = weak_from_this()](Phase::ConstSnapshotPtr snapshot)
+    {
+      if (const auto self = me.lock())
+        self->_update(snapshot);
+    },
+    [me = weak_from_this()]()
+    {
+      if (const auto self = me.lock())
+        self->_finish_phase();
+    });
+}
+
+//==============================================================================
+void Task::Active::_finish_task()
+{
+  _task_finished();
+}
+
+//==============================================================================
+auto Task::make_activator(
+  Phase::ConstActivatorPtr phase_activator,
+  std::function<rmf_traffic::Time()> clock)
 -> rmf_task::Activator::Activate<Description>
 {
-
+  return [
+      phase_activator = std::move(phase_activator),
+      clock = std::move(clock)
+    ](
+    std::function<State()> get_state,
+    const ConstParametersPtr& parameters,
+    const ConstBookingPtr& booking,
+    const Description& description,
+    std::optional<std::string> backup_state,
+    std::function<void(Phase::ConstSnapshotPtr)> update,
+    std::function<void(Phase::ConstCompletedPtr)> phase_finished,
+    std::function<void()> task_finished) -> ActivePtr
+    {
+      return Active::make(
+        phase_activator,
+        clock,
+        std::move(get_state),
+        parameters,
+        booking,
+        description,
+        std::move(backup_state),
+        std::move(update),
+        std::move(phase_finished),
+        std::move(task_finished));
+    };
 }
 
 } // namespace rmf_task_sequence

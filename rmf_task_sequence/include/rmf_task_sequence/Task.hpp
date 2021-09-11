@@ -23,6 +23,8 @@
 #include <rmf_task/Activator.hpp>
 #include <rmf_task_sequence/Phase.hpp>
 
+#include <rmf_task_sequence/typedefs.hpp>
+
 namespace rmf_task_sequence {
 
 //==============================================================================
@@ -47,12 +49,21 @@ public:
   using TaskFinished = std::function<void()>;
 
   /// Make an activator for a phase sequence task. This activator can be given
-  /// to
+  /// to the rmf_task::Activator class to activate phase sequence tasks from
+  /// phase sequence descriptions.
   ///
   /// \param[in] phase_activator
-  ///   A phase activator
+  ///   A phase activator. It is recommended to fully initialize this phase
+  ///   activator (add all supported phases) before passing it to this function.
+  ///   The task activator will keep a reference to this phase activator, so
+  ///   modifying it while a task is activating a phase could cause data races
+  ///   and therefore undefined behavior.
+  ///
+  /// \param[in] clock
+  ///   A callback that gives the current time when called.
   static rmf_task::Activator::Activate<Description> make_activator(
-    Phase::ConstActivatorPtr phase_activator);
+    Phase::ConstActivatorPtr phase_activator,
+    std::function<rmf_traffic::Time()> clock);
 
 };
 
@@ -101,7 +112,7 @@ public:
   // Documentation inherited
   Task::ConstModelPtr make_model(
     rmf_traffic::Time earliest_start_time,
-    const rmf_task::Parameters& parameters) const final;
+    const Parameters& parameters) const final;
 
   class Implementation;
 private:
@@ -115,9 +126,9 @@ public:
 
   // Documentation inherited
   std::optional<rmf_task::Estimate> estimate_finish(
-    const rmf_task::State& initial_state,
-    const rmf_task::Constraints& task_planning_constraints,
-    const rmf_task::TravelEstimator& travel_estimator) const final;
+    const State& initial_state,
+    const Constraints& task_planning_constraints,
+    const TravelEstimator& travel_estimator) const final;
 
   // Documentation inherited
   rmf_traffic::Duration invariant_duration() const final;

@@ -101,6 +101,13 @@ class Phase::Completed
 {
 public:
 
+  /// Constructor
+  Completed(
+    ConstTagPtr tag_,
+    Log::View log_,
+    rmf_traffic::Time start_,
+    rmf_traffic::Time finish_);
+
   /// Tag of the phase
   const ConstTagPtr& tag() const;
 

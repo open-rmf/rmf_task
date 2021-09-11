@@ -17,8 +17,7 @@
 
 #include "internal_PayloadTransfer.hpp"
 
-namespace rmf_task {
-namespace sequence {
+namespace rmf_task_sequence {
 namespace phases {
 
 //==============================================================================
@@ -47,15 +46,15 @@ Phase::ConstModelPtr PayloadTransfer::make_model(
 }
 
 //==============================================================================
-execute::Phase::ConstTagPtr PayloadTransfer::make_tag(
+Phase::ConstTagPtr PayloadTransfer::make_tag(
   const std::string& type,
-  execute::Phase::Tag::Id id,
+  Phase::Tag::Id id,
   const State& initial_state,
   const Parameters& parameters) const
 {
   const auto model = make_model(initial_state, parameters);
 
-  return std::make_shared<execute::Phase::Tag>(
+  return std::make_shared<Phase::Tag>(
     id,
     type,
     type + " " + payload.brief("into") + " at "
@@ -64,5 +63,4 @@ execute::Phase::ConstTagPtr PayloadTransfer::make_tag(
 }
 
 } // namespace phases
-} // namespace sequence
-} // namespace rmf_task
+} // namespace rmf_task_sequence

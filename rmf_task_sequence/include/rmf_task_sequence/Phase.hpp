@@ -26,6 +26,8 @@
 #include <rmf_task/detail/Resume.hpp>
 #include <rmf_task/detail/Backup.hpp>
 
+#include <rmf_task_sequence/typedefs.hpp>
+
 #include <yaml-cpp/yaml.h>
 
 namespace rmf_task_sequence {
@@ -115,6 +117,7 @@ public:
 //==============================================================================
 class Phase::Activator
 {
+public:
   /// Construct an empty Activator
   Activator();
 
@@ -122,6 +125,12 @@ class Phase::Activator
   ///
   /// \tparam Description
   ///   A class that implements the sequence::PhaseDescription interface
+  ///
+  /// \param[in] get_state
+  ///   A callback for getting the current state of the robot
+  ///
+  /// \param[in] tag
+  ///   The tag of this phase
   ///
   /// \param[in] description
   ///   An immutable reference to the relevant Description instance
@@ -145,10 +154,12 @@ class Phase::Activator
   using Activate =
     std::function<
     ActivePtr(
+      std::function<State()> get_state,
+      ConstTagPtr tag,
       const Description& description,
       std::optional<std::string> backup_state,
       std::function<void(rmf_task::Phase::ConstSnapshotPtr)> update,
-      std::function<void(rmf_task::Phase::ConstCompletedPtr)> finished)
+      std::function<void()> finished)
     >;
 
   /// Add a callback to convert from a PhaseDescription into an active phase.
@@ -160,6 +171,12 @@ class Phase::Activator
 
   /// Activate a phase based on a description of the phase.
   ///
+  /// \param[in] get_state
+  ///   A callback for getting the current state of the robot
+  ///
+  /// \param[in] tag
+  ///   The tag of this phase
+  ///
   /// \param[in] description
   ///   The description of the phase
   ///
@@ -168,16 +185,23 @@ class Phase::Activator
   ///   The callback will be given a snapshot of the active phase.
   ///
   /// \param[in] finished
-  ///   A callback that will be triggered when the task has finished. The
-  ///   callback will be given a copy of the completed phase.
+  ///   A callback that will be triggered when the phase has finished.
   ///
   /// \return an active, running instance of the described phase.
   ActivePtr activate(
+    std::function<State()> get_state,
+    ConstTagPtr tag,
     const Description& description,
     std::function<void(rmf_task::Phase::ConstSnapshotPtr)> update,
-    std::function<void(rmf_task::Phase::ConstCompletedPtr)> finished) const;
+    std::function<void()> finished) const;
 
   /// Restore a phase based on a description of the phase and its backup state.
+  ///
+  /// \param[in] get_state
+  ///   A callback for getting the current state of the robot
+  ///
+  /// \param[in] tag
+  ///   The tag of this phase
   ///
   /// \param[in] description
   ///   The description of the phase
@@ -190,15 +214,16 @@ class Phase::Activator
   ///   The callback will be given a snapshot of the active phase.
   ///
   /// \param[in] finished
-  ///   A callback that will be triggered when the task has finished. The
-  ///   callback will be given a copy of the completed phase.
+  ///   A callback that will be triggered when the phase has finished.
   ///
   /// \return an active, running instance of the described phase.
   ActivePtr restore(
+    std::function<State()> get_state,
+    ConstTagPtr tag,
     const Description& description,
     const std::string& backup_state,
     std::function<void(rmf_task::Phase::ConstSnapshotPtr)> update,
-    std::function<void(rmf_task::Phase::ConstCompletedPtr)> finished) const;
+    std::function<void()> finished) const;
 
   class Implementation;
 private:
@@ -222,8 +247,8 @@ public:
   ///
   /// \return a model based on the given start state and parameters.
   virtual ConstModelPtr make_model(
-    rmf_task::State invariant_initial_state,
-    const rmf_task::Parameters& parameters) const = 0;
+    State invariant_initial_state,
+    const Parameters& parameters) const = 0;
 
   /// Get the human-friendly information about this phase
   ///
@@ -234,8 +259,8 @@ public:
   ///   Constraints on the robot during the phase
   virtual rmf_task::Phase::ConstTagPtr make_tag(
     rmf_task::Phase::Tag::Id id,
-    const rmf_task::State& initial_state,
-    const rmf_task::Parameters& parameters) const = 0;
+    const State& initial_state,
+    const Parameters& parameters) const = 0;
 
   /// Serialize this phase description into a string.
   virtual YAML::Node serialize() const = 0;
@@ -260,17 +285,17 @@ public:
   /// \param[in]
   ///
   /// \return an estimated state for the robot when the phase is finished.
-  virtual std::optional<rmf_task::State> estimate_finish(
-    rmf_task::State initial_state,
-    const rmf_task::Constraints& constraints,
-    const rmf_task::TravelEstimator& travel_estimator) const = 0;
+  virtual std::optional<State> estimate_finish(
+    State initial_state,
+    const Constraints& constraints,
+    const TravelEstimator& travel_estimator) const = 0;
 
   /// Estimate the invariant component of the request's duration.
   virtual rmf_traffic::Duration invariant_duration() const = 0;
 
   /// Get the components of the finish state that this phase is guaranteed to
   /// result in once the phase is finished.
-  virtual rmf_task::State invariant_finish_state() const = 0;
+  virtual State invariant_finish_state() const = 0;
 
   // Virtual destructor
   virtual ~Model() = default;
@@ -302,20 +327,20 @@ public:
   /// \return A Phase::Model implemented as a SequenceModel.
   static Phase::ConstModelPtr make(
     const std::vector<Phase::ConstDescriptionPtr>& descriptions,
-    rmf_task::State invariant_initial_state,
-    const rmf_task::Parameters& parameters);
+    State invariant_initial_state,
+    const Parameters& parameters);
 
   // Documentation inherited
   std::optional<rmf_task::State> estimate_finish(
-    rmf_task::State initial_state,
-    const rmf_task::Constraints& constraints,
-    const rmf_task::TravelEstimator& travel_estimator) const final;
+    State initial_state,
+    const Constraints& constraints,
+    const TravelEstimator& travel_estimator) const final;
 
   // Documentation inherited
   rmf_traffic::Duration invariant_duration() const final;
 
   // Documentation inherited
-  rmf_task::State invariant_finish_state() const final;
+  State invariant_finish_state() const final;
 
   class Implementation;
 private:

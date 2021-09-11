@@ -36,8 +36,14 @@ public:
   /// \tparam Description
   ///   A class that implements the Request::Description interface
   ///
-  /// \param[in] request
-  ///   An immutable reference to the relevant task request
+  /// \param[in] get_state
+  ///   A callback for retrieving the current state of the robot
+  ///
+  /// \param[in] parameters
+  ///   A reference to the parameters for the robot
+  ///
+  /// \param[in] booking
+  ///   An immutable reference to the booking information for the task
   ///
   /// \param[in] description
   ///   The down-casted description of the task
@@ -59,7 +65,9 @@ public:
   using Activate =
     std::function<
     Task::ActivePtr(
-      const Task::ConstBookingPtr& request,
+      std::function<State()> get_state,
+      const ConstParametersPtr& parameters,
+      const Task::ConstBookingPtr& booking,
       const Description& description,
       std::optional<std::string> backup_state,
       std::function<void(Phase::ConstSnapshotPtr)> update,
@@ -79,6 +87,12 @@ public:
 
   /// Activate a Task object based on a Request::Description.
   ///
+  /// \param[in] get_state
+  ///   A callback for retrieving the current state of the robot
+  ///
+  /// \param[in] parameters
+  ///   A reference to the parameters for the robot
+  ///
   /// \param[in] request
   ///   The task request
   ///
@@ -93,12 +107,20 @@ public:
   ///
   /// \return an active, running instance of the requested task.
   std::shared_ptr<Task> activate(
+    std::function<State()> get_state,
+    const ConstParametersPtr& parameters,
     const Request& request,
     std::function<void(Phase::ConstSnapshotPtr)> update,
     std::function<void(Phase::ConstCompletedPtr)> phase_finished,
     std::function<void()> task_finished);
 
   /// Restore a Task that crashed or disconnected.
+  ///
+  /// \param[in] get_state
+  ///   A callback for retrieving the current state of the robot
+  ///
+  /// \param[in] parameters
+  ///   A reference to the parameters for the robot
   ///
   /// \param[in] request
   ///   The task request
@@ -117,6 +139,8 @@ public:
   ///
   /// \return an active, running instance of the requested task.
   std::shared_ptr<Task> restore(
+    std::function<State()> get_state,
+    const ConstParametersPtr& parameters,
     const Request& request,
     std::string backup_state,
     std::function<void(Phase::ConstSnapshotPtr)> update,

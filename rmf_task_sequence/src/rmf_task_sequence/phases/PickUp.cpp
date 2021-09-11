@@ -17,10 +17,9 @@
 
 #include "internal_PayloadTransfer.hpp"
 
-#include <rmf_task/sequence/phases/PickUp.hpp>
+#include <rmf_task_sequence/phases/PickUp.hpp>
 
-namespace rmf_task {
-namespace sequence {
+namespace rmf_task_sequence {
 namespace phases {
 
 //==============================================================================
@@ -114,8 +113,8 @@ Phase::ConstModelPtr PickUp::Description::make_model(
 }
 
 //==============================================================================
-execute::Phase::ConstTagPtr PickUp::Description::make_tag(
-  execute::Phase::Tag::Id id,
+Phase::ConstTagPtr PickUp::Description::make_tag(
+  Phase::Tag::Id id,
   const State& initial_state,
   const Parameters& parameters) const
 {
@@ -129,5 +128,4 @@ PickUp::Description::Description()
 }
 
 } // namespace phases
-} // namespace sequence
-} // namespace rmf_task
+} // namespace rmf_task_sequence

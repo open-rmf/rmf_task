@@ -21,10 +21,9 @@
 #include <rmf_traffic/agv/Planner.hpp>
 
 #include <rmf_task/Payload.hpp>
-#include <rmf_task/sequence/Phase.hpp>
+#include <rmf_task_sequence/Phase.hpp>
 
-namespace rmf_task {
-namespace sequence {
+namespace rmf_task_sequence {
 namespace phases {
 
 //==============================================================================
@@ -98,10 +97,13 @@ public:
     const Parameters& parameters) const final;
 
   // Documentation inherited
-  execute::Phase::ConstTagPtr make_tag(
-    execute::Phase::Tag::Id id,
+  Phase::ConstTagPtr make_tag(
+    Phase::Tag::Id id,
     const State& initial_state,
     const Parameters& parameters) const final;
+
+  // Documentation inherited
+  YAML::Node serialize() const final;
 
   class Implementation;
 private:
@@ -110,7 +112,6 @@ private:
 };
 
 } // namespace phases
-} // namespace sequence
-} // namespace rmf_task
+} // namespace rmf_task_sequence
 
 #endif // RMF_TASK__SEQUENCE__PHASES__PICKUP_HPP

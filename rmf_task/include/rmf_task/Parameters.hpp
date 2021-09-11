@@ -99,8 +99,10 @@ public:
 
 private:
   rmf_utils::impl_ptr<Implementation> _pimpl;
-
 };
+
+//==============================================================================
+using ConstParametersPtr = std::shared_ptr<const Parameters>;
 
 } // namespace rmf_task
 

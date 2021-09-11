@@ -15,10 +15,9 @@
  *
 */
 
-#include <rmf_task/sequence/phases/GoToPlace.hpp>
+#include <rmf_task_sequence/phases/GoToPlace.hpp>
 
-namespace rmf_task {
-namespace sequence {
+namespace rmf_task_sequence {
 namespace phases {
 
 namespace {
@@ -212,8 +211,8 @@ Phase::ConstModelPtr GoToPlace::Description::make_model(
 }
 
 //==============================================================================
-execute::Phase::ConstTagPtr GoToPlace::Description::make_tag(
-  execute::Phase::Tag::Id id,
+Phase::ConstTagPtr GoToPlace::Description::make_tag(
+  Phase::Tag::Id id,
   const State& initial_state,
   const Parameters& parameters) const
 {
@@ -240,7 +239,7 @@ execute::Phase::ConstTagPtr GoToPlace::Description::make_tag(
   if (!estimate.has_value())
     return nullptr;
 
-  return std::make_shared<execute::Phase::Tag>(
+  return std::make_shared<Phase::Tag>(
     id,
     "Go to [" + goal_name_ + "]",
     "Moving the robot from [" + start_name + "] to [" + goal_name_ + "]",
@@ -274,5 +273,4 @@ GoToPlace::Description::Description()
 }
 
 } // namespace phases
-} // namespace sequence
-} // namespace rmf_task
+} // namespace rmf_task_sequence

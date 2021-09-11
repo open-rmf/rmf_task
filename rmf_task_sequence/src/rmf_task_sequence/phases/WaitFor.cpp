@@ -89,13 +89,13 @@ Phase::ConstModelPtr WaitFor::Description::make_model(
 }
 
 //==============================================================================
-execute::Phase::ConstTagPtr WaitFor::Description::make_tag(
-  execute::Phase::Tag::Id id, const State&, const Parameters&) const
+Phase::ConstTagPtr WaitFor::Description::make_tag(
+  Phase::Tag::Id id, const State&, const Parameters&) const
 {
   const auto seconds = std::chrono::duration_cast<std::chrono::seconds>(
     _pimpl->duration);
 
-  return std::make_shared<execute::Phase::Tag>(
+  return std::make_shared<Phase::Tag>(
     id,
     "Waiting",
     "Waiting for [" + std::to_string(seconds.count()) + "] seconds to elapse",

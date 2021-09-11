@@ -19,14 +19,13 @@
 #define SRC__RMF_TASK__SEQUENCE__PHASES__INTERNAL_PAYLOADTRANSFER_HPP
 
 #include <rmf_task/Payload.hpp>
-#include <rmf_task/sequence/Phase.hpp>
-#include <rmf_task/sequence/phases/GoToPlace.hpp>
-#include <rmf_task/sequence/phases/WaitFor.hpp>
+#include <rmf_task_sequence/Phase.hpp>
+#include <rmf_task_sequence/phases/GoToPlace.hpp>
+#include <rmf_task_sequence/phases/WaitFor.hpp>
 
 #include <rmf_traffic/agv/Planner.hpp>
 
-namespace rmf_task {
-namespace sequence {
+namespace rmf_task_sequence {
 namespace phases {
 
 //==============================================================================
@@ -52,15 +51,14 @@ public:
     State invariant_initial_state,
     const Parameters& parameters) const;
 
-  execute::Phase::ConstTagPtr make_tag(
+  Phase::ConstTagPtr make_tag(
     const std::string& type,
-    execute::Phase::Tag::Id id,
+    Phase::Tag::Id id,
     const State& initial_state,
     const Parameters& parameters) const;
 };
 
 } // namespace phases
-} // namespace sequence
-} // namespace rmf_task
+} // namespace rmf_task_sequence
 
 #endif // SRC__RMF_TASK__SEQUENCE__PHASES__INTERNAL_PAYLOADTRANSFER_HPP

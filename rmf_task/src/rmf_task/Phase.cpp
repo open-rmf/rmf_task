@@ -73,6 +73,58 @@ rmf_traffic::Duration Phase::Tag::original_duration_estimate() const
 }
 
 //==============================================================================
+class Phase::Completed::Implementation
+{
+public:
+
+  ConstTagPtr tag;
+  Log::View log;
+  rmf_traffic::Time start;
+  rmf_traffic::Time finish;
+};
+
+//==============================================================================
+Phase::Completed::Completed(
+  ConstTagPtr tag_,
+  Log::View log_,
+  rmf_traffic::Time start_,
+  rmf_traffic::Time finish_)
+: _pimpl(rmf_utils::make_impl<Implementation>(
+  Implementation{
+    std::move(tag_),
+    std::move(log_),
+    start_,
+    finish_
+  }))
+{
+  // Do nothing
+}
+
+//==============================================================================
+auto Phase::Completed::tag() const -> const ConstTagPtr&
+{
+  return _pimpl->tag;
+}
+
+//==============================================================================
+const Log::View& Phase::Completed::log() const
+{
+  return _pimpl->log;
+}
+
+//==============================================================================
+rmf_traffic::Time Phase::Completed::start_time() const
+{
+  return _pimpl->start;
+}
+
+//==============================================================================
+rmf_traffic::Time Phase::Completed::finish_time() const
+{
+  return _pimpl->finish;
+}
+
+//==============================================================================
 class Phase::Pending::Implementation
 {
 public:
