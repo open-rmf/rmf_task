@@ -86,9 +86,7 @@ public:
         std::move(phase_finished),
         std::move(task_finished)));
 
-    // TODO(MXG): Make use of backup_state to fast forward the task to the
-    // relevant stage
-
+    task->_load_backup(std::move(backup_state));
     task->_generate_pending_phases();
     task->_begin_next_stage();
 
@@ -133,6 +131,10 @@ public:
 
 private:
 
+  /// _load_backup should only be used in the make(~) function. It will
+  /// fast-forward the progress of the task to catch up to a backed up state,
+  /// since the task is being restored from a task that was already in progress.
+  void _load_backup(std::optional<std::string> backup_state);
   void _generate_pending_phases();
 
   void _finish_phase();
@@ -185,6 +187,12 @@ private:
   bool _cancelled = false;
   bool _killed = false;
 };
+
+//==============================================================================
+void Task::Active::_load_backup(std::optional<std::string> backup_state_opt)
+{
+
+}
 
 //==============================================================================
 void Task::Active::_generate_pending_phases()
