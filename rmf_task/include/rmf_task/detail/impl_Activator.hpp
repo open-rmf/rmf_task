@@ -30,6 +30,7 @@ void Activator::add_activator(Activate<Description> activator)
     typeid(Description),
     [activator](
       std::function<State()> get_state,
+      const ConstParametersPtr& parameters,
       const Task::ConstBookingPtr& booking,
       const Task::Description& description,
       std::optional<std::string> backup_state,
@@ -40,6 +41,7 @@ void Activator::add_activator(Activate<Description> activator)
     {
       return activator(
         std::move(get_state),
+        parameters,
         booking,
         static_cast<const Description&>(description),
         std::move(backup_state),

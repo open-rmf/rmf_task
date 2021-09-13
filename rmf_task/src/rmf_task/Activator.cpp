@@ -101,4 +101,12 @@ Task::ActivePtr Activator::restore(
     std::move(task_finished));
 }
 
+//==============================================================================
+void Activator::_add_activator(
+  std::type_index type,
+  Activate<Task::Description> activator)
+{
+  _pimpl->activators.insert({type, std::move(activator)});
+}
+
 } // namespace rmf_task

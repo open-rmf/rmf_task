@@ -125,6 +125,53 @@ rmf_traffic::Time Phase::Completed::finish_time() const
 }
 
 //==============================================================================
+class Phase::Snapshot::Implementation
+{
+public:
+  ConstTagPtr tag;
+  ConstConditionPtr finish_condition;
+  rmf_traffic::Time estimated_finish_time;
+};
+
+//==============================================================================
+Phase::ConstSnapshotPtr Phase::Snapshot::make(const Active& active)
+{
+  Snapshot output;
+  output._pimpl = rmf_utils::make_impl<Implementation>(
+    Implementation{
+      active.tag(),
+      Condition::Snapshot::make(*active.finish_condition()),
+      active.estimate_finish_time()
+    });
+
+  return std::make_shared<Snapshot>(std::move(output));
+}
+
+//==============================================================================
+Phase::ConstTagPtr Phase::Snapshot::tag() const
+{
+  return _pimpl->tag;
+}
+
+//==============================================================================
+ConstConditionPtr Phase::Snapshot::finish_condition() const
+{
+   return _pimpl->finish_condition;
+}
+
+//==============================================================================
+rmf_traffic::Time Phase::Snapshot::estimate_finish_time() const
+{
+  return _pimpl->estimated_finish_time;
+}
+
+//==============================================================================
+Phase::Snapshot::Snapshot()
+{
+  // Do nothing
+}
+
+//==============================================================================
 class Phase::Pending::Implementation
 {
 public:

@@ -196,13 +196,14 @@ public:
   /// that is equal to Log::Reader::Iterable::end().
   ///
   /// \return a copy of the iterator before it was incremented.
-  iterator& operator++(int);
+  iterator operator++(int);
 
   /// Equality comparison operator
   bool operator==(const iterator& other) const;
 
   class Implementation;
 private:
+  iterator();
   rmf_utils::impl_ptr<Implementation> _pimpl;
 };
 

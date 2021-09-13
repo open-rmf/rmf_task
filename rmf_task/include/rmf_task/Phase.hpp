@@ -162,6 +162,7 @@ public:
 
   class Implementation;
 private:
+  Snapshot();
   rmf_utils::impl_ptr<Implementation> _pimpl;
 };
 
