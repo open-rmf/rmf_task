@@ -40,7 +40,7 @@ public:
   ///   A callback for retrieving the current state of the robot
   ///
   /// \param[in] parameters
-  ///   A reference to the parameters for the robot
+  ///   A reference to the parameters for the roboth
   ///
   /// \param[in] booking
   ///   An immutable reference to the booking information for the task
@@ -57,6 +57,10 @@ public:
   ///   A callback that will be triggered when the task has a significant
   ///   update in its status.
   ///
+  /// \param[in] checkpoint
+  ///   A callback that will be triggered when the task has reached a task
+  ///   checkpoint whose state is worth backing up.
+  ///
   /// \param[in] finished
   ///   A callback that will be triggered when the task has finished.
   ///
@@ -71,6 +75,7 @@ public:
       const Description& description,
       std::optional<std::string> backup_state,
       std::function<void(Phase::ConstSnapshotPtr)> update,
+      std::function<void(Task::Active::Backup)> checkpoint,
       std::function<void(Phase::ConstCompletedPtr)> phase_finished,
       std::function<void()> task_finished)
     >;
@@ -99,6 +104,10 @@ public:
   /// \param[in] update
   ///   A callback that will be triggered when the task has a significant update
   ///
+  /// \param[in] checkpoint
+  ///   A callback that will be triggered when the task has reached a task
+  ///   checkpoint whose state is worth backing up.
+  ///
   /// \param[in] phase_finished
   ///   A callback that will be triggered whenever a task phase is finished
   ///
@@ -106,11 +115,12 @@ public:
   ///   A callback that will be triggered when the task has finished
   ///
   /// \return an active, running instance of the requested task.
-  std::shared_ptr<Task> activate(
+  Task::ActivePtr activate(
     std::function<State()> get_state,
     const ConstParametersPtr& parameters,
     const Request& request,
     std::function<void(Phase::ConstSnapshotPtr)> update,
+    std::function<void(Task::Active::Backup)> checkpoint,
     std::function<void(Phase::ConstCompletedPtr)> phase_finished,
     std::function<void()> task_finished);
 
@@ -131,6 +141,10 @@ public:
   /// \param[in] update
   ///   A callback that will be triggered when the task has a significant update
   ///
+  /// \param[in] checkpoint
+  ///   A callback that will be triggered when the task has reached a task
+  ///   checkpoint whose state is worth backing up.
+  ///
   /// \param[in] phase_finished
   ///   A callback that will be triggered whenever a task phase is finished
   ///
@@ -138,22 +152,30 @@ public:
   ///   A callback that will be triggered when the task has finished
   ///
   /// \return an active, running instance of the requested task.
-  std::shared_ptr<Task> restore(
+  Task::ActivePtr restore(
     std::function<State()> get_state,
     const ConstParametersPtr& parameters,
     const Request& request,
     std::string backup_state,
     std::function<void(Phase::ConstSnapshotPtr)> update,
+    std::function<void(Task::Active::Backup)> checkpoint,
     std::function<void(Phase::ConstCompletedPtr)> phase_finished,
     std::function<void()> task_finished);
 
   class Implementation;
 private:
+
+  /// \private
+  void _add_activator(
+    std::type_index type,
+    Activate<Task::Description> activator);
+
   rmf_utils::impl_ptr<Implementation> _pimpl;
 };
 
 
 } // namespace rmf_task
 
+#include <rmf_task/detail/impl_Activator.hpp>
 
 #endif // RMF_TASK__ACTIVATOR_HPP

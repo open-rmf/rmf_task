@@ -62,13 +62,13 @@ class Phase::Active : public rmf_task::Phase::Active
 public:
 
   /// Backup data for the Phase. The state of the phase is represented by a
-  /// string. The meaning and format of the string is up to the phase
+  /// YAML::Node. The meaning and format of the Node is up to the phase
   /// implementation to decide.
   ///
   /// Each Backup is tagged with a sequence number. As the Phase makes progress,
   /// it can issue new Backups with higher sequence numbers. Only the Backup
   /// with the highest sequence number will be kept.
-  using Backup = rmf_task::detail::Backup;
+  class Backup;
 
   /// Get a backup for this Phase
   virtual Backup backup() const = 0;
@@ -112,6 +112,25 @@ public:
 
   // Virtual destructor
   virtual ~Active() = default;
+};
+
+class Phase::Active::Backup
+{
+public:
+
+  /// Make a backup of the phase
+  ///
+  /// \param[in] seq
+  ///   Sequence number. The Backup from this phase with the highest sequence
+  ///   number will be held onto until a Backup with a higher sequence number is
+  ///   issued.
+  ///
+  /// \param[in] state
+  ///   A serialization of the phase's state. This will be used by
+  ///   Phase::Activator when restoring a Task.
+  static Backup make(uint64_t seq, YAML::Node state);
+
+private:
 };
 
 //==============================================================================
@@ -184,6 +203,10 @@ public:
   ///   A callback that will be triggered when the phase has a notable update.
   ///   The callback will be given a snapshot of the active phase.
   ///
+  /// \param[in] checkpoint
+  ///   A callback that will be triggered when the phase has reached a task
+  ///   checkpoint whose state is worth backing up.
+  ///
   /// \param[in] finished
   ///   A callback that will be triggered when the phase has finished.
   ///
@@ -193,6 +216,7 @@ public:
     ConstTagPtr tag,
     const Description& description,
     std::function<void(rmf_task::Phase::ConstSnapshotPtr)> update,
+    std::function<void(Active::Backup)> checkpoint,
     std::function<void()> finished) const;
 
   /// Restore a phase based on a description of the phase and its backup state.
@@ -213,6 +237,10 @@ public:
   ///   A callback that will triggered when the phase has a notable update.
   ///   The callback will be given a snapshot of the active phase.
   ///
+  /// \param[in] checkpoint
+  ///   A callback that will be triggered when the phase has reached a task
+  ///   checkpoint whose state is worth backing up.
+  ///
   /// \param[in] finished
   ///   A callback that will be triggered when the phase has finished.
   ///
@@ -223,6 +251,7 @@ public:
     const Description& description,
     const std::string& backup_state,
     std::function<void(rmf_task::Phase::ConstSnapshotPtr)> update,
+    std::function<void(Active::Backup)> checkpoint,
     std::function<void()> finished) const;
 
   class Implementation;

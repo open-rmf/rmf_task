@@ -30,7 +30,7 @@ namespace detail {
 class Backup
 {
 public:
-  /// Back a Backup state
+  /// Make a Backup state
   ///
   /// \param[in] seq
   ///   Sequence number. The Backup from this phase with the highest sequence
@@ -38,7 +38,7 @@ public:
   ///   issued.
   ///
   /// \param[in] state
-  ///   A serialization of the phase's state. This will be used by TaskActivator
+  ///   A serialization of the phase's state. This will be used by Activator
   ///   when restoring a Task.
   static Backup make(uint64_t seq, std::string state);
 

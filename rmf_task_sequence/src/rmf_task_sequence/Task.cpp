@@ -71,6 +71,7 @@ public:
     const Description& description,
     std::optional<std::string> backup_state,
     std::function<void(Phase::ConstSnapshotPtr)> update,
+    std::function<void(Task::Active::Backup)> checkpoint,
     std::function<void(Phase::ConstCompletedPtr)> phase_finished,
     std::function<void()> task_finished)
   {
@@ -83,6 +84,7 @@ public:
         booking,
         description,
         std::move(update),
+        std::move(checkpoint),
         std::move(phase_finished),
         std::move(task_finished)));
 
@@ -141,6 +143,8 @@ private:
   void _begin_next_stage();
   void _finish_task();
 
+  void _issue_backup(Phase::Active::Backup backup);
+
   Active(
     Phase::ConstActivatorPtr phase_activator,
     std::function<rmf_traffic::Time()> clock,
@@ -149,6 +153,7 @@ private:
     const ConstBookingPtr& booking,
     const Description& description,
     std::function<void(Phase::ConstSnapshotPtr)> update,
+    std::function<void(Backup)> checkpoint,
     std::function<void(Phase::ConstCompletedPtr)> phase_finished,
     std::function<void()> task_finished)
     : _phase_activator(std::move(phase_activator)),
@@ -157,6 +162,7 @@ private:
       _parameters(parameters),
       _booking(std::move(booking)),
       _update(std::move(update)),
+      _checkpoint(std::move(checkpoint)),
       _phase_finished(std::move(phase_finished)),
       _task_finished(std::move(task_finished)),
       _pending_stages(Description::Implementation::get_stages(description))
@@ -170,6 +176,7 @@ private:
   ConstParametersPtr _parameters;
   ConstBookingPtr _booking;
   std::function<void(Phase::ConstSnapshotPtr)> _update;
+  std::function<void(Backup)> _checkpoint;
   std::function<void(Phase::ConstCompletedPtr)> _phase_finished;
   std::function<void()> _task_finished;
 
@@ -251,6 +258,11 @@ void Task::Active::_begin_next_stage()
       if (const auto self = me.lock())
         self->_update(snapshot);
     },
+    [me = weak_from_this()](Phase::Active::Backup backup)
+    {
+      if (const auto self = me.lock())
+        self->_issue_backup(std::move(backup));
+    },
     [me = weak_from_this()]()
     {
       if (const auto self = me.lock())
@@ -262,6 +274,12 @@ void Task::Active::_begin_next_stage()
 void Task::Active::_finish_task()
 {
   _task_finished();
+}
+
+//==============================================================================
+void Task::Active::_issue_backup(Phase::Active::Backup backup)
+{
+
 }
 
 //==============================================================================
@@ -280,6 +298,7 @@ auto Task::make_activator(
     const Description& description,
     std::optional<std::string> backup_state,
     std::function<void(Phase::ConstSnapshotPtr)> update,
+    std::function<void(Task::Active::Backup)> checkpoint,
     std::function<void(Phase::ConstCompletedPtr)> phase_finished,
     std::function<void()> task_finished) -> ActivePtr
     {
@@ -292,6 +311,7 @@ auto Task::make_activator(
         description,
         std::move(backup_state),
         std::move(update),
+        std::move(checkpoint),
         std::move(phase_finished),
         std::move(task_finished));
     };
