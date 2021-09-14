@@ -62,7 +62,6 @@ public:
       std::function<rmf_task::State()> get_state,
       const rmf_task::ConstParametersPtr& parameters,
       const Task::ConstBookingPtr& booking,
-      std::optional<std::string> backup_state,
       std::function<void(Phase::ConstSnapshotPtr)> update,
       std::function<void(Task::Active::Backup)> checkpoint,
       std::function<void(Phase::ConstCompletedPtr)> phase_finished,

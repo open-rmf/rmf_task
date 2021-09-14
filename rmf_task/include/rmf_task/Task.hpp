@@ -185,7 +185,7 @@ public:
   /// Each Backup is tagged with a sequence number. As the Task makes progress,
   /// it can issue new Backups with higher sequence numbers. Only the Backup
   /// with the highest sequence number will be kept.
-  class Backup : public detail::Backup {};
+  using Backup = detail::Backup;
 
   /// Descriptions of the phases that have been completed
   virtual const std::vector<Phase::ConstCompletedPtr>&

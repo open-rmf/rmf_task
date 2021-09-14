@@ -43,9 +43,12 @@ public:
 
     template<typename... Args>
     Active(
-      const Description& desc, Args&&... args)
+      const Description& desc,
+      std::optional<std::string> backup,
+      Args&&... args)
     : MockTask::Active(std::forward<Args>(args)...),
-      _description(desc)
+      _description(desc),
+      _restored_state(std::move(backup))
     {
       // TODO(MXG): We could use the description, state, and parameters to
       // get the actual estimate for the pending phases
@@ -54,9 +57,15 @@ public:
       add_pending_phase("Pick up", "Pretending to pick something up", 30s);
       add_pending_phase("Go to drop off", "Pretending to go to a drop off point", 1min);
       add_pending_phase("Drop off", "Pretending to drop something off", 30s);
+
+      // TODO(MXG): We could use the _restored_state here to
     }
 
+    Backup backup() const override;
+
     Description _description;
+    std::optional<std::string> _restored_state;
+    mutable uint64_t _backup_seq = 0;
   };
 
 };

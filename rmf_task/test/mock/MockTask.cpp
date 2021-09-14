@@ -95,7 +95,6 @@ MockTask::Active::Active(
   std::function<rmf_task::State()>,
   const rmf_task::ConstParametersPtr&,
   const Task::ConstBookingPtr& booking,
-  std::optional<std::string>,
   std::function<void(Phase::ConstSnapshotPtr)> update,
   std::function<void(Task::Active::Backup)> checkpoint,
   std::function<void(Phase::ConstCompletedPtr)> phase_finished,

@@ -36,15 +36,20 @@ auto MockDelivery::make_activator() -> Activator
       return std::shared_ptr<Active>(
         new Active(
           description,
+          std::move(backup_state),
           std::move(get_state),
           parameters,
           booking,
-          std::move(backup_state),
           std::move(update),
           std::move(checkpoint),
           std::move(phase_finished),
           std::move(task_finished)));
     };
+}
+
+auto MockDelivery::Active::backup() const -> Backup
+{
+  return Backup::make(_backup_seq++, "Hello, I am a backup");
 }
 
 } // namespace test_rmf_task
