@@ -62,11 +62,11 @@ SCENARIO("Activate fresh task")
   CHECK(phase_snapshot->tag()->id() == 1);
 
   // ====== Restoring a task ========
-  auto checkpoint = rmf_task::Task::Active::Backup::make(10, "Hello, backup");
-  mock_active->_checkpoint(checkpoint);
+  CHECK_FALSE(backup.has_value());
+  mock_active->issue_backup();
   REQUIRE(backup.has_value());
-  CHECK(backup->sequence() == checkpoint.sequence());
-  CHECK(backup->state() == checkpoint.state());
+  CHECK(backup->sequence() == 0);
+  CHECK(backup->state() == "Hello, I am a backup");
 
   auto restored = activator.restore(
     nullptr,
@@ -83,5 +83,5 @@ SCENARIO("Activate fresh task")
 
   REQUIRE(mock_restored);
   REQUIRE(mock_restored->_restored_state.has_value());
-  CHECK(mock_restored->_restored_state == checkpoint.state());
+  CHECK(mock_restored->_restored_state == backup->state());
 }

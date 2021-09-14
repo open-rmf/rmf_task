@@ -146,4 +146,10 @@ void MockTask::Active::start_next_phase(rmf_traffic::Time current_time)
     [](){});
 }
 
+//==============================================================================
+void MockTask::Active::issue_backup()
+{
+  _checkpoint(backup());
+}
+
 } // namespace test_rmf_task

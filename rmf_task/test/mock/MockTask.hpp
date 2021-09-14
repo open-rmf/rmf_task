@@ -74,6 +74,8 @@ public:
 
     void start_next_phase(rmf_traffic::Time current_time);
 
+    void issue_backup();
+
     std::shared_ptr<Tag> _tag;
     ConstTagPtr _ctag;
     std::vector<Phase::ConstCompletedPtr> _completed_phases;
