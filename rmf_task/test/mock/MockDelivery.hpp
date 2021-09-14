@@ -58,7 +58,8 @@ public:
       add_pending_phase("Go to drop off", "Pretending to go to a drop off point", 1min);
       add_pending_phase("Drop off", "Pretending to drop something off", 30s);
 
-      // TODO(MXG): We could use the _restored_state here to
+      // TODO(MXG): We could use the _restored_state here to fast-forward this
+      // mock task to the phase that the previous Task::Active left off from.
     }
 
     Backup backup() const override;
