@@ -114,6 +114,7 @@ public:
   virtual ~Active() = default;
 };
 
+//==============================================================================
 class Phase::Active::Backup
 {
 public:
@@ -130,7 +131,15 @@ public:
   ///   Phase::Activator when restoring a Task.
   static Backup make(uint64_t seq, YAML::Node state);
 
+  /// Get the sequence number
+  uint64_t sequence() const;
+
+  /// Get the YAML representation of the backed up state
+  const YAML::Node& state() const;
+
+  class Implementation;
 private:
+  rmf_utils::impl_ptr<Implementation> _pimpl;
 };
 
 //==============================================================================

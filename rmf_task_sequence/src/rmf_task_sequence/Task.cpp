@@ -19,9 +19,12 @@
 
 #include <rmf_task_sequence/Task.hpp>
 
+#include <rmf_utils/Modular.hpp>
+
 namespace rmf_task_sequence {
 
 namespace {
+
 //==============================================================================
 struct Stage
 {
@@ -88,7 +91,9 @@ public:
         std::move(phase_finished),
         std::move(task_finished)));
 
-    task->_load_backup(std::move(backup_state));
+    if (!task->_load_backup(std::move(backup_state)))
+      return task;
+
     task->_generate_pending_phases();
     task->_begin_next_stage();
 
@@ -136,14 +141,23 @@ private:
   /// _load_backup should only be used in the make(~) function. It will
   /// fast-forward the progress of the task to catch up to a backed up state,
   /// since the task is being restored from a task that was already in progress.
-  void _load_backup(std::optional<std::string> backup_state);
+  ///
+  /// \return false if the task needs to be aborted due to a bad backup_state,
+  /// otherwise return true.
+  bool _load_backup(std::optional<std::string> backup_state);
   void _generate_pending_phases();
 
   void _finish_phase();
   void _begin_next_stage();
   void _finish_task();
 
-  void _issue_backup(Phase::Active::Backup backup);
+  void _issue_backup(
+    Phase::Tag::Id source_phase_id,
+    Phase::Active::Backup phase_backup) const;
+
+  Backup _generate_backup(
+    Phase::Tag::Id current_phase_id,
+    Phase::Active::Backup phase_backup) const;
 
   Active(
     Phase::ConstActivatorPtr phase_activator,
@@ -165,7 +179,8 @@ private:
       _checkpoint(std::move(checkpoint)),
       _phase_finished(std::move(phase_finished)),
       _task_finished(std::move(task_finished)),
-      _pending_stages(Description::Implementation::get_stages(description))
+      _pending_stages(Description::Implementation::get_stages(description)),
+      _cancel_sequence_initial_id(_pending_stages.size()+1)
   {
     // Do nothing
   }
@@ -191,13 +206,119 @@ private:
   std::vector<Phase::ConstCompletedPtr> _completed_phases;
 
   std::optional<Resume> _resume_interrupted_phase;
-  bool _cancelled = false;
+  std::optional<Phase::Tag::Id> _cancelled_on_phase = std::nullopt;
   bool _killed = false;
+
+  mutable std::optional<uint64_t> _last_phase_backup_sequence_number;
+  mutable uint64_t _next_task_backup_sequence_number = 0;
+
+  const uint64_t _cancel_sequence_initial_id;
 };
 
 //==============================================================================
-void Task::Active::_load_backup(std::optional<std::string> backup_state_opt)
+auto Task::Builder::add_phase(
+  Phase::ConstDescriptionPtr description,
+  std::vector<Phase::ConstDescriptionPtr> cancellation_sequence) -> Builder&
 {
+  // NOTE(MXG): We give each phase the ID of _pimpl->stages.size()+1 because
+  // the ID 0 is reserved for the RestoreFromBackup phase, in case that's ever
+  // needed.
+  _pimpl->stages.emplace_back(
+    std::make_shared<Stage>(
+      Stage{
+        _pimpl->stages.size()+1,
+        std::move(description),
+        std::move(cancellation_sequence)
+      }));
+
+  return *this;
+}
+
+//==============================================================================
+auto Task::Active::backup() const -> Backup
+{
+  return _generate_backup(
+    _active_phase->tag()->id(),
+    _active_phase->backup());
+}
+
+//==============================================================================
+bool Task::Active::_load_backup(std::optional<std::string> backup_state_opt)
+{
+  if (!backup_state_opt.has_value())
+    return true;
+
+  auto restore_phase_tag = std::make_shared<Phase::Tag>(
+    0,
+    "Restore from backup",
+    "The task progress is being restored from a backed up state",
+    rmf_traffic::Duration(0));
+
+  // TODO(MXG): Allow users to specify a custom clock for the log
+  const auto start_time = std::chrono::steady_clock::now();
+  auto restore_phase_log = rmf_task::Log();
+
+  auto failed_to_restore = [&]() -> bool
+  {
+    _pending_stages.clear();
+    _phase_finished(
+      std::make_shared<rmf_task::Phase::Completed>(
+        std::move(restore_phase_tag),
+        std::move(restore_phase_log),
+        start_time,
+        std::chrono::steady_clock::now()));
+
+    _finish_task();
+    return false;
+  };
+
+  // TODO(MXG): Use a formal schema to validate the input instead of validating
+  // it manually.
+  const auto state = YAML::Load(*backup_state_opt);
+  const auto& schema = state["schema_version"];
+  if (!schema)
+  {
+    restore_phase_log.error(
+      "The field [schema_version] is missing from the root directory of the "
+      "backup state:\n```\n" + *backup_state_opt + "\n```");
+
+    return failed_to_restore();
+  }
+
+  if (!schema.IsScalar())
+  {
+    restore_phase_log.error(
+      "The field [schema_version] contains an unsupported value type ["
+          + std::to_string(schema.Type()) + "] expected scalar type ["
+          + std::to_string(YAML::NodeType::Scalar) + "]\n```\n"
+          + *backup_state_opt + "\n```");
+
+    return failed_to_restore();
+  }
+
+  try
+  {
+    const auto schema_version = schema.as<std::size_t>();
+    if (schema_version != 1)
+    {
+      restore_phase_log.error(
+        "Unrecognized value for [schema_version]: "
+        + std::to_string(schema_version) +". Backup state might have been "
+        "produced by a newer or unsupported implementation.\n```"
+        + *backup_state_opt + "\n```");
+
+      return failed_to_restore();
+    }
+  }
+  catch(const YAML::BadConversion& err)
+  {
+    restore_phase_log.error(
+      std::string("Invalid data type for [schema_version]: ") + err.what()
+      + "\n```\n" + *backup_state_opt + "\n```");
+
+    return failed_to_restore();
+  }
+
 
 }
 
@@ -248,6 +369,9 @@ void Task::Active::_begin_next_stage()
   auto tag = _pending_phases.front()->tag();
   _pending_phases.erase(_pending_phases.begin());
 
+  // Reset our memory of phase backup sequence number
+  _last_phase_backup_sequence_number = std::nullopt;
+
   _current_phase_start_time = _clock();
   _active_phase = _phase_activator->activate(
     _get_state,
@@ -258,10 +382,11 @@ void Task::Active::_begin_next_stage()
       if (const auto self = me.lock())
         self->_update(snapshot);
     },
-    [me = weak_from_this()](Phase::Active::Backup backup)
+    [me = weak_from_this(), id = _active_phase->tag()->id()](
+      Phase::Active::Backup backup)
     {
       if (const auto self = me.lock())
-        self->_issue_backup(std::move(backup));
+        self->_issue_backup(id, std::move(backup));
     },
     [me = weak_from_this()]()
     {
@@ -277,9 +402,56 @@ void Task::Active::_finish_task()
 }
 
 //==============================================================================
-void Task::Active::_issue_backup(Phase::Active::Backup backup)
+void Task::Active::_issue_backup(
+  Phase::Tag::Id source_phase_id,
+  Phase::Active::Backup phase_backup) const
 {
+  if (source_phase_id != _active_phase->tag()->id())
+  {
+    // If this backup is for something other than the current phase, ignore it
+    return;
+  }
 
+  if (_last_phase_backup_sequence_number.has_value())
+  {
+    const auto cutoff = *_last_phase_backup_sequence_number;
+    if (rmf_utils::modular(phase_backup.sequence()).less_than_or_equal(cutoff))
+    {
+      // The current backup sequence number has already passed this one
+      return;
+    }
+  }
+
+  _last_phase_backup_sequence_number = phase_backup.sequence();
+  _checkpoint(_generate_backup(source_phase_id, std::move(phase_backup)));
+}
+
+//==============================================================================
+auto Task::Active::_generate_backup(
+  Phase::Tag::Id current_phase_id,
+  Phase::Active::Backup phase_backup) const -> Backup
+{
+  YAML::Node current_phase;
+  current_phase["id"] = current_phase_id;
+  if (_cancelled_on_phase.has_value())
+    current_phase["cancelled_from"] = *_cancelled_on_phase;
+
+  current_phase["backup"] = phase_backup.state();
+
+  std::vector<uint64_t> skipping_phases;
+  for (const auto& p : _pending_phases)
+  {
+    if (p->will_be_skipped())
+      skipping_phases.push_back(p->tag()->id());
+  }
+
+  YAML::Node root;
+  root["schema_version"] = 1;
+  root["current_phase"] = std::move(current_phase);
+  root["skip_phases"] = std::move(skipping_phases);
+  // TODO(MXG): Is there anything else we need to consider as part of the state?
+
+  return Backup::make(_next_task_backup_sequence_number++, YAML::Dump(root));
 }
 
 //==============================================================================
