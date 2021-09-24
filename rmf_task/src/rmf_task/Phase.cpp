@@ -195,6 +195,13 @@ auto Phase::Pending::tag() const -> const ConstTagPtr&
 }
 
 //==============================================================================
+auto Phase::Pending::will_be_skipped(bool value) -> Pending&
+{
+  _pimpl->will_be_skipped = value;
+  return *this;
+}
+
+//==============================================================================
 bool Phase::Pending::will_be_skipped() const
 {
   return _pimpl->will_be_skipped;

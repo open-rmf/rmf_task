@@ -46,6 +46,7 @@ public:
   using ConstSnapshotPtr = std::shared_ptr<const Snapshot>;
 
   class Pending;
+  using PendingPtr = std::shared_ptr<Pending>;
   using ConstPendingPtr = std::shared_ptr<const Pending>;
 };
 
@@ -176,6 +177,9 @@ public:
 
   /// Tag of the phase
   const ConstTagPtr& tag() const;
+
+  /// Change whether this pending phase will be skipped
+  Pending& will_be_skipped(bool value);
 
   /// Check if this phase is set to be skipped
   bool will_be_skipped() const;
