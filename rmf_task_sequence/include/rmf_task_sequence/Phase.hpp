@@ -174,6 +174,10 @@ public:
   ///   active phase. This snapshot can be safely read in parallel to the phase
   ///   execution.
   ///
+  /// \param[in] checkpoint
+  ///   A callback that will be triggered when the phase has reached a task
+  ///   checkpoint whose state is worth backing up.
+  ///
   /// \param[in] finished
   ///   A callback that will be triggered when the phase has finished.
   ///
@@ -187,6 +191,7 @@ public:
       const Description& description,
       std::optional<std::string> backup_state,
       std::function<void(rmf_task::Phase::ConstSnapshotPtr)> update,
+      std::function<void(Active::Backup)> checkpoint,
       std::function<void()> finished)
     >;
 
@@ -235,6 +240,12 @@ public:
 
   class Implementation;
 private:
+
+  /// \private
+  void _add_activator(
+    std::type_index type,
+    Activate<Phase::Description> activator);
+
   rmf_utils::impl_ptr<Implementation> _pimpl;
 };
 
@@ -357,5 +368,7 @@ private:
 };
 
 } // namespace rmf_task_sequence
+
+#include <rmf_task_sequence/detail/impl_Phase.hpp>
 
 #endif // RMF_TASK_SEQUENCE__PHASE_HPP
