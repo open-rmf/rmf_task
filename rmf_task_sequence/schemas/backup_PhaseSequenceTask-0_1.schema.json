@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://open-rmf.org/rmf_task_sequence/backup_PhaseSequenceTask/0.1",
+  "title": "Phase Sequence Task",
+  "description": "A task which is defined by a sequence of specified phases",
+  "properties": {
+    "schema_version": {
+      "description": "The version of the PhaseSequenceTask schema being used",
+      "const": "0.1"
+    },
+    "current_phase": {
+      "description": "The current phase of the task when the backup occurred",
+      "properties": {
+        "id": {
+          "description": "The integer ID of the phase",
+          "type": "integer",
+          "minimum": 0
+        },
+        "cancelled_from": {
+          "description": "The integer ID of the phase that was cancelled to reach the current phase",
+          "type": "integer",
+          "minimum": 0
+        },
+        "state": {
+          "description": "The serialized state of the backed up current phase"
+        }
+      },
+      "required": [ "id", "state" ]
+    },
+    "skip_phases": {
+      "description": "A list of pending phases that are supposed to be skipped",
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    }
+  },
+  "required": [ "schema_version", "current_phase" ]
+}

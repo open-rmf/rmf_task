@@ -21,7 +21,7 @@ endif()
 include(GNUInstallDirs)
 
 find_package(rmf_task REQUIRED)
-find_package(yaml-cpp REQUIRED)
+find_package(nlohmann_json REQUIRED)
 
 find_package(ament_cmake_catch2 QUIET)
 find_package(rmf_cmake_uncrustify QUIET)

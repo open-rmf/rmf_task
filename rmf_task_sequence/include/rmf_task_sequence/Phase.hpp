@@ -28,7 +28,7 @@
 
 #include <rmf_task_sequence/typedefs.hpp>
 
-#include <yaml-cpp/yaml.h>
+#include <nlohmann/json.hpp>
 
 namespace rmf_task_sequence {
 
@@ -129,13 +129,13 @@ public:
   /// \param[in] state
   ///   A serialization of the phase's state. This will be used by
   ///   Phase::Activator when restoring a Task.
-  static Backup make(uint64_t seq, YAML::Node state);
+  static Backup make(uint64_t seq, nlohmann::json state);
 
   /// Get the sequence number
   uint64_t sequence() const;
 
   /// Get the YAML representation of the backed up state
-  const YAML::Node& state() const;
+  const nlohmann::json& state() const;
 
   class Implementation;
 private:
@@ -282,7 +282,7 @@ public:
     const Parameters& parameters) const = 0;
 
   /// Serialize this phase description into a string.
-  virtual YAML::Node serialize() const = 0;
+  virtual nlohmann::json serialize() const = 0;
 
   // Virtual destructor
   virtual ~Description() = default;
