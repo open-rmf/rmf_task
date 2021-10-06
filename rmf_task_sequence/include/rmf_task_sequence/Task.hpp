@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef RMF_TASK__SEQUENCE__TASK_HPP
-#define RMF_TASK__SEQUENCE__TASK_HPP
+#ifndef RMF_TASK_SEQUENCE__TASK_HPP
+#define RMF_TASK_SEQUENCE__TASK_HPP
 
 #include <rmf_task/Request.hpp>
 #include <rmf_task/Task.hpp>
@@ -140,4 +140,4 @@ private:
 
 } // namespace rmf_task_sequence
 
-#endif // RMF_TASK__SEQUENCE__TASK_HPP
+#endif // RMF_TASK_SEQUENCE__TASK_HPP

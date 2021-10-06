@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef RMF_TASK__SEQUENCE__PHASES__DROPOFF_HPP
-#define RMF_TASK__SEQUENCE__PHASES__DROPOFF_HPP
+#ifndef RMF_TASK_SEQUENCE__PHASES__DROPOFF_HPP
+#define RMF_TASK_SEQUENCE__PHASES__DROPOFF_HPP
 
 #include <rmf_traffic/agv/Planner.hpp>
 
@@ -114,4 +114,4 @@ private:
 } // namespace phases
 } // namespace rmf_task_sequence
 
-#endif // RMF_TASK__SEQUENCE__PHASES__DROPOFF_HPP
+#endif // RMF_TASK_SEQUENCE__PHASES__DROPOFF_HPP
