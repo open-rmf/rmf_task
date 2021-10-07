@@ -9,7 +9,7 @@
 namespace rmf_task_sequence {
 namespace schemas {
 
-const std::string @lower_schema_name@ =
+const std::string @schema_name@ =
 R"raw_schema_definition(
 @lower_schema_text@)raw_schema_definition"R
 
