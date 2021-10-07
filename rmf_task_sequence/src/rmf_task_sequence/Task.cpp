@@ -21,6 +21,8 @@
 
 #include <rmf_utils/Modular.hpp>
 
+#include <rmf_task_sequence/schemas/backup_PhaseSequenceTask_v0_1.hpp>
+
 namespace rmf_task_sequence {
 
 namespace {
@@ -251,8 +253,6 @@ auto Task::Active::backup() const -> Backup
 //==============================================================================
 void Task::Active::_load_backup(std::string backup_state_str)
 {
-  // TODO(MXG): This function (and really the entire class) could be refactored
-  // into a smarter component-based design instead of this wall-of-text.
   auto restore_phase_tag = std::make_shared<Phase::Tag>(
     0,
     "Restore from backup",
@@ -263,211 +263,229 @@ void Task::Active::_load_backup(std::string backup_state_str)
   const auto start_time = std::chrono::steady_clock::now();
   auto restore_phase_log = rmf_task::Log();
 
-  const auto failed_to_restore = [&]() -> void
-    {
-      _pending_stages.clear();
-      _phase_finished(
-        std::make_shared<rmf_task::Phase::Completed>(
-          std::move(restore_phase_tag),
-          restore_phase_log.view(),
-          start_time,
-          std::chrono::steady_clock::now()));
 
-      _finish_task();
-    };
-
-  const auto get_state_text = [&]() -> std::string
-    {
-      return "\n```\n" + backup_state_str + "\n```\n";
-    };
-
-  // TODO(MXG): Use a formal schema to validate the input instead of validating
-  // it manually.
-  const auto state = YAML::Load(backup_state_str);
-  const auto& schema = state["schema_version"];
-  if (!schema)
-  {
-    restore_phase_log.error(
-      "The field [schema_version] is missing from the root directory of the "
-      "backup state:" + get_state_text());
-
-    return failed_to_restore();
-  }
-
-  if (!schema.IsScalar())
-  {
-    restore_phase_log.error(
-      "The field [schema_version] contains an unsupported value type ["
-          + std::to_string(schema.Type()) + "] expected scalar type ["
-          + std::to_string(YAML::NodeType::Scalar) + "]" + get_state_text());
-
-    return failed_to_restore();
-  }
-
-  try
-  {
-    const auto schema_version = schema.as<std::size_t>();
-    if (schema_version != 1)
-    {
-      restore_phase_log.error(
-        "Unrecognized value for [schema_version]: "
-        + std::to_string(schema_version) +". Backup state might have been "
-        "produced by a newer or unsupported implementation."
-        + get_state_text());
-
-      return failed_to_restore();
-    }
-  }
-  catch (const YAML::BadConversion& err)
-  {
-    restore_phase_log.error(
-      std::string("Invalid data type for [schema_version]: ") + err.what()
-      + get_state_text());
-
-    return failed_to_restore();
-  }
-
-  const auto current_phase_yaml = state["current_phase"];
-  if (!current_phase_yaml)
-  {
-    restore_phase_log.error(
-      "[current_phase] element missing from backup" + get_state_text());
-
-    return failed_to_restore();
-  }
-
-  const auto current_phase_id_yaml = current_phase_yaml["id"];
-  if (!current_phase_id_yaml)
-  {
-    restore_phase_log.error(
-      "[id] element missing from [current_phase]" + get_state_text());
-
-    return failed_to_restore();
-  }
-
-  const auto cancelled_from_yaml = current_phase_yaml["cancelled_from"];
-  if (cancelled_from_yaml)
-  {
-    std::optional<uint64_t> cancelled_from_phase_opt;
-    try
-    {
-      cancelled_from_phase_opt = cancelled_from_yaml.as<uint64_t>();
-    }
-    catch (const YAML::BadConversion& err)
-    {
-      restore_phase_log.error(
-        "[cancelled_from] element in [current_phase] has an invalid type"
-        + get_state_text());
-
-      return failed_to_restore();
-    }
-
-    const auto cancelled_from = cancelled_from_phase_opt.value();
-    if (cancelled_from >= _cancel_sequence_initial_id)
-    {
-      restore_phase_log.error(
-        "Invalid value [" + std::to_string(cancelled_from)
-        + "] for [cancelled_from]. Value must be less than ["
-        + std::to_string(_cancel_sequence_initial_id) + "]" + get_state_text());
-
-      return failed_to_restore();
-    }
-
-    for (const auto& stage : _pending_stages)
-    {
-      if (stage->id == cancelled_from)
-      {
-        _prepare_cancellation_sequence(stage->cancellation_sequence);
-        break;
-      }
-    }
-  }
-
-  std::optional<uint64_t> current_phase_id_opt;
-  try
-  {
-    current_phase_id_opt = current_phase_id_yaml.as<uint64_t>();
-  }
-  catch (const YAML::BadConversion& err)
-  {
-    restore_phase_log.error(
-      "[id] element in [current_phase] has an invalid type" + get_state_text());
-
-    return failed_to_restore();
-  }
-
-  const auto current_phase_id = current_phase_id_opt.value();
-  bool found_phase = false;
-  while (!found_phase)
-  {
-    const auto stage = _pending_stages.front();
-    if (stage->id != current_phase_id)
-    {
-      _pending_stages.pop_front();
-      continue;
-    }
-
-    found_phase = true;
-  }
-
-  const auto skip_phases_yaml = state["skip_phases"];
-  if (skip_phases_yaml)
-  {
-    std::vector<uint64_t> skip_phases;
-    try
-    {
-      skip_phases = skip_phases_yaml.as<std::vector<uint64_t>>();
-    }
-    catch (const YAML::BadConversion& err)
-    {
-      restore_phase_log.error(
-        std::string("Invalid data type for [skip_phases]: ") + err.what()
-        + get_state_text());
-
-      return failed_to_restore();
-    }
-
-    auto pending_it = _pending_phases.begin();
-    for (const auto& id : skip_phases)
-    {
-      if (id == 0)
-      {
-        // This should probably issue a warning, because this would be kind of
-        // weird, but not really a problem
-        continue;
-      }
-
-      if (pending_it == _pending_phases.end()
-        || id < (*pending_it)->tag()->id())
-      {
-        // This shouldn't happen, but it's not a critical error. In the worst
-        // case, the operator needs to resend a skip command.
-        restore_phase_log.warn(
-          "Unexpected ordering of phase skip IDs" + get_state_text());
-        continue;
-      }
-
-      while (pending_it != _pending_phases.end()
-        && (*pending_it)->tag()->id() < id)
-      {
-        ++pending_it;
-      }
-
-      (*pending_it)->will_be_skipped(true);
-    }
-  }
-
-  const auto phase_state_yaml = current_phase_yaml["state"];
-  if (!phase_state_yaml)
-  {
-    restore_phase_log.error(
-      "Missing [state] field for [current_phase]" + get_state_text());
-
-    return failed_to_restore();
-  }
-
-  _begin_next_stage(phase_state_yaml.as<std::string>());
 }
+
+////==============================================================================
+//void Task::Active::_load_backup(std::string backup_state_str)
+//{
+//  // TODO(MXG): This function (and really the entire class) could be refactored
+//  // into a smarter component-based design instead of this wall-of-text.
+//  auto restore_phase_tag = std::make_shared<Phase::Tag>(
+//    0,
+//    "Restore from backup",
+//    "The task progress is being restored from a backed up state",
+//    rmf_traffic::Duration(0));
+
+//  // TODO(MXG): Allow users to specify a custom clock for the log
+//  const auto start_time = std::chrono::steady_clock::now();
+//  auto restore_phase_log = rmf_task::Log();
+
+//  const auto failed_to_restore = [&]() -> void
+//    {
+//      _pending_stages.clear();
+//      _phase_finished(
+//        std::make_shared<rmf_task::Phase::Completed>(
+//          std::move(restore_phase_tag),
+//          restore_phase_log.view(),
+//          start_time,
+//          std::chrono::steady_clock::now()));
+
+//      _finish_task();
+//    };
+
+//  const auto get_state_text = [&]() -> std::string
+//    {
+//      return "\n```\n" + backup_state_str + "\n```\n";
+//    };
+
+//  // TODO(MXG): Use a formal schema to validate the input instead of validating
+//  // it manually.
+//  const auto state = YAML::Load(backup_state_str);
+//  const auto& schema = state["schema_version"];
+//  if (!schema)
+//  {
+//    restore_phase_log.error(
+//      "The field [schema_version] is missing from the root directory of the "
+//      "backup state:" + get_state_text());
+
+//    return failed_to_restore();
+//  }
+
+//  if (!schema.IsScalar())
+//  {
+//    restore_phase_log.error(
+//      "The field [schema_version] contains an unsupported value type ["
+//          + std::to_string(schema.Type()) + "] expected scalar type ["
+//          + std::to_string(YAML::NodeType::Scalar) + "]" + get_state_text());
+
+//    return failed_to_restore();
+//  }
+
+//  try
+//  {
+//    const auto schema_version = schema.as<std::size_t>();
+//    if (schema_version != 1)
+//    {
+//      restore_phase_log.error(
+//        "Unrecognized value for [schema_version]: "
+//        + std::to_string(schema_version) +". Backup state might have been "
+//        "produced by a newer or unsupported implementation."
+//        + get_state_text());
+
+//      return failed_to_restore();
+//    }
+//  }
+//  catch (const YAML::BadConversion& err)
+//  {
+//    restore_phase_log.error(
+//      std::string("Invalid data type for [schema_version]: ") + err.what()
+//      + get_state_text());
+
+//    return failed_to_restore();
+//  }
+
+//  const auto current_phase_yaml = state["current_phase"];
+//  if (!current_phase_yaml)
+//  {
+//    restore_phase_log.error(
+//      "[current_phase] element missing from backup" + get_state_text());
+
+//    return failed_to_restore();
+//  }
+
+//  const auto current_phase_id_yaml = current_phase_yaml["id"];
+//  if (!current_phase_id_yaml)
+//  {
+//    restore_phase_log.error(
+//      "[id] element missing from [current_phase]" + get_state_text());
+
+//    return failed_to_restore();
+//  }
+
+//  const auto cancelled_from_yaml = current_phase_yaml["cancelled_from"];
+//  if (cancelled_from_yaml)
+//  {
+//    std::optional<uint64_t> cancelled_from_phase_opt;
+//    try
+//    {
+//      cancelled_from_phase_opt = cancelled_from_yaml.as<uint64_t>();
+//    }
+//    catch (const YAML::BadConversion& err)
+//    {
+//      restore_phase_log.error(
+//        "[cancelled_from] element in [current_phase] has an invalid type"
+//        + get_state_text());
+
+//      return failed_to_restore();
+//    }
+
+//    const auto cancelled_from = cancelled_from_phase_opt.value();
+//    if (cancelled_from >= _cancel_sequence_initial_id)
+//    {
+//      restore_phase_log.error(
+//        "Invalid value [" + std::to_string(cancelled_from)
+//        + "] for [cancelled_from]. Value must be less than ["
+//        + std::to_string(_cancel_sequence_initial_id) + "]" + get_state_text());
+
+//      return failed_to_restore();
+//    }
+
+//    for (const auto& stage : _pending_stages)
+//    {
+//      if (stage->id == cancelled_from)
+//      {
+//        _prepare_cancellation_sequence(stage->cancellation_sequence);
+//        break;
+//      }
+//    }
+//  }
+
+//  std::optional<uint64_t> current_phase_id_opt;
+//  try
+//  {
+//    current_phase_id_opt = current_phase_id_yaml.as<uint64_t>();
+//  }
+//  catch (const YAML::BadConversion& err)
+//  {
+//    restore_phase_log.error(
+//      "[id] element in [current_phase] has an invalid type" + get_state_text());
+
+//    return failed_to_restore();
+//  }
+
+//  const auto current_phase_id = current_phase_id_opt.value();
+//  bool found_phase = false;
+//  while (!found_phase)
+//  {
+//    const auto stage = _pending_stages.front();
+//    if (stage->id != current_phase_id)
+//    {
+//      _pending_stages.pop_front();
+//      continue;
+//    }
+
+//    found_phase = true;
+//  }
+
+//  const auto skip_phases_yaml = state["skip_phases"];
+//  if (skip_phases_yaml)
+//  {
+//    std::vector<uint64_t> skip_phases;
+//    try
+//    {
+//      skip_phases = skip_phases_yaml.as<std::vector<uint64_t>>();
+//    }
+//    catch (const YAML::BadConversion& err)
+//    {
+//      restore_phase_log.error(
+//        std::string("Invalid data type for [skip_phases]: ") + err.what()
+//        + get_state_text());
+
+//      return failed_to_restore();
+//    }
+
+//    auto pending_it = _pending_phases.begin();
+//    for (const auto& id : skip_phases)
+//    {
+//      if (id == 0)
+//      {
+//        // This should probably issue a warning, because this would be kind of
+//        // weird, but not really a problem
+//        continue;
+//      }
+
+//      if (pending_it == _pending_phases.end()
+//        || id < (*pending_it)->tag()->id())
+//      {
+//        // This shouldn't happen, but it's not a critical error. In the worst
+//        // case, the operator needs to resend a skip command.
+//        restore_phase_log.warn(
+//          "Unexpected ordering of phase skip IDs" + get_state_text());
+//        continue;
+//      }
+
+//      while (pending_it != _pending_phases.end()
+//        && (*pending_it)->tag()->id() < id)
+//      {
+//        ++pending_it;
+//      }
+
+//      (*pending_it)->will_be_skipped(true);
+//    }
+//  }
+
+//  const auto phase_state_yaml = current_phase_yaml["state"];
+//  if (!phase_state_yaml)
+//  {
+//    restore_phase_log.error(
+//      "Missing [state] field for [current_phase]" + get_state_text());
+
+//    return failed_to_restore();
+//  }
+
+//  _begin_next_stage(phase_state_yaml.as<std::string>());
+//}
 
 //==============================================================================
 void Task::Active::_generate_pending_phases()
@@ -601,7 +619,7 @@ auto Task::Active::_generate_backup(
   Phase::Tag::Id current_phase_id,
   Phase::Active::Backup phase_backup) const -> Backup
 {
-  YAML::Node current_phase;
+  nlohmann::json current_phase;
   current_phase["id"] = current_phase_id;
   if (_cancelled_on_phase.has_value())
     current_phase["cancelled_from"] = *_cancelled_on_phase;
@@ -615,13 +633,13 @@ auto Task::Active::_generate_backup(
       skipping_phases.push_back(p->tag()->id());
   }
 
-  YAML::Node root;
+  nlohmann::json root;
   root["schema_version"] = 1;
   root["current_phase"] = std::move(current_phase);
   root["skip_phases"] = std::move(skipping_phases);
   // TODO(MXG): Is there anything else we need to consider as part of the state?
 
-  return Backup::make(_next_task_backup_sequence_number++, YAML::Dump(root));
+  return Backup::make(_next_task_backup_sequence_number++, root.dump());
 }
 
 //==============================================================================

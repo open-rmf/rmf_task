@@ -103,7 +103,7 @@ public:
     const Parameters& parameters) const final;
 
   // Documentation inherited
-  YAML::Node serialize() const final;
+  nlohmann::json serialize() const final;
 
   class Implementation;
 private:
