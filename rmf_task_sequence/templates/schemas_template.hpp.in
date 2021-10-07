@@ -7,12 +7,14 @@
 #ifndef RMF_TASK_SEQUENCE__SCHEMAS__@upper_schema_name@
 #define RMF_TASK_SEQUENCE__SCHEMAS__@upper_schema_name@
 
+#include <nlohmann/json.hpp>
+
 namespace rmf_task_sequence {
 namespace schemas {
 
-constexpr const char* const @schema_name@ =
+static const nlohmann::json @schema_name@ =
 R"raw_schema(
-@schema_text@)raw_schema";
+@schema_text@)raw_schema"_json;
 
 } // namespace schemas
 } // namespace rmf_task_sequence

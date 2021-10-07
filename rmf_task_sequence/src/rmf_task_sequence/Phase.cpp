@@ -29,11 +29,10 @@ public:
 };
 
 //==============================================================================
-Phase::ActivePtr Phase::Activator::activate(
-  std::function<State()> get_state,
+Phase::ActivePtr Phase::Activator::activate(std::function<State()> get_state,
   ConstTagPtr tag,
   const Description& description,
-  std::optional<std::string> backup_state,
+  std::optional<nlohmann::json> backup_state,
   std::function<void(rmf_task::Phase::ConstSnapshotPtr)> update,
   std::function<void(Active::Backup)> checkpoint,
   std::function<void()> finished) const
