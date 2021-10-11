@@ -300,7 +300,7 @@ void Task::Active::_load_backup(std::string backup_state_str)
   {
     restore_phase_log.error(
       "Error in state data while trying to restore task from backup: " +
-      result->message);
+      result->message + "\n - Original message:" + get_state_text());
 
     return failed_to_restore();
   }
