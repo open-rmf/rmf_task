@@ -78,21 +78,20 @@ class Phase::Completed::Implementation
 public:
 
   ConstTagPtr tag;
-  Log::View log;
+  ConstSnapshotPtr snapshot;
   rmf_traffic::Time start;
   rmf_traffic::Time finish;
 };
 
 //==============================================================================
-Phase::Completed::Completed(
-  ConstTagPtr tag_,
-  Log::View log_,
+Phase::Completed::Completed(ConstTagPtr tag_,
+  ConstSnapshotPtr snapshot_,
   rmf_traffic::Time start_,
   rmf_traffic::Time finish_)
 : _pimpl(rmf_utils::make_impl<Implementation>(
   Implementation{
     std::move(tag_),
-    std::move(log_),
+    std::move(snapshot_),
     start_,
     finish_
   }))
@@ -107,9 +106,9 @@ auto Phase::Completed::tag() const -> const ConstTagPtr&
 }
 
 //==============================================================================
-const Log::View& Phase::Completed::log() const
+auto Phase::Completed::snapshot() const -> const ConstSnapshotPtr&
 {
-  return _pimpl->log;
+  return _pimpl->snapshot;
 }
 
 //==============================================================================
