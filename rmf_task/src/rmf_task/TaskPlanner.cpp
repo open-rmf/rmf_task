@@ -169,14 +169,14 @@ class TaskPlanner::Assignment::Implementation
 public:
 
   rmf_task::ConstRequestPtr request;
-  State state;
+  std::optional<State> state;
   rmf_traffic::Time deployment_time;
 };
 
 //==============================================================================
 TaskPlanner::Assignment::Assignment(
   rmf_task::ConstRequestPtr request,
-  State state,
+  std::optional<State> state,
   rmf_traffic::Time deployment_time)
 : _pimpl(rmf_utils::make_impl<Implementation>(
       Implementation{
@@ -469,7 +469,7 @@ public:
         if (charge_battery_estimate.has_value())
         {
           model = request->description()->make_model(
-            charge_battery_estimate.value().finish_state().time().value(),
+            charge_battery_estimate.value().finish_state()->time().value(),
             config.parameters());
           estimate = model->estimate_finish(
             charge_battery_estimate.value().finish_state(),

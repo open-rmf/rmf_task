@@ -113,7 +113,7 @@ std::shared_ptr<Candidates> Candidates::make(
     if (finish.has_value())
     {
       initial_map.insert({
-          finish.value().finish_state().time().value(),
+          finish.value().finish_state()->time().value(),
           Entry{
             i,
             finish.value().finish_state(),

@@ -53,7 +53,7 @@ public:
   struct Entry
   {
     std::size_t candidate;
-    State state;
+    std::optional<State> state;
     rmf_traffic::Time wait_until;
     State previous_state;
     bool require_charge_battery = false;

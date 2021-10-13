@@ -27,30 +27,33 @@ class Estimate::Implementation
 {
 public:
 
-  Implementation(State finish_state, rmf_traffic::Time wait_until)
+  Implementation(
+    std::optional<State> finish_state, rmf_traffic::Time wait_until)
   : _finish_state(std::move(finish_state)),
     _wait_until(std::move(wait_until))
   {}
 
-  State _finish_state;
+  std::optional<State> _finish_state;
   rmf_traffic::Time _wait_until;
 };
 
 //==============================================================================
-Estimate::Estimate(State finish_state, rmf_traffic::Time wait_until)
+Estimate::Estimate(
+  std::optional<State> finish_state,
+  rmf_traffic::Time wait_until)
 : _pimpl(rmf_utils::make_impl<Implementation>(
       std::move(finish_state), std::move(wait_until)))
 {
 }
 
 //==============================================================================
-State Estimate::finish_state() const
+ std::optional<State> Estimate::finish_state() const
 {
   return _pimpl->_finish_state;
 }
 
 //==============================================================================
-Estimate& Estimate::finish_state(State new_finish_state)
+Estimate& Estimate::finish_state(std::optional<State> new_finish_state)
 {
   _pimpl->_finish_state = std::move(new_finish_state);
   return *this;
