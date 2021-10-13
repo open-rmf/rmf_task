@@ -20,11 +20,11 @@
 
 #include <rmf_task/Phase.hpp>
 
-namespace rmf_task_sequence {
+namespace rmf_task {
 namespace phases {
 
 //==============================================================================
-class RestoreBackup
+class RestoreBackup : public Phase
 {
 public:
 
@@ -36,11 +36,19 @@ public:
 };
 
 //==============================================================================
-class RestoreBackup::Active
+class RestoreBackup::Active : public Phase::Active
 {
 public:
 
+  /// Make an active RestoreBackup phase
   static ActivePtr make(std::string backup_state_str);
+
+  // Documentation inherited
+  ConstTagPtr tag() const final;
+
+  // Documentation inherited
+  ConstConditionPtr finish_condition() const final;
+
 
 
 
@@ -51,6 +59,6 @@ private:
 };
 
 } // namespace phases
-} // namespace rmf_task_sequence
+} // namespace rmf_task
 
 #endif // RMF_TASK__PHASES__RESTOREBACKUP_HPP
