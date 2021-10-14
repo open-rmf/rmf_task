@@ -89,12 +89,12 @@ Task::Tag::Tag(
   std::string detail_,
   rmf_traffic::Time original_finish_estimate_)
 : _pimpl(rmf_utils::make_impl<Implementation>(
-    Implementation{
-      std::move(booking_),
-      std::move(category_),
-      std::move(detail_),
-      original_finish_estimate_
-    }))
+      Implementation{
+        std::move(booking_),
+        std::move(category_),
+        std::move(detail_),
+        original_finish_estimate_
+      }))
 {
   // Do nothing
 }

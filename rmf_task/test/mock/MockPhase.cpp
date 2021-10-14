@@ -25,12 +25,12 @@ MockPhase::Active::Active(
   ConstTagPtr tag_,
   std::function<void(Phase::ConstSnapshotPtr)> update_,
   std::function<void()> phase_finished_)
-  : _tag(std::move(tag_)),
-    _condition(std::make_shared<MockCondition>(
+: _tag(std::move(tag_)),
+  _condition(std::make_shared<MockCondition>(
       "Mock condition", "This is a mocked up condition")),
-    _start_time(start_time_),
-    _update(std::move(update_)),
-    _phase_finished(std::move(phase_finished_))
+  _start_time(start_time_),
+  _update(std::move(update_)),
+  _phase_finished(std::move(phase_finished_))
 {
   // Do nothing
 }

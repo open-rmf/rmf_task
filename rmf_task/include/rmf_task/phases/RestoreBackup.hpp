@@ -49,9 +49,6 @@ public:
   // Documentation inherited
   ConstConditionPtr finish_condition() const final;
 
-
-
-
   class Implementation;
 private:
   Active();

@@ -24,9 +24,9 @@ MockCondition::MockCondition(
   std::string name_,
   std::string detail_,
   Status initial_status)
-  : _status(initial_status),
-    _name(std::move(name_)),
-    _detail(std::move(detail_))
+: _status(initial_status),
+  _name(std::move(name_)),
+  _detail(std::move(detail_))
 {
   // Do nothing
 }
