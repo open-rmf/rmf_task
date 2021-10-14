@@ -47,7 +47,7 @@ public:
   ConstTagPtr tag() const final;
 
   // Documentation inherited
-  ConstConditionPtr finish_condition() const final;
+  ConstEventPtr finish_event() const final;
 
   class Implementation;
 private:

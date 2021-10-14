@@ -18,7 +18,7 @@
 #ifndef RMF_TASK__EXECUTE__PHASE_HPP
 #define RMF_TASK__EXECUTE__PHASE_HPP
 
-#include <rmf_task/Condition.hpp>
+#include <rmf_task/Event.hpp>
 
 #include <rmf_traffic/Time.hpp>
 
@@ -134,8 +134,8 @@ public:
   /// Tag of the phase
   virtual ConstTagPtr tag() const = 0;
 
-  /// The condition that needs to be satisfied for this phase to be complete
-  virtual ConstConditionPtr finish_condition() const = 0;
+  /// The Event that needs to finish for this phase to be complete
+  virtual ConstEventPtr finish_event() const = 0;
 
   /// The estimated finish time for this phase
   virtual rmf_traffic::Time estimate_finish_time() const = 0;
@@ -156,7 +156,7 @@ public:
   ConstTagPtr tag() const final;
 
   // Documentation inherited
-  ConstConditionPtr finish_condition() const final;
+  ConstEventPtr finish_event() const final;
 
   // Documentation inherited
   rmf_traffic::Time estimate_finish_time() const final;

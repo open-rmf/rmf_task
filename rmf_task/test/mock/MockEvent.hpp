@@ -15,19 +15,19 @@
  *
 */
 
-#ifndef TEST__MOCK__MOCKCONDITION_HPP
-#define TEST__MOCK__MOCKCONDITION_HPP
+#ifndef TEST__MOCK__MOCKEVENT_HPP
+#define TEST__MOCK__MOCKEVENT_HPP
 
-#include <rmf_task/Condition.hpp>
+#include <rmf_task/Event.hpp>
 
 namespace test_rmf_task {
 
 //==============================================================================
-class MockCondition : public rmf_task::Condition
+class MockEvent : public rmf_task::Event
 {
 public:
 
-  MockCondition(
+  MockEvent(
     std::string name_,
     std::string detail_,
     Status initial_status = Status::Standby);
@@ -37,14 +37,14 @@ public:
   std::string name() const final;
   std::string detail() const final;
   rmf_task::Log::View log() const final;
-  std::vector<rmf_task::ConstConditionPtr> subconditions() const final;
+  std::vector<rmf_task::ConstEventPtr> dependencies() const final;
 
   // Fields
   Status _status;
   std::string _name;
   std::string _detail;
   rmf_task::Log _log;
-  std::vector<std::shared_ptr<MockCondition>> _subconditions;
+  std::vector<std::shared_ptr<MockEvent>> _dependencies;
 
 };
 

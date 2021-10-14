@@ -15,30 +15,30 @@
  *
 */
 
-#include <rmf_task/Condition.hpp>
+#include <rmf_task/Event.hpp>
 
 namespace rmf_task {
 
 namespace {
 //==============================================================================
-std::vector<ConstConditionPtr> snapshot_conditions(
-  const std::vector<ConstConditionPtr>& queue)
+std::vector<ConstEventPtr> snapshot_dependencies(
+  const std::vector<ConstEventPtr>& queue)
 {
   // NOTE(MXG): This implementation is using recursion. That should be fine
-  // since I don't expect much depth in the trees of subconditions, but we may
+  // since I don't expect much depth in the trees of dependencies, but we may
   // want to revisit this and implement it as a queue instead if we ever find
   // a use-case with deep recursion.
-  std::vector<ConstConditionPtr> output;
+  std::vector<ConstEventPtr> output;
   output.reserve(queue.size());
   for (const auto& c : queue)
-    output.push_back(Condition::Snapshot::make(*c));
+    output.push_back(Event::Snapshot::make(*c));
 
   return output;
 }
 } // anonymous namespace
 
 //==============================================================================
-class Condition::Snapshot::Implementation
+class Event::Snapshot::Implementation
 {
 public:
 
@@ -46,12 +46,12 @@ public:
   std::string name;
   std::string detail;
   Log::View log;
-  std::vector<ConstConditionPtr> subconditions;
+  std::vector<ConstEventPtr> dependencies;
 
 };
 
 //==============================================================================
-ConstConditionPtr Condition::Snapshot::make(const Condition& other)
+ConstEventPtr Event::Snapshot::make(const Event& other)
 {
   Snapshot output;
   output._pimpl = rmf_utils::make_impl<Implementation>(
@@ -60,44 +60,44 @@ ConstConditionPtr Condition::Snapshot::make(const Condition& other)
       other.name(),
       other.detail(),
       other.log(),
-      snapshot_conditions(other.subconditions())
+      snapshot_dependencies(other.dependencies())
     });
 
   return std::make_shared<Snapshot>(std::move(output));
 }
 
 //==============================================================================
-auto Condition::Snapshot::status() const -> Status
+auto Event::Snapshot::status() const -> Status
 {
   return _pimpl->status;
 }
 
 //==============================================================================
-std::string Condition::Snapshot::name() const
+std::string Event::Snapshot::name() const
 {
   return _pimpl->name;
 }
 
 //==============================================================================
-std::string Condition::Snapshot::detail() const
+std::string Event::Snapshot::detail() const
 {
   return _pimpl->detail;
 }
 
 //==============================================================================
-Log::View Condition::Snapshot::log() const
+Log::View Event::Snapshot::log() const
 {
   return _pimpl->log;
 }
 
 //==============================================================================
-std::vector<ConstConditionPtr> Condition::Snapshot::subconditions() const
+std::vector<ConstEventPtr> Event::Snapshot::dependencies() const
 {
-  return _pimpl->subconditions;
+  return _pimpl->dependencies;
 }
 
 //==============================================================================
-Condition::Snapshot::Snapshot()
+Event::Snapshot::Snapshot()
 {
   // Do nothing
 }

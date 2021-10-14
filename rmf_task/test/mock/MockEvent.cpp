@@ -15,12 +15,12 @@
  *
 */
 
-#include "MockCondition.hpp"
+#include "MockEvent.hpp"
 
 namespace test_rmf_task {
 
 //==============================================================================
-MockCondition::MockCondition(
+MockEvent::MockEvent(
   std::string name_,
   std::string detail_,
   Status initial_status)
@@ -32,34 +32,34 @@ MockCondition::MockCondition(
 }
 
 //==============================================================================
-auto MockCondition::status() const -> Status
+auto MockEvent::status() const -> Status
 {
   return _status;
 }
 
 //==============================================================================
-std::string MockCondition::name() const
+std::string MockEvent::name() const
 {
   return _name;
 }
 
 //==============================================================================
-std::string MockCondition::detail() const
+std::string MockEvent::detail() const
 {
   return _detail;
 }
 
 //==============================================================================
-rmf_task::Log::View MockCondition::log() const
+rmf_task::Log::View MockEvent::log() const
 {
   return _log.view();
 }
 
 //==============================================================================
-std::vector<rmf_task::ConstConditionPtr> MockCondition::subconditions() const
+std::vector<rmf_task::ConstEventPtr> MockEvent::dependencies() const
 {
-  return std::vector<rmf_task::ConstConditionPtr>(
-    _subconditions.begin(), _subconditions.end());
+  return std::vector<rmf_task::ConstEventPtr>(
+    _dependencies.begin(), _dependencies.end());
 }
 
 } // namespace test_rmf_task

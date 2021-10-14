@@ -20,7 +20,7 @@
 
 #include <rmf_task/Phase.hpp>
 
-#include "MockCondition.hpp"
+#include "MockEvent.hpp"
 
 namespace test_rmf_task {
 
@@ -41,13 +41,13 @@ public:
       std::function<void()> phase_finished_);
 
     ConstTagPtr tag() const final;
-    rmf_task::ConstConditionPtr finish_condition() const final;
+    rmf_task::ConstEventPtr finish_event() const final;
     rmf_traffic::Time estimate_finish_time() const final;
 
     void send_update() const;
 
     ConstTagPtr _tag;
-    std::shared_ptr<MockCondition> _condition;
+    std::shared_ptr<MockEvent> _event;
     rmf_traffic::Time _start_time;
     std::function<void(Phase::ConstSnapshotPtr)> _update;
     std::function<void()> _phase_finished;

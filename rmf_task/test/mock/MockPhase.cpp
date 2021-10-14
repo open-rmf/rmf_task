@@ -26,7 +26,7 @@ MockPhase::Active::Active(
   std::function<void(Phase::ConstSnapshotPtr)> update_,
   std::function<void()> phase_finished_)
 : _tag(std::move(tag_)),
-  _condition(std::make_shared<MockCondition>(
+  _event(std::make_shared<MockEvent>(
       "Mock condition", "This is a mocked up condition")),
   _start_time(start_time_),
   _update(std::move(update_)),
@@ -42,9 +42,9 @@ rmf_task::Phase::ConstTagPtr MockPhase::Active::tag() const
 }
 
 //==============================================================================
-rmf_task::ConstConditionPtr MockPhase::Active::finish_condition() const
+rmf_task::ConstEventPtr MockPhase::Active::finish_event() const
 {
-  return _condition;
+  return _event;
 }
 
 //==============================================================================

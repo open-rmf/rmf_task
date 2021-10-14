@@ -129,7 +129,7 @@ class Phase::Snapshot::Implementation
 {
 public:
   ConstTagPtr tag;
-  ConstConditionPtr finish_condition;
+  ConstEventPtr finish_event;
   rmf_traffic::Time estimated_finish_time;
 };
 
@@ -140,7 +140,7 @@ Phase::ConstSnapshotPtr Phase::Snapshot::make(const Active& active)
   output._pimpl = rmf_utils::make_impl<Implementation>(
     Implementation{
       active.tag(),
-      Condition::Snapshot::make(*active.finish_condition()),
+      Event::Snapshot::make(*active.finish_event()),
       active.estimate_finish_time()
     });
 
@@ -154,9 +154,9 @@ Phase::ConstTagPtr Phase::Snapshot::tag() const
 }
 
 //==============================================================================
-ConstConditionPtr Phase::Snapshot::finish_condition() const
+ConstEventPtr Phase::Snapshot::finish_event() const
 {
-  return _pimpl->finish_condition;
+  return _pimpl->finish_event;
 }
 
 //==============================================================================
