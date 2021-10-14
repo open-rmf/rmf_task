@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef RMF_TASK__SEQUENCE__PHASES__GOTOPLACE_HPP
-#define RMF_TASK__SEQUENCE__PHASES__GOTOPLACE_HPP
+#ifndef RMF_TASK_SEQUENCE__PHASES__GOTOPLACE_HPP
+#define RMF_TASK_SEQUENCE__PHASES__GOTOPLACE_HPP
 
 #include <rmf_traffic/agv/Planner.hpp>
 
@@ -68,7 +68,7 @@ public:
     const rmf_task::Parameters& parameters) const final;
 
   // Documentation inherited
-  YAML::Node serialize() const final;
+  nlohmann::json serialize() const final;
 
   class Implementation;
 private:
@@ -79,4 +79,4 @@ private:
 } // namespace phases
 } // namespace rmf_task_sequence
 
-#endif // RMF_TASK__SEQUENCE__PHASES__GOTOPLACE_HPP
+#endif // RMF_TASK_SEQUENCE__PHASES__GOTOPLACE_HPP

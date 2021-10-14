@@ -10,7 +10,8 @@
   <author>Grey</author>
 
   <depend>rmf_task</depend>
-  <depend>yaml-cpp</depend>
+  <depend>nlohmann-json3-dev</depend>
+  <depend>nlohmann_json_schema_validator_vendor</depend>
 
   <test_depend>ament_cmake_catch2</test_depend>
   <test_depend>rmf_cmake_uncrustify</test_depend>

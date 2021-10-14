@@ -21,6 +21,13 @@
 
 #include <rmf_utils/Modular.hpp>
 
+#include <rmf_task_sequence/schemas/ErrorHandler.hpp>
+#include <rmf_task_sequence/schemas/backup_PhaseSequenceTask_v0_1.hpp>
+
+#include <nlohmann/json-schema.hpp>
+
+#include <cstring>
+
 namespace rmf_task_sequence {
 
 namespace {
@@ -139,6 +146,8 @@ public:
   /// Get a weak reference to this object
   std::weak_ptr<Active> weak_from_this() const;
 
+  static const nlohmann::json_schema::json_validator backup_schema_validator;
+
 private:
 
   /// _load_backup should only be used in the make(~) function. It will
@@ -151,7 +160,7 @@ private:
   void _generate_pending_phases();
 
   void _finish_phase();
-  void _begin_next_stage(std::optional<std::string> restore = std::nullopt);
+  void _begin_next_stage(std::optional<nlohmann::json> restore = std::nullopt);
   void _finish_task();
 
   void _prepare_cancellation_sequence(
@@ -222,6 +231,12 @@ private:
 };
 
 //==============================================================================
+const nlohmann::json_schema::json_validator
+Task::Active::backup_schema_validator =
+  nlohmann::json_schema::json_validator(
+    schemas::backup_PhaseSequenceTask_v0_1);
+
+//==============================================================================
 auto Task::Builder::add_phase(
   Phase::ConstDescriptionPtr description,
   std::vector<Phase::ConstDescriptionPtr> cancellation_sequence) -> Builder&
@@ -251,8 +266,6 @@ auto Task::Active::backup() const -> Backup
 //==============================================================================
 void Task::Active::_load_backup(std::string backup_state_str)
 {
-  // TODO(MXG): This function (and really the entire class) could be refactored
-  // into a smarter component-based design instead of this wall-of-text.
   auto restore_phase_tag = std::make_shared<Phase::Tag>(
     0,
     "Restore from backup",
@@ -262,6 +275,11 @@ void Task::Active::_load_backup(std::string backup_state_str)
   // TODO(MXG): Allow users to specify a custom clock for the log
   const auto start_time = std::chrono::steady_clock::now();
   auto restore_phase_log = rmf_task::Log();
+
+  const auto get_state_text = [&]() -> std::string
+    {
+      return "\n```\n" + backup_state_str + "\n```\n";
+    };
 
   const auto failed_to_restore = [&]() -> void
     {
@@ -276,93 +294,22 @@ void Task::Active::_load_backup(std::string backup_state_str)
       _finish_task();
     };
 
-  const auto get_state_text = [&]() -> std::string
-    {
-      return "\n```\n" + backup_state_str + "\n```\n";
-    };
-
-  // TODO(MXG): Use a formal schema to validate the input instead of validating
-  // it manually.
-  const auto state = YAML::Load(backup_state_str);
-  const auto& schema = state["schema_version"];
-  if (!schema)
+  const auto backup_state = nlohmann::json::parse(backup_state_str);
+  if (const auto result =
+      schemas::ErrorHandler::has_error(backup_schema_validator, backup_state))
   {
     restore_phase_log.error(
-      "The field [schema_version] is missing from the root directory of the "
-      "backup state:" + get_state_text());
+      "Error in state data while trying to restore task from backup: " +
+      result->message + "\n - Original message:" + get_state_text());
 
     return failed_to_restore();
   }
 
-  if (!schema.IsScalar())
+  const auto& current_phase_json = backup_state["current_phase"];
+  const auto& cancelled_from_json = current_phase_json["cancelled_from"];
+  if (cancelled_from_json)
   {
-    restore_phase_log.error(
-      "The field [schema_version] contains an unsupported value type ["
-          + std::to_string(schema.Type()) + "] expected scalar type ["
-          + std::to_string(YAML::NodeType::Scalar) + "]" + get_state_text());
-
-    return failed_to_restore();
-  }
-
-  try
-  {
-    const auto schema_version = schema.as<std::size_t>();
-    if (schema_version != 1)
-    {
-      restore_phase_log.error(
-        "Unrecognized value for [schema_version]: "
-        + std::to_string(schema_version) +". Backup state might have been "
-        "produced by a newer or unsupported implementation."
-        + get_state_text());
-
-      return failed_to_restore();
-    }
-  }
-  catch (const YAML::BadConversion& err)
-  {
-    restore_phase_log.error(
-      std::string("Invalid data type for [schema_version]: ") + err.what()
-      + get_state_text());
-
-    return failed_to_restore();
-  }
-
-  const auto current_phase_yaml = state["current_phase"];
-  if (!current_phase_yaml)
-  {
-    restore_phase_log.error(
-      "[current_phase] element missing from backup" + get_state_text());
-
-    return failed_to_restore();
-  }
-
-  const auto current_phase_id_yaml = current_phase_yaml["id"];
-  if (!current_phase_id_yaml)
-  {
-    restore_phase_log.error(
-      "[id] element missing from [current_phase]" + get_state_text());
-
-    return failed_to_restore();
-  }
-
-  const auto cancelled_from_yaml = current_phase_yaml["cancelled_from"];
-  if (cancelled_from_yaml)
-  {
-    std::optional<uint64_t> cancelled_from_phase_opt;
-    try
-    {
-      cancelled_from_phase_opt = cancelled_from_yaml.as<uint64_t>();
-    }
-    catch (const YAML::BadConversion& err)
-    {
-      restore_phase_log.error(
-        "[cancelled_from] element in [current_phase] has an invalid type"
-        + get_state_text());
-
-      return failed_to_restore();
-    }
-
-    const auto cancelled_from = cancelled_from_phase_opt.value();
+    const auto cancelled_from = cancelled_from_json.get<uint64_t>();
     if (cancelled_from >= _cancel_sequence_initial_id)
     {
       restore_phase_log.error(
@@ -383,22 +330,10 @@ void Task::Active::_load_backup(std::string backup_state_str)
     }
   }
 
-  std::optional<uint64_t> current_phase_id_opt;
-  try
-  {
-    current_phase_id_opt = current_phase_id_yaml.as<uint64_t>();
-  }
-  catch (const YAML::BadConversion& err)
-  {
-    restore_phase_log.error(
-      "[id] element in [current_phase] has an invalid type" + get_state_text());
-
-    return failed_to_restore();
-  }
-
-  const auto current_phase_id = current_phase_id_opt.value();
+  const auto& current_phase_id_json = current_phase_json["id"];
+  const auto current_phase_id = current_phase_id_json.get<uint64_t>();
   bool found_phase = false;
-  while (!found_phase)
+  while (!found_phase && !_pending_stages.empty())
   {
     const auto stage = _pending_stages.front();
     if (stage->id != current_phase_id)
@@ -410,35 +345,37 @@ void Task::Active::_load_backup(std::string backup_state_str)
     found_phase = true;
   }
 
-  const auto skip_phases_yaml = state["skip_phases"];
-  if (skip_phases_yaml)
+  if (_pending_stages.empty())
   {
-    std::vector<uint64_t> skip_phases;
-    try
-    {
-      skip_phases = skip_phases_yaml.as<std::vector<uint64_t>>();
-    }
-    catch (const YAML::BadConversion& err)
-    {
-      restore_phase_log.error(
-        std::string("Invalid data type for [skip_phases]: ") + err.what()
-        + get_state_text());
+    restore_phase_log.error(
+      "Invalid value [" + std::to_string(current_phase_id)
+      + "] for [current_phase/id]. "
+        "Value is higher than all available phase IDs.");
 
-      return failed_to_restore();
-    }
+    return failed_to_restore();
+  }
 
+  const auto& skip_phases_json = backup_state["skip_phases"];
+  if (skip_phases_json)
+  {
+    const auto skip_phases = skip_phases_json.get<std::vector<uint64_t>>();
     auto pending_it = _pending_phases.begin();
+    const auto pending_end = _pending_phases.end();
     for (const auto& id : skip_phases)
     {
       if (id == 0)
       {
         // This should probably issue a warning, because this would be kind of
-        // weird, but not really a problem
+        // weird, but it's not really a problem
         continue;
       }
 
-      if (pending_it == _pending_phases.end()
-        || id < (*pending_it)->tag()->id())
+      while (pending_it != pending_end && (*pending_it)->tag()->id() < id)
+      {
+        ++pending_it;
+      }
+
+      if (pending_it == pending_end || id < (*pending_it)->tag()->id())
       {
         // This shouldn't happen, but it's not a critical error. In the worst
         // case, the operator needs to resend a skip command.
@@ -447,26 +384,11 @@ void Task::Active::_load_backup(std::string backup_state_str)
         continue;
       }
 
-      while (pending_it != _pending_phases.end()
-        && (*pending_it)->tag()->id() < id)
-      {
-        ++pending_it;
-      }
-
       (*pending_it)->will_be_skipped(true);
     }
   }
 
-  const auto phase_state_yaml = current_phase_yaml["state"];
-  if (!phase_state_yaml)
-  {
-    restore_phase_log.error(
-      "Missing [state] field for [current_phase]" + get_state_text());
-
-    return failed_to_restore();
-  }
-
-  _begin_next_stage(phase_state_yaml.as<std::string>());
+  _begin_next_stage(current_phase_json["state"]);
 }
 
 //==============================================================================
@@ -503,7 +425,7 @@ void Task::Active::_finish_phase()
 }
 
 //==============================================================================
-void Task::Active::_begin_next_stage(std::optional<std::string> restore)
+void Task::Active::_begin_next_stage(std::optional<nlohmann::json> restore)
 {
   if (_pending_stages.empty())
     return _finish_task();
@@ -601,7 +523,7 @@ auto Task::Active::_generate_backup(
   Phase::Tag::Id current_phase_id,
   Phase::Active::Backup phase_backup) const -> Backup
 {
-  YAML::Node current_phase;
+  nlohmann::json current_phase;
   current_phase["id"] = current_phase_id;
   if (_cancelled_on_phase.has_value())
     current_phase["cancelled_from"] = *_cancelled_on_phase;
@@ -615,13 +537,13 @@ auto Task::Active::_generate_backup(
       skipping_phases.push_back(p->tag()->id());
   }
 
-  YAML::Node root;
+  nlohmann::json root;
   root["schema_version"] = 1;
   root["current_phase"] = std::move(current_phase);
   root["skip_phases"] = std::move(skipping_phases);
   // TODO(MXG): Is there anything else we need to consider as part of the state?
 
-  return Backup::make(_next_task_backup_sequence_number++, YAML::Dump(root));
+  return Backup::make(_next_task_backup_sequence_number++, root.dump());
 }
 
 //==============================================================================

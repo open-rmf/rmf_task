@@ -21,7 +21,8 @@ endif()
 include(GNUInstallDirs)
 
 find_package(rmf_task REQUIRED)
-find_package(yaml-cpp REQUIRED)
+find_package(nlohmann_json REQUIRED)
+find_package(nlohmann_json_schema_validator_vendor REQUIRED)
 
 find_package(ament_cmake_catch2 QUIET)
 find_package(rmf_cmake_uncrustify QUIET)
@@ -39,13 +40,15 @@ add_library(rmf_task_sequence SHARED
 target_link_libraries(rmf_task_sequence
   PUBLIC
     rmf_task::rmf_task
-    yaml-cpp
+    nlohmann_json::nlohmann_json
+    nlohmann_json_schema_validator
 )
 
 target_include_directories(rmf_task_sequence
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+    $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include> # for auto-generated headers
 )
 
 if(BUILD_TESTING AND ament_cmake_catch2_FOUND AND rmf_cmake_uncrustify_FOUND)
@@ -74,6 +77,8 @@ if(BUILD_TESTING AND ament_cmake_catch2_FOUND AND rmf_cmake_uncrustify_FOUND)
   )
 endif()
 
+# Generate the schema headers
+add_subdirectory(schemas)
 
 # Create cmake config files
 include(CMakePackageConfigHelpers)
