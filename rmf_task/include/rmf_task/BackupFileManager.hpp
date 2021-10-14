@@ -36,7 +36,9 @@ public:
   ///
   /// \param[in] root_directory
   ///   Specify the root directory that the backup files should live in
-  BackupFileManager(std::filesystem::path root_directory);
+  BackupFileManager(std::filesystem::path root_directory,
+    std::function<void(std::string)> info_logger = nullptr,
+    std::function<void(std::string)> debug_logger = nullptr);
 
   /// Set whether any previously existing backups should be cleared out on
   /// startup. By default this behavior is turned OFF.

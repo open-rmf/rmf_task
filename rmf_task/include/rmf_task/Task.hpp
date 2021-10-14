@@ -267,7 +267,7 @@ public:
   ///
   /// \param[in] value
   ///   True if the phase should be skipped, false otherwise.
-  virtual void skip(uint64_t phase_id, bool value=true) = 0;
+  virtual void skip(uint64_t phase_id, bool value = true) = 0;
 
   /// Rewind the Task to a specific phase. This can be issued by operators if
   /// a phase did not actually go as intended and needs to be repeated.

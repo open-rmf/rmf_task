@@ -16,6 +16,7 @@
 */
 
 #include "MockDelivery.hpp"
+#include <stdexcept>
 
 namespace test_rmf_task {
 
@@ -49,7 +50,9 @@ auto MockDelivery::make_activator() -> Activator
 
 auto MockDelivery::Active::backup() const -> Backup
 {
-  return Backup::make(_backup_seq++, "Hello, I am a backup");
+  std::stringstream ss;
+  ss << this->active_phase()->tag()->id();
+  return Backup::make(_backup_seq++, ss.str());
 }
 
 } // namespace test_rmf_task

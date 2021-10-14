@@ -61,7 +61,7 @@ auto MockTask::Active::interrupt(std::function<void()> task_is_interrupted)
 -> Resume
 {
   task_is_interrupted();
-  return make_resumer([](){});
+  return make_resumer([]() {});
 }
 
 //==============================================================================
@@ -100,7 +100,7 @@ MockTask::Active::Active(
   std::function<void(Phase::ConstCompletedPtr)> phase_finished,
   std::function<void()> task_finished)
 : _tag(std::make_shared<Tag>(
-    booking, "Mock Task", "Mocked up task", rmf_traffic::Time())),
+      booking, "Mock Task", "Mocked up task", rmf_traffic::Time())),
   _ctag(_tag),
   _update(std::move(update)),
   _checkpoint(std::move(checkpoint)),
@@ -129,7 +129,7 @@ void MockTask::Active::start_next_phase(rmf_traffic::Time current_time)
     _phase_finished(
       std::make_shared<Phase::Completed>(
         _active_phase->tag(),
-        _active_phase->finish_condition()->log(),
+        rmf_task::Phase::Snapshot::make(*_active_phase),
         _active_phase->_start_time,
         current_time));
   }
@@ -142,8 +142,8 @@ void MockTask::Active::start_next_phase(rmf_traffic::Time current_time)
   _active_phase = std::make_shared<MockPhase::Active>(
     current_time,
     next_phase.tag(),
-    [update = _update](Phase::ConstSnapshotPtr u){ update(std::move(u)); },
-    [](){});
+    [update = _update](Phase::ConstSnapshotPtr u) { update(std::move(u)); },
+    []() {});
 }
 
 //==============================================================================

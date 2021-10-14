@@ -15,23 +15,131 @@
  *
 */
 
+#include <iostream>
+#include <filesystem>
 #include <rmf_task/BackupFileManager.hpp>
 
 #include "../mock/MockDelivery.hpp"
 
 #include <rmf_utils/catch.hpp>
 
-SCENARIO("Back up to file")
+const std::filesystem::path backup_root_dir = "/tmp/rmf_task/test_backups";
+void cleanup()
 {
+  std::filesystem::remove_all(std::filesystem::weakly_canonical(backup_root_dir));
+}
+
+SCENARIO("Backup file creation and clearing tests")
+{
+  cleanup();
+
   rmf_task::Activator activator;
   activator.add_activator(test_rmf_task::MockDelivery::make_activator());
-
-  const std::string backup_root_dir = "/tmp/rmf_task/test_backups";
   rmf_task::BackupFileManager backup(backup_root_dir);
-  backup.clear_on_startup();
+
+  auto group_backup = backup.make_group("group");
+  CHECK(std::filesystem::exists(backup_root_dir / "group"));
+
+  auto robot_backup = group_backup->make_robot("robot");
+  CHECK(std::filesystem::exists(backup_root_dir / "group" / "robot"));
+
+  using namespace std::chrono_literals;
+  auto request = rmf_task::requests::Delivery::make(
+    0, 1min, 1, 1min, "request_0", rmf_traffic::Time());
+  rmf_task::Phase::ConstSnapshotPtr phase_snapshot;
+  auto active_task = activator.activate(
+    nullptr,
+    nullptr,
+    *request,
+    [&phase_snapshot](auto s) { phase_snapshot = s; },
+    [robot_backup](auto b) { robot_backup->write(b); },
+    [](auto) {},
+    []() {});
+  REQUIRE(active_task);
+
+  auto mock_active_task =
+    std::dynamic_pointer_cast<test_rmf_task::MockDelivery::Active>(active_task);
+  REQUIRE(mock_active_task);
+
+  auto mock_active_task_backup = mock_active_task->backup();
+
+  robot_backup->write(mock_active_task_backup);
+  CHECK(std::filesystem::exists(backup_root_dir / "group" / "robot" /
+    "backup"));
+  CHECK_FALSE(std::filesystem::exists(backup_root_dir / "group" / "robot" /
+    ".backup"));
+
+  robot_backup.reset();
+  active_task.reset();
+  mock_active_task.reset();
+  CHECK(std::filesystem::exists(backup_root_dir / "group" / "robot"));
+  CHECK_FALSE(std::filesystem::exists(backup_root_dir / "group" / "robot" /
+    "backup"));
+  CHECK_FALSE(std::filesystem::exists(backup_root_dir / "group" / "robot" /
+    ".backup"));
+
+  group_backup.reset(); // Should not delete group or robot folder
+  CHECK(std::filesystem::exists(backup_root_dir / "group"));
+  CHECK(std::filesystem::exists(backup_root_dir / "group" / "robot"));
+}
+
+SCENARIO("RAII tests for temporary BackupFileManager::Robot instances")
+{
+  cleanup();
+
+  rmf_task::Activator activator;
+  activator.add_activator(test_rmf_task::MockDelivery::make_activator());
+  rmf_task::BackupFileManager backup(backup_root_dir);
+
+  auto group_backup = backup.make_group("group");
+
+  using namespace std::chrono_literals;
+  auto request = rmf_task::requests::Delivery::make(
+    0, 1min, 1, 1min, "request_0", rmf_traffic::Time());
+  rmf_task::Phase::ConstSnapshotPtr phase_snapshot;
+  auto active_task = activator.activate(
+    nullptr,
+    nullptr,
+    *request,
+    [&phase_snapshot](auto s) { phase_snapshot = s; },
+    [](auto) {},
+    [](auto) {},
+    []() {});
+  REQUIRE(active_task);
+
+  auto mock_active_task =
+    std::dynamic_pointer_cast<test_rmf_task::MockDelivery::Active>(active_task);
+  REQUIRE(mock_active_task);
+
+  auto mock_active_task_backup = mock_active_task->backup();
+
+  CHECK_FALSE(std::filesystem::exists(backup_root_dir / "group" / "robot" /
+    "backup"));
+  group_backup->make_robot("robot")->write(mock_active_task_backup);
+  // Due to RAII and clear_on_shutdown the destructor is called immediately
+  CHECK_FALSE(std::filesystem::exists(backup_root_dir / "group" / "robot" /
+    "backup"));
+}
+
+
+SCENARIO("Back up to file")
+{
+  cleanup();
+
+  rmf_task::Activator activator;
+  activator.add_activator(test_rmf_task::MockDelivery::make_activator());
+  rmf_task::BackupFileManager backup(backup_root_dir);
 
   auto robot_backup = backup.make_group("group")->make_robot("robot");
   CHECK_FALSE(robot_backup->read().has_value());
+
+  //// ====== We should get a nullopt on restoring if no backup files ======
+  rmf_task::BackupFileManager null_restore(backup_root_dir);
+
+  auto null_robot_restore =
+    null_restore.make_group("group")->make_robot("robot");
+  const auto null_restored_state = null_robot_restore->read();
+  REQUIRE(!null_restored_state.has_value());
 
   using namespace std::chrono_literals;
   auto request = rmf_task::requests::Delivery::make(
@@ -42,8 +150,8 @@ SCENARIO("Back up to file")
     nullptr,
     nullptr,
     *request,
-    [&phase_snapshot](auto s){ phase_snapshot = s; },
-    [robot_backup](auto b){ robot_backup->write(b); },
+    [&phase_snapshot](auto s) { phase_snapshot = s; },
+    [robot_backup](auto b) { robot_backup->write(b); },
     [](auto) {},
     []() {});
 
@@ -51,12 +159,9 @@ SCENARIO("Back up to file")
 
   auto mock_active_task =
     std::dynamic_pointer_cast<test_rmf_task::MockDelivery::Active>(active_task);
-
   REQUIRE(mock_active_task);
 
-  // ====== Advance the robot forward through some phases ======
-  CHECK(phase_snapshot == nullptr);
-  mock_active_task->start_next_phase(rmf_traffic::Time());
+  //// ====== Advance the robot forward through some phases ======
   CHECK(phase_snapshot == nullptr);
 
   mock_active_task->_active_phase->send_update();
@@ -73,7 +178,7 @@ SCENARIO("Back up to file")
   // ====== Backup the task ======
   mock_active_task->issue_backup();
 
-  // ====== Restore the task ======
+  //// ====== Restore the task ======
   rmf_task::BackupFileManager restore(backup_root_dir);
 
   auto robot_restore = restore.make_group("group")->make_robot("robot");
@@ -86,14 +191,14 @@ SCENARIO("Back up to file")
     nullptr,
     *request,
     restored_state.value(),
-    [&restored_snapshot](auto s){ restored_snapshot = s; },
-    [robot_restore](auto b){ robot_restore->write(b); },
-    [](auto){},
-    [](){});
+    [&restored_snapshot](auto s) { restored_snapshot = s; },
+    [robot_restore](auto b) { robot_restore->write(b); },
+    [](auto) {},
+    []() {});
 
   auto mock_restored_task =
     std::dynamic_pointer_cast<test_rmf_task::MockDelivery::Active>(
-      restored_task);
+    restored_task);
 
   REQUIRE(mock_restored_task);
   REQUIRE(mock_restored_task->_restored_state.has_value());
@@ -101,6 +206,7 @@ SCENARIO("Back up to file")
 
   // When the task is restored, it should resume where mock_active_task left off
   // and it should issue a phase snapshot to reflect that
+  mock_restored_task->_active_phase->send_update();
   REQUIRE(restored_snapshot);
   CHECK(restored_snapshot->tag()->id() == phase_snapshot->tag()->id());
   CHECK(restored_snapshot->tag()->name() == phase_snapshot->tag()->name());

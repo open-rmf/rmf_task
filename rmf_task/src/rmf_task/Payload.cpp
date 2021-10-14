@@ -35,7 +35,7 @@ public:
 //==============================================================================
 Payload::Payload(std::vector<Component> components)
 : _pimpl(rmf_utils::make_impl<Implementation>(
-    Implementation{std::move(components)}))
+      Implementation{std::move(components)}))
 {
   // Do nothing
 }
@@ -112,11 +112,11 @@ Payload::Component::Component(
   uint32_t quantity,
   std::string compartment)
 : _pimpl(rmf_utils::make_impl<Implementation>(
-    Implementation{
-      std::move(sku),
-      quantity,
-      std::move(compartment)
-    }))
+      Implementation{
+        std::move(sku),
+        quantity,
+        std::move(compartment)
+      }))
 {
   // Do nothing
 }

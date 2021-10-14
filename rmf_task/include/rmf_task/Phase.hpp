@@ -105,7 +105,7 @@ public:
   /// Constructor
   Completed(
     ConstTagPtr tag_,
-    Log::View log_,
+    ConstSnapshotPtr snapshot_,
     rmf_traffic::Time start_,
     rmf_traffic::Time finish_);
 
@@ -113,7 +113,7 @@ public:
   const ConstTagPtr& tag() const;
 
   /// The final log of the phase
-  const Log::View& log() const;
+  const ConstSnapshotPtr& snapshot() const;
 
   /// The actual time that the phase started
   rmf_traffic::Time start_time() const;

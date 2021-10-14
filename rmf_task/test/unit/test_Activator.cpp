@@ -34,8 +34,8 @@ SCENARIO("Activate fresh task")
     nullptr,
     nullptr,
     *request,
-    [&phase_snapshot](auto s){ phase_snapshot = s; },
-    [&backup](auto b){ backup = b; },
+    [&phase_snapshot](auto s) { phase_snapshot = s; },
+    [&backup](auto b) { backup = b; },
     [](auto) {},
     []() {});
 
@@ -46,8 +46,6 @@ SCENARIO("Activate fresh task")
 
   REQUIRE(mock_active);
 
-  CHECK(phase_snapshot == nullptr);
-  mock_active->start_next_phase(rmf_traffic::Time());
   CHECK(phase_snapshot == nullptr);
 
   mock_active->_active_phase->send_update();
@@ -66,17 +64,17 @@ SCENARIO("Activate fresh task")
   mock_active->issue_backup();
   REQUIRE(backup.has_value());
   CHECK(backup->sequence() == 0);
-  CHECK(backup->state() == "Hello, I am a backup");
+  CHECK(backup->state() == "1");
 
   auto restored = activator.restore(
     nullptr,
     nullptr,
     *request,
     backup->state(),
-    [&phase_snapshot](auto s){ phase_snapshot = s; },
-    [&backup](auto b){ backup = b; },
-    [](auto){},
-    [](){});
+    [&phase_snapshot](auto s) { phase_snapshot = s; },
+    [&backup](auto b) { backup = b; },
+    [](auto) {},
+    []() {});
 
   auto mock_restored =
     std::dynamic_pointer_cast<test_rmf_task::MockDelivery::Active>(restored);

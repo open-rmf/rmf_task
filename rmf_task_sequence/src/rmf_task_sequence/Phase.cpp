@@ -29,7 +29,8 @@ public:
 };
 
 //==============================================================================
-Phase::ActivePtr Phase::Activator::activate(std::function<State()> get_state,
+Phase::ActivePtr Phase::Activator::activate(
+  std::function<State()> get_state,
   ConstTagPtr tag,
   const Description& description,
   std::optional<nlohmann::json> backup_state,
