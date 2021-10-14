@@ -38,12 +38,12 @@ Phase::Tag::Tag(
   std::string detail_,
   rmf_traffic::Duration estimate_)
 : _pimpl(rmf_utils::make_impl<Implementation>(
-    Implementation{
-      id_,
-      std::move(name_),
-      std::move(detail_),
-      estimate_
-    }))
+      Implementation{
+        id_,
+        std::move(name_),
+        std::move(detail_),
+        estimate_
+      }))
 {
   // Do nothing
 }
@@ -90,12 +90,12 @@ Phase::Completed::Completed(
   rmf_traffic::Time start_,
   rmf_traffic::Time finish_)
 : _pimpl(rmf_utils::make_impl<Implementation>(
-  Implementation{
-    std::move(tag_),
-    std::move(log_),
-    start_,
-    finish_
-  }))
+      Implementation{
+        std::move(tag_),
+        std::move(log_),
+        start_,
+        finish_
+      }))
 {
   // Do nothing
 }
@@ -156,7 +156,7 @@ Phase::ConstTagPtr Phase::Snapshot::tag() const
 //==============================================================================
 ConstConditionPtr Phase::Snapshot::finish_condition() const
 {
-   return _pimpl->finish_condition;
+  return _pimpl->finish_condition;
 }
 
 //==============================================================================
@@ -192,6 +192,13 @@ Phase::Pending::Pending(ConstTagPtr tag)
 auto Phase::Pending::tag() const -> const ConstTagPtr&
 {
   return _pimpl->tag;
+}
+
+//==============================================================================
+auto Phase::Pending::will_be_skipped(bool value) -> Pending&
+{
+  _pimpl->will_be_skipped = value;
+  return *this;
 }
 
 //==============================================================================

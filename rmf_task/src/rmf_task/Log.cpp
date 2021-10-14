@@ -34,7 +34,7 @@ public:
   {
     if (!clock)
     {
-      clock = [](){ return std::chrono::system_clock::now(); };
+      clock = []() { return std::chrono::system_clock::now(); };
     }
   }
 
@@ -79,7 +79,7 @@ public:
     if (log._pimpl->entries->empty())
     {
       output._pimpl = rmf_utils::make_impl<Implementation>(
-            Implementation{log._pimpl->entries, std::nullopt, std::nullopt});
+        Implementation{log._pimpl->entries, std::nullopt, std::nullopt});
     }
     else
     {

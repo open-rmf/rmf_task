@@ -20,6 +20,47 @@
 namespace rmf_task_sequence {
 
 //==============================================================================
+class Phase::Activator::Implementation
+{
+public:
+
+  std::unordered_map<std::type_index, Activate<Phase::Description>> activators;
+
+};
+
+//==============================================================================
+Phase::ActivePtr Phase::Activator::activate(
+  std::function<State()> get_state,
+  ConstTagPtr tag,
+  const Description& description,
+  std::optional<std::string> backup_state,
+  std::function<void(rmf_task::Phase::ConstSnapshotPtr)> update,
+  std::function<void(Active::Backup)> checkpoint,
+  std::function<void()> finished) const
+{
+  const auto& type = typeid(description);
+  const auto it = _pimpl->activators.find(type);
+  if (it == _pimpl->activators.end())
+    return nullptr;
+
+  return it->second(
+    std::move(get_state),
+    std::move(tag),
+    description,
+    std::move(backup_state),
+    std::move(update),
+    std::move(checkpoint),
+    std::move(finished));
+}
+
+//==============================================================================
+void Phase::Activator::_add_activator(
+  std::type_index type, Activate<Phase::Description> activator)
+{
+  _pimpl->activators.insert_or_assign(type, std::move(activator));
+}
+
+//==============================================================================
 class Phase::SequenceModel::Implementation
 {
 public:

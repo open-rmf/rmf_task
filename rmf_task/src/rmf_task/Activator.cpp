@@ -106,7 +106,7 @@ void Activator::_add_activator(
   std::type_index type,
   Activate<Task::Description> activator)
 {
-  _pimpl->activators.insert({type, std::move(activator)});
+  _pimpl->activators.insert_or_assign(type, std::move(activator));
 }
 
 } // namespace rmf_task

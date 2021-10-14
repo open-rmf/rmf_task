@@ -114,6 +114,7 @@ public:
   virtual ~Active() = default;
 };
 
+//==============================================================================
 class Phase::Active::Backup
 {
 public:
@@ -130,7 +131,15 @@ public:
   ///   Phase::Activator when restoring a Task.
   static Backup make(uint64_t seq, YAML::Node state);
 
+  /// Get the sequence number
+  uint64_t sequence() const;
+
+  /// Get the YAML representation of the backed up state
+  const YAML::Node& state() const;
+
+  class Implementation;
 private:
+  rmf_utils::impl_ptr<Implementation> _pimpl;
 };
 
 //==============================================================================
@@ -165,6 +174,10 @@ public:
   ///   active phase. This snapshot can be safely read in parallel to the phase
   ///   execution.
   ///
+  /// \param[in] checkpoint
+  ///   A callback that will be triggered when the phase has reached a task
+  ///   checkpoint whose state is worth backing up.
+  ///
   /// \param[in] finished
   ///   A callback that will be triggered when the phase has finished.
   ///
@@ -178,6 +191,7 @@ public:
       const Description& description,
       std::optional<std::string> backup_state,
       std::function<void(rmf_task::Phase::ConstSnapshotPtr)> update,
+      std::function<void(Active::Backup)> checkpoint,
       std::function<void()> finished)
     >;
 
@@ -199,6 +213,10 @@ public:
   /// \param[in] description
   ///   The description of the phase
   ///
+  /// \param[in] backup_state
+  ///   If the phase is being restored, pass its backup state in here. Otherwise
+  ///   if the phase is being freshly activated, pass a nullopt.
+  ///
   /// \param[in] update
   ///   A callback that will be triggered when the phase has a notable update.
   ///   The callback will be given a snapshot of the active phase.
@@ -215,47 +233,19 @@ public:
     std::function<State()> get_state,
     ConstTagPtr tag,
     const Description& description,
-    std::function<void(rmf_task::Phase::ConstSnapshotPtr)> update,
-    std::function<void(Active::Backup)> checkpoint,
-    std::function<void()> finished) const;
-
-  /// Restore a phase based on a description of the phase and its backup state.
-  ///
-  /// \param[in] get_state
-  ///   A callback for getting the current state of the robot
-  ///
-  /// \param[in] tag
-  ///   The tag of this phase
-  ///
-  /// \param[in] description
-  ///   The description of the phase
-  ///
-  /// \param[in] backup_state
-  ///   The serialized backup state of the phase
-  ///
-  /// \param[in] update
-  ///   A callback that will triggered when the phase has a notable update.
-  ///   The callback will be given a snapshot of the active phase.
-  ///
-  /// \param[in] checkpoint
-  ///   A callback that will be triggered when the phase has reached a task
-  ///   checkpoint whose state is worth backing up.
-  ///
-  /// \param[in] finished
-  ///   A callback that will be triggered when the phase has finished.
-  ///
-  /// \return an active, running instance of the described phase.
-  ActivePtr restore(
-    std::function<State()> get_state,
-    ConstTagPtr tag,
-    const Description& description,
-    const std::string& backup_state,
+    std::optional<std::string> backup_state,
     std::function<void(rmf_task::Phase::ConstSnapshotPtr)> update,
     std::function<void(Active::Backup)> checkpoint,
     std::function<void()> finished) const;
 
   class Implementation;
 private:
+
+  /// \private
+  void _add_activator(
+    std::type_index type,
+    Activate<Phase::Description> activator);
+
   rmf_utils::impl_ptr<Implementation> _pimpl;
 };
 
@@ -378,5 +368,7 @@ private:
 };
 
 } // namespace rmf_task_sequence
+
+#include <rmf_task_sequence/detail/impl_Phase.hpp>
 
 #endif // RMF_TASK_SEQUENCE__PHASE_HPP
