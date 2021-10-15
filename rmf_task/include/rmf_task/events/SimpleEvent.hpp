@@ -24,9 +24,23 @@ namespace rmf_task {
 namespace events {
 
 //==============================================================================
+/// This class is the simplest possible implementation for directly managing the
+/// required fields of the Event interface.
+///
+/// This may be useful if you have a Phase implementation that takes care of the
+/// logic for tracking your event(s) but you still need an Event object to
+/// satisfy the Phase interface's finish_event() function. Your Phase
+/// implementation can create an instance of this class and then manage its
+/// fields directly.
 class SimpleEvent : public Event
 {
 public:
+
+  static std::shared_ptr<SimpleEvent> make(
+    std::string name,
+    std::string detail,
+    Status initial_status,
+    std::vector<ConstEventPtr> dependencies = {});
 
   // Documentation inherited
   Status status() const final;
@@ -35,10 +49,33 @@ public:
   SimpleEvent& update_status(Status new_status);
 
   // Documentation inherited
+  VersionedString::View name() const final;
 
+  /// Update the name of this event
+  SimpleEvent& update_name(std::string new_name);
 
+  // Documentation inherited
+  VersionedString::View detail() const final;
 
+  /// Update the detail of this event
+  SimpleEvent& update_detail(std::string new_detail);
 
+  // Documentation inherited
+  Log::View log() const final;
+
+  /// Update the log
+  Log& update_log();
+
+  // Documentation inherited
+  std::vector<ConstEventPtr> dependencies() const final;
+
+  /// Update the dependencies
+  SimpleEvent& update_dependencies(std::vector<ConstEventPtr> new_dependencies);
+
+  class Implementation;
+private:
+  SimpleEvent();
+  rmf_utils::unique_impl_ptr<Implementation> _pimpl;
 };
 
 } // namespace events

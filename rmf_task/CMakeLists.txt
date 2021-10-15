@@ -29,10 +29,7 @@ find_package(ament_cmake_catch2 QUIET)
 find_package(rmf_cmake_uncrustify QUIET)
 
 # ===== RMF Tasks library
-file(GLOB lib_srcs
-  "src/rmf_task/detail/*.cpp"
-  "src/rmf_task/requests/*.cpp"
-  "src/rmf_task/requests/factory/*.cpp"
+file(GLOB_RECURSE lib_srcs
   "src/rmf_task/*.cpp"
 )
 
