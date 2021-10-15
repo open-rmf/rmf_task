@@ -128,7 +128,7 @@ public:
 
   std::unordered_map<const void*, Memory> memories;
 
-  Iterable iterate(const View& view);
+  Iterable read(const View& view);
 };
 
 //==============================================================================
@@ -191,7 +191,7 @@ Log::Reader::Iterable Log::Reader::Iterable::Implementation::make(
 }
 
 //==============================================================================
-auto Log::Reader::Implementation::iterate(const View& view) -> Iterable
+auto Log::Reader::Implementation::read(const View& view) -> Iterable
 {
   const auto& v = View::Implementation::get(view);
   const auto it = memories.insert({v.shared.get(), Memory()}).first;
@@ -200,6 +200,8 @@ auto Log::Reader::Implementation::iterate(const View& view) -> Iterable
   {
     if (!memory.last.has_value())
       memory.last = v.begin;
+    else
+      ++(*memory.last);
   }
   else
   {
@@ -294,6 +296,12 @@ Log::Reader::Reader()
 : _pimpl(rmf_utils::make_unique_impl<Implementation>())
 {
   // Do nothing
+}
+
+//==============================================================================
+auto Log::Reader::read(const View& view) -> Iterable
+{
+  return _pimpl->read(view);
 }
 
 //==============================================================================

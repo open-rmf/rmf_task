@@ -414,7 +414,7 @@ void Task::Active::_finish_phase()
   const auto completed_phase =
     std::make_shared<Phase::Completed>(
       _active_phase->tag(),
-      _active_phase->finish_condition()->log(),
+      _active_phase->finish_event(),
       _current_phase_start_time.value(),
       phase_finish_time);
 

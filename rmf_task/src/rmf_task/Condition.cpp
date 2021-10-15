@@ -43,8 +43,8 @@ class Event::Snapshot::Implementation
 public:
 
   Status status;
-  std::string name;
-  std::string detail;
+  VersionedString::View name;
+  VersionedString::View detail;
   Log::View log;
   std::vector<ConstEventPtr> dependencies;
 
@@ -73,13 +73,13 @@ auto Event::Snapshot::status() const -> Status
 }
 
 //==============================================================================
-std::string Event::Snapshot::name() const
+VersionedString::View Event::Snapshot::name() const
 {
   return _pimpl->name;
 }
 
 //==============================================================================
-std::string Event::Snapshot::detail() const
+VersionedString::View Event::Snapshot::detail() const
 {
   return _pimpl->detail;
 }

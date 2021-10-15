@@ -38,15 +38,15 @@ auto MockEvent::status() const -> Status
 }
 
 //==============================================================================
-std::string MockEvent::name() const
+rmf_task::VersionedString::View MockEvent::name() const
 {
-  return _name;
+  return _name.view();
 }
 
 //==============================================================================
-std::string MockEvent::detail() const
+rmf_task::VersionedString::View MockEvent::detail() const
 {
-  return _detail;
+  return _detail.view();
 }
 
 //==============================================================================

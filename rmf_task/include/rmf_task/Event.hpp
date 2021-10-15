@@ -19,6 +19,7 @@
 #define RMF_TASK__EVENT_HPP
 
 #include <rmf_task/Log.hpp>
+#include <rmf_task/VersionedString.hpp>
 
 #include <rmf_utils/impl_ptr.hpp>
 
@@ -36,6 +37,8 @@ using ConstEventPtr = std::shared_ptr<const Event>;
 class Event
 {
 public:
+
+  using Id = uint64_t;
 
   /// A simple computer-friendly indicator of the current status of this
   /// event. This enum may be used to automatically identify when an
@@ -91,10 +94,10 @@ public:
 
   /// The "name" of this event. Ideally a short, simple piece of text that
   /// helps a human being intuit what this event is expecting at a glance.
-  virtual std::string name() const = 0;
+  virtual VersionedString::View name() const = 0;
 
   /// A detailed explanation of this event.
-  virtual std::string detail() const = 0;
+  virtual VersionedString::View detail() const = 0;
 
   /// A view of the log for this event.
   virtual Log::View log() const = 0;
@@ -124,10 +127,10 @@ public:
   Status status() const final;
 
   // Documentation inherited
-  std::string name() const final;
+  VersionedString::View name() const final;
 
   // Documentation inherited
-  std::string detail() const final;
+  VersionedString::View detail() const final;
 
   // Documentation inherited
   Log::View log() const final;

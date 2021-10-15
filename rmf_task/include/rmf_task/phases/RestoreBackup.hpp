@@ -31,8 +31,6 @@ public:
   class Active;
   using ActivePtr = std::shared_ptr<Active>;
 
-  class Condition;
-  using ConditionPtr = std::shared_ptr<Condition>;
 };
 
 //==============================================================================
@@ -48,6 +46,12 @@ public:
 
   // Documentation inherited
   ConstEventPtr finish_event() const final;
+
+  /// Call this function if the parsing fails
+  void parsing_failed(std::string error_message);
+
+  /// Call this function if the parsing succeeds
+  void parsing_succeeded();
 
   class Implementation;
 private:

@@ -15,39 +15,33 @@
  *
 */
 
-#ifndef TEST__MOCK__MOCKEVENT_HPP
-#define TEST__MOCK__MOCKEVENT_HPP
+#ifndef RMF_TASK__EVENTS__SIMPLEEVENT_HPP
+#define RMF_TASK__EVENTS__SIMPLEEVENT_HPP
 
 #include <rmf_task/Event.hpp>
 
-namespace test_rmf_task {
+namespace rmf_task {
+namespace events {
 
 //==============================================================================
-class MockEvent : public rmf_task::Event
+class SimpleEvent : public Event
 {
 public:
 
-  MockEvent(
-    std::string name_,
-    std::string detail_,
-    Status initial_status = Status::Standby);
-
-  // Interface
+  // Documentation inherited
   Status status() const final;
-  rmf_task::VersionedString::View name() const final;
-  rmf_task::VersionedString::View detail() const final;
-  rmf_task::Log::View log() const final;
-  std::vector<rmf_task::ConstEventPtr> dependencies() const final;
 
-  // Fields
-  Status _status;
-  rmf_task::VersionedString _name;
-  rmf_task::VersionedString _detail;
-  rmf_task::Log _log;
-  std::vector<std::shared_ptr<MockEvent>> _dependencies;
+  /// Update the status of this event
+  SimpleEvent& update_status(Status new_status);
+
+  // Documentation inherited
+
+
+
 
 };
 
-} // namespace test_rmf_task
+} // namespace events
+} // namespace rmf_task
 
-#endif // TEST__MOCK__MOCKCONDITION_HPP
+#endif // RMF_TASK__EVENTS__SIMPLEEVENT_HPP
