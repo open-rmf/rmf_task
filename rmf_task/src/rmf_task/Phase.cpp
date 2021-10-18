@@ -77,7 +77,6 @@ class Phase::Completed::Implementation
 {
 public:
 
-  ConstTagPtr tag;
   ConstSnapshotPtr snapshot;
   rmf_traffic::Time start;
   rmf_traffic::Time finish;
@@ -85,25 +84,17 @@ public:
 
 //==============================================================================
 Phase::Completed::Completed(
-  ConstTagPtr tag_,
   ConstSnapshotPtr snapshot_,
   rmf_traffic::Time start_,
   rmf_traffic::Time finish_)
 : _pimpl(rmf_utils::make_impl<Implementation>(
       Implementation{
-        std::move(tag_),
         std::move(snapshot_),
         start_,
         finish_
       }))
 {
   // Do nothing
-}
-
-//==============================================================================
-auto Phase::Completed::tag() const -> const ConstTagPtr&
-{
-  return _pimpl->tag;
 }
 
 //==============================================================================
@@ -140,7 +131,7 @@ Phase::ConstSnapshotPtr Phase::Snapshot::make(const Active& active)
   output._pimpl = rmf_utils::make_impl<Implementation>(
     Implementation{
       active.tag(),
-      Event::Snapshot::make(*active.finish_event()),
+      Event::Snapshot::make(*active.final_event()),
       active.estimate_finish_time()
     });
 
@@ -154,7 +145,7 @@ Phase::ConstTagPtr Phase::Snapshot::tag() const
 }
 
 //==============================================================================
-ConstEventPtr Phase::Snapshot::finish_event() const
+ConstEventPtr Phase::Snapshot::final_event() const
 {
   return _pimpl->finish_event;
 }

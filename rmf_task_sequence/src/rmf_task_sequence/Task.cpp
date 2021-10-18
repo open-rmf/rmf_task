@@ -17,16 +17,17 @@
 
 #include <list>
 
+#include <rmf_task/phases/RestoreBackup.hpp>
+
 #include <rmf_task_sequence/Task.hpp>
-
-#include <rmf_utils/Modular.hpp>
-
 #include <rmf_task_sequence/schemas/ErrorHandler.hpp>
 #include <rmf_task_sequence/schemas/backup_PhaseSequenceTask_v0_1.hpp>
 
 #include <nlohmann/json-schema.hpp>
 
 #include <cstring>
+
+#include <rmf_utils/Modular.hpp>
 
 namespace rmf_task_sequence {
 
@@ -266,28 +267,18 @@ auto Task::Active::backup() const -> Backup
 //==============================================================================
 void Task::Active::_load_backup(std::string backup_state_str)
 {
-  auto restore_phase_tag = std::make_shared<Phase::Tag>(
-    0,
-    "Restore from backup",
-    "The task progress is being restored from a backed up state",
-    rmf_traffic::Duration(0));
+  const auto restore_phase = rmf_task::phases::RestoreBackup::Active::make(
+    backup_state_str, std::chrono::steady_clock::now());
 
   // TODO(MXG): Allow users to specify a custom clock for the log
   const auto start_time = std::chrono::steady_clock::now();
-  auto restore_phase_log = rmf_task::Log();
-
-  const auto get_state_text = [&]() -> std::string
-    {
-      return "\n```\n" + backup_state_str + "\n```\n";
-    };
 
   const auto failed_to_restore = [&]() -> void
     {
       _pending_stages.clear();
       _phase_finished(
         std::make_shared<rmf_task::Phase::Completed>(
-          std::move(restore_phase_tag),
-          restore_phase_log.view(),
+          rmf_task::Phase::Snapshot::make(*restore_phase),
           start_time,
           std::chrono::steady_clock::now()));
 
@@ -298,10 +289,7 @@ void Task::Active::_load_backup(std::string backup_state_str)
   if (const auto result =
       schemas::ErrorHandler::has_error(backup_schema_validator, backup_state))
   {
-    restore_phase_log.error(
-      "Error in state data while trying to restore task from backup: " +
-      result->message + "\n - Original message:" + get_state_text());
-
+    restore_phase->parsing_failed(result->message);
     return failed_to_restore();
   }
 
@@ -312,10 +300,10 @@ void Task::Active::_load_backup(std::string backup_state_str)
     const auto cancelled_from = cancelled_from_json.get<uint64_t>();
     if (cancelled_from >= _cancel_sequence_initial_id)
     {
-      restore_phase_log.error(
+      restore_phase->parsing_failed(
         "Invalid value [" + std::to_string(cancelled_from)
         + "] for [cancelled_from]. Value must be less than ["
-        + std::to_string(_cancel_sequence_initial_id) + "]" + get_state_text());
+        + std::to_string(_cancel_sequence_initial_id) + "]");
 
       return failed_to_restore();
     }
@@ -347,7 +335,7 @@ void Task::Active::_load_backup(std::string backup_state_str)
 
   if (_pending_stages.empty())
   {
-    restore_phase_log.error(
+    restore_phase->parsing_failed(
       "Invalid value [" + std::to_string(current_phase_id)
       + "] for [current_phase/id]. "
         "Value is higher than all available phase IDs.");
@@ -379,8 +367,8 @@ void Task::Active::_load_backup(std::string backup_state_str)
       {
         // This shouldn't happen, but it's not a critical error. In the worst
         // case, the operator needs to resend a skip command.
-        restore_phase_log.warn(
-          "Unexpected ordering of phase skip IDs" + get_state_text());
+        restore_phase->update_log().warn(
+          "Unexpected ordering of phase skip IDs");
         continue;
       }
 
@@ -413,8 +401,7 @@ void Task::Active::_finish_phase()
   const auto phase_finish_time = _clock();
   const auto completed_phase =
     std::make_shared<Phase::Completed>(
-      _active_phase->tag(),
-      _active_phase->finish_event(),
+      rmf_task::Phase::Snapshot::make(*_active_phase),
       _current_phase_start_time.value(),
       phase_finish_time);
 

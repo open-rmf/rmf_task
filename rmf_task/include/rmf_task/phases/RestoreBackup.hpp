@@ -34,24 +34,39 @@ public:
 };
 
 //==============================================================================
+/// This is a special phase type designated for restoring the backup of a task.
+///
+/// This phase type uses a reserved phase ID of 0.
 class RestoreBackup::Active : public Phase::Active
 {
 public:
 
   /// Make an active RestoreBackup phase
-  static ActivePtr make(std::string backup_state_str);
+  static ActivePtr make(
+    const std::string& backup_state_str,
+    rmf_traffic::Time estimated_finish_time);
 
   // Documentation inherited
   ConstTagPtr tag() const final;
 
   // Documentation inherited
-  ConstEventPtr finish_event() const final;
+  ConstEventPtr final_event() const final;
+
+  // Documentation inherited
+  rmf_traffic::Time estimate_finish_time() const final;
 
   /// Call this function if the parsing fails
-  void parsing_failed(std::string error_message);
+  void parsing_failed(const std::string& error_message);
+
+  /// Call this function if the restoration fails for some reason besides
+  /// parsing
+  void restoration_failed(const std::string& error_message);
 
   /// Call this function if the parsing succeeds
-  void parsing_succeeded();
+  void restoration_succeeded();
+
+  /// Get the log to pass in some other kind of message
+  Log& update_log();
 
   class Implementation;
 private:

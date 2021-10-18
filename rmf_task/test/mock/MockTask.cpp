@@ -128,7 +128,6 @@ void MockTask::Active::start_next_phase(rmf_traffic::Time current_time)
   {
     _phase_finished(
       std::make_shared<Phase::Completed>(
-        _active_phase->tag(),
         rmf_task::Phase::Snapshot::make(*_active_phase),
         _active_phase->_start_time,
         current_time));
