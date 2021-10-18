@@ -50,7 +50,7 @@ public:
   ConstTagPtr tag() const final;
 
   // Documentation inherited
-  ConstEventPtr final_event() const final;
+  Event::ConstActivePtr final_event() const final;
 
   // Documentation inherited
   rmf_traffic::Time estimate_finish_time() const final;

@@ -23,7 +23,7 @@
 namespace test_rmf_task {
 
 //==============================================================================
-class MockEvent : public rmf_task::Event
+class MockEvent : public rmf_task::Event::Active
 {
 public:
 
@@ -37,7 +37,7 @@ public:
   rmf_task::VersionedString::View name() const final;
   rmf_task::VersionedString::View detail() const final;
   rmf_task::Log::View log() const final;
-  std::vector<rmf_task::ConstEventPtr> dependencies() const final;
+  std::vector<rmf_task::Event::ConstActivePtr> dependencies() const final;
 
   // Fields
   Status _status;

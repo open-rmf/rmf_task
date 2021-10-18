@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef RMF_TASK__EXECUTE__LOG_HPP
-#define RMF_TASK__EXECUTE__LOG_HPP
+#ifndef RMF_TASK__LOG_HPP
+#define RMF_TASK__LOG_HPP
 
 #include <rmf_utils/impl_ptr.hpp>
 
@@ -209,4 +209,4 @@ private:
 
 } // namespace rmf_task
 
-#endif // RMF_TASK__EXECUTE__LOG_HPP
+#endif // RMF_TASK__LOG_HPP

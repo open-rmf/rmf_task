@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef RMF_TASK__EXECUTE__PHASE_HPP
-#define RMF_TASK__EXECUTE__PHASE_HPP
+#ifndef RMF_TASK__PHASE_HPP
+#define RMF_TASK__PHASE_HPP
 
 #include <rmf_task/Event.hpp>
 
@@ -131,7 +131,7 @@ public:
   virtual ConstTagPtr tag() const = 0;
 
   /// The Event that needs to finish for this phase to be complete
-  virtual ConstEventPtr final_event() const = 0;
+  virtual Event::ConstActivePtr final_event() const = 0;
 
   /// The estimated finish time for this phase
   virtual rmf_traffic::Time estimate_finish_time() const = 0;
@@ -152,7 +152,7 @@ public:
   ConstTagPtr tag() const final;
 
   // Documentation inherited
-  ConstEventPtr final_event() const final;
+  Event::ConstActivePtr final_event() const final;
 
   // Documentation inherited
   rmf_traffic::Time estimate_finish_time() const final;
@@ -187,4 +187,4 @@ private:
 
 } // namespace rmf_task
 
-#endif // RMF_TASK__EXECUTE__PHASE_HPP
+#endif // RMF_TASK__PHASE_HPP

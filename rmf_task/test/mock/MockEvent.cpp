@@ -56,9 +56,9 @@ rmf_task::Log::View MockEvent::log() const
 }
 
 //==============================================================================
-std::vector<rmf_task::ConstEventPtr> MockEvent::dependencies() const
+std::vector<rmf_task::Event::ConstActivePtr> MockEvent::dependencies() const
 {
-  return std::vector<rmf_task::ConstEventPtr>(
+  return std::vector<rmf_task::Event::ConstActivePtr>(
     _dependencies.begin(), _dependencies.end());
 }
 

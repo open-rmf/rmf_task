@@ -120,7 +120,7 @@ class Phase::Snapshot::Implementation
 {
 public:
   ConstTagPtr tag;
-  ConstEventPtr finish_event;
+  Event::ConstActivePtr finish_event;
   rmf_traffic::Time estimated_finish_time;
 };
 
@@ -145,7 +145,7 @@ Phase::ConstTagPtr Phase::Snapshot::tag() const
 }
 
 //==============================================================================
-ConstEventPtr Phase::Snapshot::final_event() const
+Event::ConstActivePtr Phase::Snapshot::final_event() const
 {
   return _pimpl->finish_event;
 }

@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef RMF_TASK__EXECUTE__TASK_HPP
-#define RMF_TASK__EXECUTE__TASK_HPP
+#ifndef RMF_TASK__TASK_HPP
+#define RMF_TASK__TASK_HPP
 
 #include <rmf_task/Phase.hpp>
 #include <rmf_task/detail/Backup.hpp>

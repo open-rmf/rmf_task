@@ -21,14 +21,14 @@ namespace rmf_task {
 
 namespace {
 //==============================================================================
-std::vector<ConstEventPtr> snapshot_dependencies(
-  const std::vector<ConstEventPtr>& queue)
+std::vector<Event::ConstActivePtr> snapshot_dependencies(
+  const std::vector<Event::ConstActivePtr>& queue)
 {
   // NOTE(MXG): This implementation is using recursion. That should be fine
   // since I don't expect much depth in the trees of dependencies, but we may
   // want to revisit this and implement it as a queue instead if we ever find
   // a use-case with deep recursion.
-  std::vector<ConstEventPtr> output;
+  std::vector<Event::ConstActivePtr> output;
   output.reserve(queue.size());
   for (const auto& c : queue)
     output.push_back(Event::Snapshot::make(*c));
@@ -46,12 +46,12 @@ public:
   VersionedString::View name;
   VersionedString::View detail;
   Log::View log;
-  std::vector<ConstEventPtr> dependencies;
+  std::vector<ConstActivePtr> dependencies;
 
 };
 
 //==============================================================================
-ConstEventPtr Event::Snapshot::make(const Event& other)
+auto Event::Snapshot::make(const Active& other) -> ConstSnapshotPtr
 {
   Snapshot output;
   output._pimpl = rmf_utils::make_impl<Implementation>(
@@ -91,7 +91,7 @@ Log::View Event::Snapshot::log() const
 }
 
 //==============================================================================
-std::vector<ConstEventPtr> Event::Snapshot::dependencies() const
+std::vector<Event::ConstActivePtr> Event::Snapshot::dependencies() const
 {
   return _pimpl->dependencies;
 }

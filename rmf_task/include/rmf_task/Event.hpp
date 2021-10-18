@@ -30,15 +30,10 @@
 
 namespace rmf_task {
 
-class Event;
-using ConstEventPtr = std::shared_ptr<const Event>;
-
 //==============================================================================
 class Event
 {
 public:
-
-  using Id = uint64_t;
 
   /// A simple computer-friendly indicator of the current status of this
   /// event. This enum may be used to automatically identify when an
@@ -86,6 +81,23 @@ public:
     Finished
   };
 
+  class Active;
+  using ConstActivePtr = std::shared_ptr<const Active>;
+
+  class Snapshot;
+  using ConstSnapshotPtr = std::shared_ptr<const Snapshot>;
+
+};
+
+//==============================================================================
+/// The interface to an active event.
+class Event::Active
+{
+public:
+
+  using Status = Event::Status;
+  using ConstActivePtr = Event::ConstActivePtr;
+
   /// The current Status of this event
   virtual Status status() const = 0;
 
@@ -103,12 +115,10 @@ public:
   virtual Log::View log() const = 0;
 
   /// Get more granular dependencies of this event, if any exist.
-  virtual std::vector<ConstEventPtr> dependencies() const = 0;
-
-  class Snapshot;
+  virtual std::vector<ConstActivePtr> dependencies() const = 0;
 
   // Virtual destructor
-  virtual ~Event() = default;
+  virtual ~Active() = default;
 };
 
 //==============================================================================
@@ -116,12 +126,12 @@ public:
 /// original event is arbitrarily changed, and there is no risk of a race
 /// condition, as long as the snapshot is not being created while the event
 /// is changing.
-class Event::Snapshot : public Event
+class Event::Snapshot : public Event::Active
 {
 public:
 
   /// Make a snapshot of the current state of an Event
-  static ConstEventPtr make(const Event& other);
+  static ConstSnapshotPtr make(const Active& other);
 
   // Documentation inherited
   Status status() const final;
@@ -136,7 +146,7 @@ public:
   Log::View log() const final;
 
   // Documentation inherited
-  std::vector<ConstEventPtr> dependencies() const final;
+  std::vector<ConstActivePtr> dependencies() const final;
 
   class Implementation;
 private:
