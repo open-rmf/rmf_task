@@ -57,14 +57,14 @@ inline void CHECK_TIMES(const TaskPlanner::Assignments& assignments,
     for (std::size_t i = 0; i < agent.size(); ++i)
     {
       CHECK(agent[i].deployment_time() >= now);
-      CHECK(agent[i].finish_state().time().value()
+      CHECK(agent[i].finish_state()->time().value()
         >= agent[i].deployment_time());
 
       if (i == 0)
         continue;
 
       CHECK(agent[i].deployment_time()
-        >= agent[i-1].finish_state().time().value());
+        >= agent[i-1].finish_state()->time().value());
     }
   }
 }
@@ -91,7 +91,7 @@ inline bool check_implicit_charging_task_start(
     // No task should consume more charge than (1.0 - initial_soc)
     // in the current test, so we are guaranted to find any occurrence
     // of an implicit charging task.
-    if (!is_charge_request && s.battery_soc() > initial_soc)
+    if (!is_charge_request && s->battery_soc() > initial_soc)
     {
       implicit_charging_task_added = true;
       break;
@@ -121,12 +121,12 @@ inline void display_solution(
 
       const double start_seconds =
         a.deployment_time().time_since_epoch().count();
-      const rmf_traffic::Time finish_time = s.time().value();
+      const rmf_traffic::Time finish_time = s->time().value();
       const double finish_seconds = finish_time.time_since_epoch().count();
       std::cout << std::fixed
                 << "    <" << a.request()->booking()->id() << ": "
                 << request_seconds << ", " << start_seconds
-                << ", "<< finish_seconds << ", " << 100*s.battery_soc().value()
+                << ", "<< finish_seconds << ", " << 100*s->battery_soc().value()
                 << "%>" << std::endl;
     }
   }
@@ -1542,7 +1542,7 @@ SCENARIO("Grid World")
             const rmf_task::requests::ChargeBattery::Description>(
             assignment.request()->description()))
         {
-          CHECK(assignment.finish_state().battery_soc() == recharge_soc);
+          CHECK(assignment.finish_state()->battery_soc() == recharge_soc);
         }
       }
     }
@@ -1864,7 +1864,7 @@ SCENARIO("Grid World")
         const auto last_assignment = agent.back();
         CHECK_FALSE(last_assignment.request()->booking()->automatic());
         const auto& state = last_assignment.finish_state();
-        CHECK_FALSE(state.waypoint() == state.dedicated_charging_waypoint());
+        CHECK_FALSE(state->waypoint() == state->dedicated_charging_waypoint());
       }
     }
 
@@ -1900,7 +1900,7 @@ SCENARIO("Grid World")
         const auto last_assignment = agent.back();
         CHECK(last_assignment.request()->booking()->automatic());
         const auto& state = last_assignment.finish_state();
-        CHECK(state.waypoint() == state.dedicated_charging_waypoint());
+        CHECK(state->waypoint() == state->dedicated_charging_waypoint());
       }
     }
   }

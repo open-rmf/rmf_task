@@ -34,7 +34,7 @@ auto BinaryPriorityCostCalculator::compute_g_assignment(
   }
 
   return rmf_traffic::time::to_seconds(
-    assignment.finish_state().time().value()
+    assignment.finish_state()->time().value()
     - assignment.request()->booking()->earliest_start_time());
 }
 
@@ -110,7 +110,7 @@ auto BinaryPriorityCostCalculator::compute_h(
       else
         value = rmf_traffic::time::to_seconds(
           assignments.back().assignment.finish_state()
-          .time().value().time_since_epoch());
+          ->time().value().time_since_epoch());
     }
   }
 

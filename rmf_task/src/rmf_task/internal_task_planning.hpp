@@ -46,6 +46,7 @@ struct InvariantLess
 };
 
 // ============================================================================
+// Robot
 class Candidates
 {
 public:
@@ -121,6 +122,7 @@ public:
 
   rmf_task::ConstRequestPtr request;
   Task::ConstModelPtr model;
+  /// Robots
   Candidates candidates;
 
 private:
@@ -139,6 +141,7 @@ struct Node
     TaskPlanner::Assignment assignment;
   };
 
+ // First robot, ordered 
   using AssignedTasks = std::vector<std::vector<AssignmentWrapper>>;
   using UnassignedTasks =
     std::unordered_map<std::size_t, PendingTask>;
