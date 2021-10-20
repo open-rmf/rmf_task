@@ -18,6 +18,7 @@
 #ifndef RMF_TASK_SEQUENCE__TYPEDEFS_HPP
 #define RMF_TASK_SEQUENCE__TYPEDEFS_HPP
 
+#include <rmf_task/Header.hpp>
 #include <rmf_task/State.hpp>
 #include <rmf_task/Parameters.hpp>
 #include <rmf_task/Constraints.hpp>
@@ -26,6 +27,7 @@
 
 namespace rmf_task_sequence {
 
+using Header = rmf_task::Header;
 using State = rmf_task::State;
 using Parameters = rmf_task::Parameters;
 using ConstParametersPtr = rmf_task::ConstParametersPtr;

@@ -18,6 +18,7 @@
 #ifndef RMF_TASK__TASK_HPP
 #define RMF_TASK__TASK_HPP
 
+#include <rmf_task/Header.hpp>
 #include <rmf_task/Phase.hpp>
 #include <rmf_task/detail/Backup.hpp>
 #include <rmf_task/detail/Resume.hpp>
@@ -109,21 +110,13 @@ public:
   /// Constructor
   Tag(
     ConstBookingPtr booking_,
-    std::string category_,
-    std::string detail_,
-    rmf_traffic::Time original_finish_estimate_);
+    Header header_);
 
   /// The booking information of the request that this Task is carrying out
   const ConstBookingPtr& booking() const;
 
-  /// The category of this Task.
-  const std::string& category() const;
-
-  /// Details about this Task.
-  const std::string& detail() const;
-
-  /// The original finish estimate of this Task.
-  rmf_traffic::Time original_finish_estimate() const;
+  /// The header for this Task
+  const Header& header() const;
 
   class Implementation;
 private:

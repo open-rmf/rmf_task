@@ -47,9 +47,9 @@ public:
 
 //==============================================================================
 /// The interface for an Active phase within a phase sequence task.
-class Phase::Active
-  : public rmf_task::Phase::Active,
-    public Activity::Active { };
+class Phase::Active :
+  public rmf_task::Phase::Active,
+  public Activity::Active {};
 
 //==============================================================================
 class Phase::Activator
@@ -159,25 +159,7 @@ private:
 };
 
 //==============================================================================
-class Phase::Description : public Activity::Description
-{
-public:
-
-  /// Get the human-friendly information about this phase
-  ///
-  /// \param[in] initial_state
-  ///   The expected initial state when the phase begins
-  ///
-  /// \param[in] constraints
-  ///   Constraints on the robot during the phase
-  virtual rmf_task::Phase::ConstTagPtr make_tag(
-    rmf_task::Phase::Tag::Id id,
-    const State& initial_state,
-    const Parameters& parameters) const = 0;
-
-  // Virtual destructor
-  virtual ~Description() = default;
-};
+class Phase::Description : public Activity::Description {};
 
 } // namespace rmf_task_sequence
 

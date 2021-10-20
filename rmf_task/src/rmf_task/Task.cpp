@@ -77,23 +77,17 @@ class Task::Tag::Implementation
 {
 public:
   ConstBookingPtr booking;
-  std::string category;
-  std::string detail;
-  rmf_traffic::Time original_finish_estimate;
+  Header header;
 };
 
 //==============================================================================
 Task::Tag::Tag(
   ConstBookingPtr booking_,
-  std::string category_,
-  std::string detail_,
-  rmf_traffic::Time original_finish_estimate_)
+  Header header_)
 : _pimpl(rmf_utils::make_impl<Implementation>(
       Implementation{
         std::move(booking_),
-        std::move(category_),
-        std::move(detail_),
-        original_finish_estimate_
+        std::move(header_)
       }))
 {
   // Do nothing
@@ -106,21 +100,9 @@ auto Task::Tag::booking() const -> const ConstBookingPtr&
 }
 
 //==============================================================================
-const std::string& Task::Tag::category() const
+const Header& Task::Tag::header() const
 {
-  return _pimpl->category;
-}
-
-//==============================================================================
-const std::string& Task::Tag::detail() const
-{
-  return _pimpl->detail;
-}
-
-//==============================================================================
-rmf_traffic::Time Task::Tag::original_finish_estimate() const
-{
-  return _pimpl->original_finish_estimate;
+  return _pimpl->header;
 }
 
 //==============================================================================

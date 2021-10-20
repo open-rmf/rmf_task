@@ -20,8 +20,8 @@
 
 #include <rmf_task/Payload.hpp>
 #include <rmf_task_sequence/Phase.hpp>
-#include <rmf_task_sequence/phases/GoToPlace.hpp>
-#include <rmf_task_sequence/phases/WaitFor.hpp>
+#include <rmf_task_sequence/events/GoToPlace.hpp>
+#include <rmf_task_sequence/events/WaitFor.hpp>
 
 #include <rmf_traffic/agv/Planner.hpp>
 
@@ -37,9 +37,9 @@ public:
 
   std::string target;
   Payload payload;
-  GoToPlace::DescriptionPtr go_to_place;
-  WaitFor::DescriptionPtr wait_for;
-  std::vector<Phase::ConstDescriptionPtr> descriptions;
+  events::GoToPlace::DescriptionPtr go_to_place;
+  events::WaitFor::DescriptionPtr wait_for;
+  std::vector<Activity::ConstDescriptionPtr> descriptions;
 
   PayloadTransfer(
     Location location_,
@@ -47,13 +47,12 @@ public:
     Payload payload_,
     rmf_traffic::Duration loading_duration_estimate);
 
-  Phase::ConstModelPtr make_model(
+  Activity::ConstModelPtr make_model(
     State invariant_initial_state,
     const Parameters& parameters) const;
 
-  Phase::ConstTagPtr make_tag(
+  Header generate_header(
     const std::string& type,
-    Phase::Tag::Id id,
     const State& initial_state,
     const Parameters& parameters) const;
 };

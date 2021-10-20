@@ -15,48 +15,50 @@
  *
 */
 
-#include "MockPhase.hpp"
+#include <rmf_task/Header.hpp>
 
-namespace test_rmf_task {
+namespace rmf_task {
 
 //==============================================================================
-MockPhase::Active::Active(
-  rmf_traffic::Time start_time_,
-  ConstTagPtr tag_,
-  std::function<void(Phase::ConstSnapshotPtr)> update_,
-  std::function<void()> phase_finished_)
-: _tag(std::move(tag_)),
-  _event(std::make_shared<MockEvent>(
-      "Mock condition", "This is a mocked up condition")),
-  _start_time(start_time_),
-  _update(std::move(update_)),
-  _phase_finished(std::move(phase_finished_))
+class Header::Implementation
+{
+public:
+
+  std::string category;
+  std::string detail;
+  rmf_traffic::Duration duration;
+
+};
+
+//==============================================================================
+Header::Header(
+  std::string category_,
+  std::string detail_,
+  rmf_traffic::Duration estimate_)
+: _pimpl(rmf_utils::make_impl<Implementation>(
+      Implementation{
+        std::move(category_), std::move(detail_), estimate_
+      }))
 {
   // Do nothing
 }
 
 //==============================================================================
-rmf_task::Phase::ConstTagPtr MockPhase::Active::tag() const
+const std::string& Header::category() const
 {
-  return _tag;
+  return _pimpl->category;
 }
 
 //==============================================================================
-rmf_task::Event::ConstActivePtr MockPhase::Active::final_event() const
+const std::string& Header::detail() const
 {
-  return _event;
+  return _pimpl->detail;
 }
 
 //==============================================================================
-rmf_traffic::Time MockPhase::Active::estimate_finish_time() const
+rmf_traffic::Duration Header::original_duration_estimate() const
 {
-  return _start_time + _tag->header().original_duration_estimate();
+  return _pimpl->duration;
 }
 
-//==============================================================================
-void MockPhase::Active::send_update() const
-{
-  _update(Phase::Snapshot::make(*this));
-}
-
-} // namespace test_rmf_task
+} // namespace rmf_task

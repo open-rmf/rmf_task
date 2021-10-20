@@ -30,9 +30,10 @@ public:
   {
     return std::make_shared<Tag>(
       0,
-      "Restore from backup",
-      "The task progress is being restored from a backed up state",
-      rmf_traffic::Duration(0));
+      Header(
+        "Restore from backup",
+        "The task progress is being restored from a backed up state",
+        rmf_traffic::Duration(0)));
   }
 
   Implementation(
@@ -40,7 +41,9 @@ public:
     rmf_traffic::Time estimated_finish_time_)
   : tag(make_tag()),
     event(events::SimpleEvent::make(
-      tag->name(), tag->detail(), rmf_task::Event::Status::Underway)),
+        tag->header().category(),
+        tag->header().detail(),
+        rmf_task::Event::Status::Underway)),
     estimated_finish_time(estimated_finish_time_)
   {
     event->update_log().info(
@@ -87,16 +90,16 @@ rmf_traffic::Time RestoreBackup::Active::estimate_finish_time() const
 void RestoreBackup::Active::parsing_failed(const std::string& error_message)
 {
   _pimpl->event
-      ->update_status(Event::Status::Error)
-      .update_log().error("Parsing failed: " + error_message);
+  ->update_status(Event::Status::Error)
+  .update_log().error("Parsing failed: " + error_message);
 }
 
 //==============================================================================
 void RestoreBackup::Active::restoration_failed(const std::string& error_message)
 {
   _pimpl->event
-      ->update_status(Event::Status::Error)
-      .update_log().error("Restoration failed: " + error_message);
+  ->update_status(Event::Status::Error)
+  .update_log().error("Restoration failed: " + error_message);
 }
 
 //==============================================================================

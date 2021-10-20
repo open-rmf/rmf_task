@@ -25,8 +25,7 @@
 
 #include <rmf_task/detail/Resume.hpp>
 
-#include <rmf_task_sequence/detail/Backup.hpp>
-#include <rmf_task_sequence/typedefs.hpp>
+#include <rmf_task_sequence/Activity.hpp>
 
 namespace rmf_task_sequence {
 
@@ -35,29 +34,15 @@ class Event : public rmf_task::Event
 {
 public:
 
-  class Active;
+  class Active : public Activity::Active {};
   using ActivePtr = std::shared_ptr<Active>;
 
   class Activator;
   using ActivatorPtr = std::shared_ptr<Activator>;
   using ConstActivatorPtr = std::shared_ptr<const Activator>;
 
-  class Description;
+  class Description : public Activity::Description {};
   using ConstDescriptionPtr = std::shared_ptr<const Description>;
-
-  class Model;
-  using ConstModelPtr = std::shared_ptr<const Model>;
-};
-
-//==============================================================================
-class Event::Active : public rmf_task::Event::Active
-{
-public:
-
-  using Backup = detail::Backup;
-
-  virtual Backup backup() const = 0;
-
 };
 
 } // namespace rmf_task_sequence

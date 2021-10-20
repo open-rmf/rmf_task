@@ -41,13 +41,14 @@ auto MockTask::Active::pending_phases() const -> std::vector<Phase::Pending>
 //==============================================================================
 auto MockTask::Active::tag() const -> const ConstTagPtr&
 {
-  return _ctag;
+  return _tag;
 }
 
 //==============================================================================
 rmf_traffic::Time MockTask::Active::estimate_finish_time() const
 {
-  return _tag->original_finish_estimate();
+  return std::chrono::steady_clock::now()
+    + _tag->header().original_duration_estimate();
 }
 
 //==============================================================================
@@ -100,8 +101,9 @@ MockTask::Active::Active(
   std::function<void(Phase::ConstCompletedPtr)> phase_finished,
   std::function<void()> task_finished)
 : _tag(std::make_shared<Tag>(
-      booking, "Mock Task", "Mocked up task", rmf_traffic::Time())),
-  _ctag(_tag),
+      booking,
+      rmf_task::Header(
+        "Mock Task", "Mocked up task", rmf_traffic::Duration(0)))),
   _update(std::move(update)),
   _checkpoint(std::move(checkpoint)),
   _phase_finished(std::move(phase_finished)),
@@ -118,7 +120,8 @@ void MockTask::Active::add_pending_phase(
 {
   _pending_phases.emplace_back(
     std::make_shared<Phase::Tag>(
-      _next_phase_id++, std::move(name), std::move(detail), estimate));
+      _next_phase_id++,
+      rmf_task::Header(std::move(name), std::move(detail), estimate)));
 }
 
 //==============================================================================

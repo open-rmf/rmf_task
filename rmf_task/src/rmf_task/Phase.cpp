@@ -25,24 +25,18 @@ class Phase::Tag::Implementation
 public:
 
   Id id;
-  std::string name;
-  std::string detail;
-  rmf_traffic::Duration duration;
+  Header header;
 
 };
 
 //==============================================================================
 Phase::Tag::Tag(
   Id id_,
-  std::string name_,
-  std::string detail_,
-  rmf_traffic::Duration estimate_)
+  Header header_)
 : _pimpl(rmf_utils::make_impl<Implementation>(
       Implementation{
         id_,
-        std::move(name_),
-        std::move(detail_),
-        estimate_
+        std::move(header_)
       }))
 {
   // Do nothing
@@ -55,21 +49,9 @@ auto Phase::Tag::id() const -> Id
 }
 
 //==============================================================================
-const std::string& Phase::Tag::name() const
+const Header& Phase::Tag::header() const
 {
-  return _pimpl->name;
-}
-
-//==============================================================================
-const std::string& Phase::Tag::detail() const
-{
-  return _pimpl->detail;
-}
-
-//==============================================================================
-rmf_traffic::Duration Phase::Tag::original_duration_estimate() const
-{
-  return _pimpl->duration;
+  return _pimpl->header;
 }
 
 //==============================================================================

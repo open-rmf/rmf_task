@@ -40,10 +40,10 @@ auto PickUp::Description::make(
   output->_pimpl = rmf_utils::make_unique_impl<Implementation>(
     Implementation{
       PayloadTransfer(
-      std::move(pickup_location),
-      std::move(from_dispenser),
-      std::move(payload),
-      loading_duration_estimate)
+        std::move(pickup_location),
+        std::move(from_dispenser),
+        std::move(payload),
+        loading_duration_estimate)
     });
 
   return output;
@@ -52,13 +52,13 @@ auto PickUp::Description::make(
 //==============================================================================
 auto PickUp::Description::pickup_location() const -> const Location&
 {
-  return _pimpl->transfer.go_to_place->goal();
+  return _pimpl->transfer.go_to_place->destination();
 }
 
 //==============================================================================
 auto PickUp::Description::pickup_location(Location new_location) -> Description&
 {
-  _pimpl->transfer.go_to_place->goal(std::move(new_location));
+  _pimpl->transfer.go_to_place->destination(std::move(new_location));
   return *this;
 }
 
@@ -104,7 +104,7 @@ auto PickUp::Description::loading_duration_estimate(
 }
 
 //==============================================================================
-Phase::ConstModelPtr PickUp::Description::make_model(
+Activity::ConstModelPtr PickUp::Description::make_model(
   State invariant_initial_state,
   const Parameters& parameters) const
 {
@@ -113,12 +113,11 @@ Phase::ConstModelPtr PickUp::Description::make_model(
 }
 
 //==============================================================================
-Phase::ConstTagPtr PickUp::Description::make_tag(
-  Phase::Tag::Id id,
+Header PickUp::Description::generate_header(
   const State& initial_state,
   const Parameters& parameters) const
 {
-  return _pimpl->transfer.make_tag("Pick up", id, initial_state, parameters);
+  return _pimpl->transfer.generate_header("Pick up", initial_state, parameters);
 }
 
 //==============================================================================

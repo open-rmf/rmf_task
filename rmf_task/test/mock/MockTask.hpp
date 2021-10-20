@@ -76,8 +76,7 @@ public:
 
     void issue_backup();
 
-    std::shared_ptr<Tag> _tag;
-    ConstTagPtr _ctag;
+    ConstTagPtr _tag;
     std::vector<Phase::ConstCompletedPtr> _completed_phases;
     std::shared_ptr<MockPhase::Active> _active_phase;
     std::vector<Phase::Pending> _pending_phases;

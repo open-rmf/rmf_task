@@ -209,6 +209,8 @@ SCENARIO("Back up to file")
   mock_restored_task->_active_phase->send_update();
   REQUIRE(restored_snapshot);
   CHECK(restored_snapshot->tag()->id() == phase_snapshot->tag()->id());
-  CHECK(restored_snapshot->tag()->name() == phase_snapshot->tag()->name());
-  CHECK(restored_snapshot->tag()->detail() == phase_snapshot->tag()->detail());
+  CHECK(restored_snapshot->tag()->header().category()
+    == phase_snapshot->tag()->header().category());
+  CHECK(restored_snapshot->tag()->header().detail()
+    == phase_snapshot->tag()->header().detail());
 }

@@ -19,6 +19,7 @@
 #define RMF_TASK__PHASE_HPP
 
 #include <rmf_task/Event.hpp>
+#include <rmf_task/Header.hpp>
 
 #include <rmf_traffic/Time.hpp>
 
@@ -65,31 +66,16 @@ public:
   /// \param[in] id_
   ///   ID of the phase. This phase ID must be unique within its Task instance.
   ///
-  /// \param[in] name_
-  ///   Name of the phase
-  ///
-  /// \param[in] detail_
-  ///   Details about the phase
-  ///
-  /// \param[in] estimate_
-  ///   The original (ideal) estimate of how long the phase will last
-  Tag(
-    Id id_,
-    std::string name_,
-    std::string detail_,
-    rmf_traffic::Duration estimate_);
+  /// \param[in] header_
+  ///   Header of the phase.
+  Tag(Id id_, Header header_);
 
   /// Unique ID of the phase
   Id id() const;
 
-  /// Name of the phase
-  const std::string& name() const;
-
-  /// Details about the phase
-  const std::string& detail() const;
-
-  /// The original (ideal) estimate of how long the phase will last
-  rmf_traffic::Duration original_duration_estimate() const;
+  /// Header of the phase, containing human-friendly high-level information
+  /// about the phase.
+  const Header& header() const;
 
   class Implementation;
 private:

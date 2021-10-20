@@ -15,13 +15,13 @@
  *
 */
 
-#include <rmf_task_sequence/phases/WaitFor.hpp>
+#include <rmf_task_sequence/events/WaitFor.hpp>
 
 namespace rmf_task_sequence {
-namespace phases {
+namespace events {
 
 //==============================================================================
-class WaitFor::Model : public Phase::Model
+class WaitFor::Model : public Activity::Model
 {
 public:
 
@@ -30,14 +30,14 @@ public:
     rmf_traffic::Duration duration,
     const rmf_task::Parameters& parameters);
 
-  std::optional<rmf_task::State> estimate_finish(
+  std::optional<State> estimate_finish(
     rmf_task::State initial_state,
-    const rmf_task::Constraints& constraints,
-    const rmf_task::TravelEstimator& travel_estimator) const final;
+    const Constraints& constraints,
+    const TravelEstimator& travel_estimator) const final;
 
   rmf_traffic::Duration invariant_duration() const final;
 
-  rmf_task::State invariant_finish_state() const final;
+  State invariant_finish_state() const final;
 
 private:
   rmf_task::State _invariant_finish_state;
@@ -80,7 +80,7 @@ auto WaitFor::Description::duration(rmf_traffic::Duration new_duration)
 }
 
 //==============================================================================
-Phase::ConstModelPtr WaitFor::Description::make_model(
+Activity::ConstModelPtr WaitFor::Description::make_model(
   State invariant_initial_state,
   const Parameters& parameters) const
 {
@@ -89,14 +89,13 @@ Phase::ConstModelPtr WaitFor::Description::make_model(
 }
 
 //==============================================================================
-Phase::ConstTagPtr WaitFor::Description::make_tag(
-  Phase::Tag::Id id, const State&, const Parameters&) const
+Header WaitFor::Description::generate_header(
+  const State&, const Parameters&) const
 {
   const auto seconds = std::chrono::duration_cast<std::chrono::seconds>(
     _pimpl->duration);
 
-  return std::make_shared<Phase::Tag>(
-    id,
+  return Header(
     "Waiting",
     "Waiting for [" + std::to_string(seconds.count()) + "] seconds to elapse",
     _pimpl->duration);
@@ -118,7 +117,7 @@ WaitFor::Model::Model(
 {
   _invariant_battery_drain =
     parameters.ambient_sink()->compute_change_in_charge(
-      rmf_traffic::time::to_seconds(_duration));
+    rmf_traffic::time::to_seconds(_duration));
 }
 
 //==============================================================================

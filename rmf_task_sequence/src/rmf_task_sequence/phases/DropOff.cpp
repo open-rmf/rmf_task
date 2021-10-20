@@ -40,10 +40,10 @@ auto DropOff::Description::make(
   output->_pimpl = rmf_utils::make_unique_impl<Implementation>(
     Implementation{
       PayloadTransfer(
-      std::move(drop_off_location),
-      std::move(into_ingestor),
-      std::move(payload),
-      unloading_duration_estimate)
+        std::move(drop_off_location),
+        std::move(into_ingestor),
+        std::move(payload),
+        unloading_duration_estimate)
     });
 
   return output;
@@ -52,14 +52,14 @@ auto DropOff::Description::make(
 //==============================================================================
 auto DropOff::Description::drop_off_location() const -> const Location&
 {
-  return _pimpl->transfer.go_to_place->goal();
+  return _pimpl->transfer.go_to_place->destination();
 }
 
 //==============================================================================
 auto DropOff::Description::drop_off_location(Location new_location)
 -> Description&
 {
-  _pimpl->transfer.go_to_place->goal(std::move(new_location));
+  _pimpl->transfer.go_to_place->destination(std::move(new_location));
   return *this;
 }
 
@@ -105,7 +105,7 @@ auto DropOff::Description::unloading_duration_estimate(
 }
 
 //==============================================================================
-Phase::ConstModelPtr DropOff::Description::make_model(
+Activity::ConstModelPtr DropOff::Description::make_model(
   State invariant_initial_state,
   const Parameters& parameters) const
 {
@@ -114,12 +114,12 @@ Phase::ConstModelPtr DropOff::Description::make_model(
 }
 
 //==============================================================================
-Phase::ConstTagPtr DropOff::Description::make_tag(
-  Phase::Tag::Id id,
+Header DropOff::Description::generate_header(
   const State& initial_state,
   const Parameters& parameters) const
 {
-  return _pimpl->transfer.make_tag("Drop off", id, initial_state, parameters);
+  return _pimpl->transfer
+    .generate_header("Drop off", initial_state, parameters);
 }
 
 //==============================================================================

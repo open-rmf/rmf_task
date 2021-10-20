@@ -36,7 +36,7 @@ public:
   ValuePtr value;
 
   // The token is used to uniquely identify this VersionedString.
-  struct Token { };
+  struct Token {};
   using TokenPtr = std::shared_ptr<const Token>;
   TokenPtr token = std::make_shared<Token>();
 

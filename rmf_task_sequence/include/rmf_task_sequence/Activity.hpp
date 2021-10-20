@@ -19,6 +19,7 @@
 #define RMF_TASK_SEQUENCE__ACTIVITY_HPP
 
 #include <rmf_task/detail/Resume.hpp>
+#include <rmf_task/Header.hpp>
 
 #include <rmf_task_sequence/detail/Backup.hpp>
 #include <rmf_task_sequence/typedefs.hpp>
@@ -101,12 +102,12 @@ class Activity::Description
 {
 public:
 
-  /// Generate a Model for this phase based on its description, parameters, and
-  /// the invariants of its initial state.
+  /// Generate a Model for this Activity based on its description, parameters,
+  /// and the invariants of its initial state.
   ///
   /// \param[in] invariant_initial_state
   ///   A partial state that represents the state components which will
-  ///   definitely be true when this phase begins.
+  ///   definitely be true when this Activity begins.
   ///
   /// \param[in] parameters
   ///   The parameters for the robot.
@@ -116,8 +117,16 @@ public:
     State invariant_initial_state,
     const Parameters& parameters) const = 0;
 
-  /// Serialize this activity description into a JSON data structure.
-  virtual nlohmann::json serialize() const = 0;
+  /// Generate human-friendly header information for this Activity.
+  ///
+  /// \param[in] initial_state
+  ///   The expected initial state when the activity begins
+  ///
+  /// \param[in] parameters
+  ///   Parameters of the robot during the Activity
+  virtual Header generate_header(
+    const State& initial_state,
+    const Parameters& parameters) const = 0;
 
   // Virtual destructor
   virtual ~Description() = default;

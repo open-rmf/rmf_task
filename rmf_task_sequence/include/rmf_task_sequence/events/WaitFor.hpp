@@ -15,15 +15,15 @@
  *
 */
 
-#ifndef RMF_TASK_SEQUENCE__PHASES__WAITFOR_HPP
-#define RMF_TASK_SEQUENCE__PHASES__WAITFOR_HPP
+#ifndef RMF_TASK_SEQUENCE__EVENTS__WAITFOR_HPP
+#define RMF_TASK_SEQUENCE__EVENTS__WAITFOR_HPP
 
 #include <rmf_traffic/Time.hpp>
 
 #include <rmf_task_sequence/Phase.hpp>
 
 namespace rmf_task_sequence {
-namespace phases {
+namespace events {
 
 //==============================================================================
 /// A WaitFor phase encompasses having the robot sit in place and wait for a
@@ -63,18 +63,14 @@ public:
   Description& duration(rmf_traffic::Duration new_duration);
 
   // Documentation inherited
-  Phase::ConstModelPtr make_model(
+  Activity::ConstModelPtr make_model(
     rmf_task::State invariant_initial_state,
     const rmf_task::Parameters& parameters) const final;
 
   // Documentation inherited
-  Phase::ConstTagPtr make_tag(
-    Phase::Tag::Id id,
+  rmf_task::Header generate_header(
     const rmf_task::State& initial_state,
     const rmf_task::Parameters& parameters) const final;
-
-  // Documentation inherited
-  nlohmann::json serialize() const final;
 
   class Implementation;
 private:
@@ -82,7 +78,7 @@ private:
   rmf_utils::impl_ptr<Implementation> _pimpl;
 };
 
-} // namespace phases
+} // namespace events
 } // namespace rmf_task_sequence
 
 #endif // RMF_TASK_SEQUENCE__PHASES__WAITFOR_HPP

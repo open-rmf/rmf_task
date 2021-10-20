@@ -26,39 +26,37 @@ PayloadTransfer::PayloadTransfer(
   std::string target_,
   Payload payload_,
   rmf_traffic::Duration loading_duration_estimate)
-  : target(std::move(target_)),
-    payload(std::move(payload_)),
-    go_to_place(GoToPlace::Description::make(std::move(location_))),
-    wait_for(WaitFor::Description::make(loading_duration_estimate))
+: target(std::move(target_)),
+  payload(std::move(payload_)),
+  go_to_place(events::GoToPlace::Description::make(std::move(location_))),
+  wait_for(events::WaitFor::Description::make(loading_duration_estimate))
 {
   descriptions = {go_to_place, wait_for};
 }
 
 //==============================================================================
-Phase::ConstModelPtr PayloadTransfer::make_model(
+Activity::ConstModelPtr PayloadTransfer::make_model(
   State invariant_initial_state,
   const Parameters& parameters) const
 {
-  return Phase::SequenceModel::make(
+  return Activity::SequenceModel::make(
     descriptions,
     std::move(invariant_initial_state),
     parameters);
 }
 
 //==============================================================================
-Phase::ConstTagPtr PayloadTransfer::make_tag(
+Header PayloadTransfer::generate_header(
   const std::string& type,
-  Phase::Tag::Id id,
   const State& initial_state,
   const Parameters& parameters) const
 {
   const auto model = make_model(initial_state, parameters);
 
-  return std::make_shared<Phase::Tag>(
-    id,
+  return Header(
     type,
     type + " " + payload.brief("into") + " at "
-      + go_to_place->goal_name(parameters),
+    + go_to_place->destination_name(parameters),
     model->invariant_duration());
 }
 

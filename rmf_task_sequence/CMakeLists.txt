@@ -28,9 +28,8 @@ find_package(ament_cmake_catch2 QUIET)
 find_package(rmf_cmake_uncrustify QUIET)
 
 # ===== RMF Task Sequence Library
-file(GLOB lib_srcs
+file(GLOB_RECURSE lib_srcs
   "src/rmf_task_sequence/*.cpp"
-  "src/rmf_task_sequence/phases/*.cpp"
 )
 
 add_library(rmf_task_sequence SHARED

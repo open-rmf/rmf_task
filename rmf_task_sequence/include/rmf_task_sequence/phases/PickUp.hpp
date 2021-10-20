@@ -92,18 +92,14 @@ public:
   Description& loading_duration_estimate(rmf_traffic::Duration new_duration);
 
   // Documentation inherited
-  Phase::ConstModelPtr make_model(
+  Activity::ConstModelPtr make_model(
     State invariant_initial_state,
     const Parameters& parameters) const final;
 
   // Documentation inherited
-  Phase::ConstTagPtr make_tag(
-    Phase::Tag::Id id,
+  Header generate_header(
     const State& initial_state,
     const Parameters& parameters) const final;
-
-  // Documentation inherited
-  nlohmann::json serialize() const final;
 
   class Implementation;
 private:

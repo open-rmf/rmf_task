@@ -186,17 +186,17 @@ private:
     std::function<void(Backup)> checkpoint,
     std::function<void(Phase::ConstCompletedPtr)> phase_finished,
     std::function<void()> task_finished)
-    : _phase_activator(std::move(phase_activator)),
-      _clock(std::move(clock)),
-      _get_state(std::move(get_state)),
-      _parameters(parameters),
-      _booking(std::move(booking)),
-      _update(std::move(update)),
-      _checkpoint(std::move(checkpoint)),
-      _phase_finished(std::move(phase_finished)),
-      _task_finished(std::move(task_finished)),
-      _pending_stages(Description::Implementation::get_stages(description)),
-      _cancel_sequence_initial_id(_pending_stages.size()+1)
+  : _phase_activator(std::move(phase_activator)),
+    _clock(std::move(clock)),
+    _get_state(std::move(get_state)),
+    _parameters(parameters),
+    _booking(std::move(booking)),
+    _update(std::move(update)),
+    _checkpoint(std::move(checkpoint)),
+    _phase_finished(std::move(phase_finished)),
+    _task_finished(std::move(task_finished)),
+    _pending_stages(Description::Implementation::get_stages(description)),
+    _cancel_sequence_initial_id(_pending_stages.size()+1)
   {
     // Do nothing
   }
@@ -235,7 +235,7 @@ private:
 const nlohmann::json_schema::json_validator
 Task::Active::backup_schema_validator =
   nlohmann::json_schema::json_validator(
-    schemas::backup_PhaseSequenceTask_v0_1);
+  schemas::backup_PhaseSequenceTask_v0_1);
 
 //==============================================================================
 auto Task::Builder::add_phase(
@@ -287,7 +287,7 @@ void Task::Active::_load_backup(std::string backup_state_str)
 
   const auto backup_state = nlohmann::json::parse(backup_state_str);
   if (const auto result =
-      schemas::ErrorHandler::has_error(backup_schema_validator, backup_state))
+    schemas::ErrorHandler::has_error(backup_schema_validator, backup_state))
   {
     restore_phase->parsing_failed(result->message);
     return failed_to_restore();
@@ -338,7 +338,7 @@ void Task::Active::_load_backup(std::string backup_state_str)
     restore_phase->parsing_failed(
       "Invalid value [" + std::to_string(current_phase_id)
       + "] for [current_phase/id]. "
-        "Value is higher than all available phase IDs.");
+      "Value is higher than all available phase IDs.");
 
     return failed_to_restore();
   }
@@ -388,7 +388,12 @@ void Task::Active::_generate_pending_phases()
   {
     _pending_phases.push_back(
       std::make_shared<Phase::Pending>(
-        s->description->make_tag(s->id, state, *_parameters)));
+        std::make_shared<Phase::Tag>(
+          s->id,
+          s->description->generate_header(state, *_parameters)
+        )
+      )
+    );
   }
 }
 
@@ -399,11 +404,10 @@ void Task::Active::_finish_phase()
   _active_stage = nullptr;
 
   const auto phase_finish_time = _clock();
-  const auto completed_phase =
-    std::make_shared<Phase::Completed>(
-      rmf_task::Phase::Snapshot::make(*_active_phase),
-      _current_phase_start_time.value(),
-      phase_finish_time);
+  const auto completed_phase = std::make_shared<Phase::Completed>(
+    rmf_task::Phase::Snapshot::make(*_active_phase),
+    _current_phase_start_time.value(),
+    phase_finish_time);
 
   _completed_phases.push_back(completed_phase);
   _phase_finished(completed_phase);
@@ -540,9 +544,9 @@ auto Task::make_activator(
 -> rmf_task::Activator::Activate<Description>
 {
   return [
-      phase_activator = std::move(phase_activator),
-      clock = std::move(clock)
-    ](
+    phase_activator = std::move(phase_activator),
+    clock = std::move(clock)
+  ](
     std::function<State()> get_state,
     const ConstParametersPtr& parameters,
     const ConstBookingPtr& booking,
