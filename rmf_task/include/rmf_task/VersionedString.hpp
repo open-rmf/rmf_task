@@ -20,6 +20,8 @@
 
 #include <rmf_utils/impl_ptr.hpp>
 
+#include <string>
+
 namespace rmf_task {
 
 //==============================================================================
