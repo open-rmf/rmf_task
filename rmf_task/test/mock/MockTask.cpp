@@ -33,7 +33,8 @@ auto MockTask::Active::active_phase() const -> Phase::ConstActivePtr
 }
 
 //==============================================================================
-auto MockTask::Active::pending_phases() const -> std::vector<Phase::Pending>
+auto MockTask::Active::pending_phases() const
+-> const std::vector<Phase::Pending>&
 {
   return _pending_phases;
 }

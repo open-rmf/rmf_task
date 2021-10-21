@@ -188,7 +188,7 @@ public:
   virtual Phase::ConstActivePtr active_phase() const = 0;
 
   /// Descriptions of the phases that are expected in the future
-  virtual std::vector<Phase::Pending> pending_phases() const = 0;
+  virtual const std::vector<Phase::Pending>& pending_phases() const = 0;
 
   /// The tag of this Task
   virtual const ConstTagPtr& tag() const = 0;

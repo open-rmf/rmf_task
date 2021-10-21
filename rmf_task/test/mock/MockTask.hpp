@@ -40,7 +40,7 @@ public:
 
     Phase::ConstActivePtr active_phase() const override;
 
-    std::vector<Phase::Pending> pending_phases() const override;
+    const std::vector<Phase::Pending>& pending_phases() const override;
 
     const ConstTagPtr& tag() const override;
 

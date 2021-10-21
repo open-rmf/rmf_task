@@ -47,8 +47,6 @@ public:
   using ConstSnapshotPtr = std::shared_ptr<const Snapshot>;
 
   class Pending;
-  using PendingPtr = std::shared_ptr<Pending>;
-  using ConstPendingPtr = std::shared_ptr<const Pending>;
 };
 
 //==============================================================================

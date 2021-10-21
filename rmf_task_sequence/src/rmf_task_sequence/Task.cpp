@@ -118,7 +118,7 @@ public:
   Phase::ConstActivePtr active_phase() const final;
 
   // Documentation inherited
-  std::vector<Phase::Pending> pending_phases() const final;
+  const std::vector<Phase::Pending>& pending_phases() const final;
 
   // Documentation inherited
   const ConstTagPtr& tag() const final;
@@ -212,7 +212,7 @@ private:
   std::function<void()> _task_finished;
 
   std::list<ConstStagePtr> _pending_stages;
-  std::vector<Phase::PendingPtr> _pending_phases;
+  std::vector<Phase::Pending> _pending_phases;
 
   ConstStagePtr _active_stage;
   Phase::ActivePtr _active_phase;
@@ -358,12 +358,12 @@ void Task::Active::_load_backup(std::string backup_state_str)
         continue;
       }
 
-      while (pending_it != pending_end && (*pending_it)->tag()->id() < id)
+      while (pending_it != pending_end && pending_it->tag()->id() < id)
       {
         ++pending_it;
       }
 
-      if (pending_it == pending_end || id < (*pending_it)->tag()->id())
+      if (pending_it == pending_end || id < pending_it->tag()->id())
       {
         // This shouldn't happen, but it's not a critical error. In the worst
         // case, the operator needs to resend a skip command.
@@ -372,7 +372,7 @@ void Task::Active::_load_backup(std::string backup_state_str)
         continue;
       }
 
-      (*pending_it)->will_be_skipped(true);
+      pending_it->will_be_skipped(true);
     }
   }
 
@@ -386,12 +386,10 @@ void Task::Active::_generate_pending_phases()
   _pending_phases.reserve(_pending_stages.size());
   for (const auto& s : _pending_stages)
   {
-    _pending_phases.push_back(
-      std::make_shared<Phase::Pending>(
-        std::make_shared<Phase::Tag>(
-          s->id,
-          s->description->generate_header(state, *_parameters)
-        )
+    _pending_phases.emplace_back(
+      std::make_shared<Phase::Tag>(
+        s->id,
+        s->description->generate_header(state, *_parameters)
       )
     );
   }
@@ -423,10 +421,10 @@ void Task::Active::_begin_next_stage(std::optional<nlohmann::json> restore)
 
   assert(!_pending_phases.empty());
   _active_stage = _pending_stages.front();
-  assert(_active_stage->id == _pending_phases.front()->tag()->id());
+  assert(_active_stage->id == _pending_phases.front().tag()->id());
 
   _pending_stages.pop_front();
-  auto tag = _pending_phases.front()->tag();
+  auto tag = _pending_phases.front().tag();
   _pending_phases.erase(_pending_phases.begin());
 
   // Reset our memory of phase backup sequence number
@@ -524,8 +522,8 @@ auto Task::Active::_generate_backup(
   std::vector<uint64_t> skipping_phases;
   for (const auto& p : _pending_phases)
   {
-    if (p->will_be_skipped())
-      skipping_phases.push_back(p->tag()->id());
+    if (p.will_be_skipped())
+      skipping_phases.push_back(p.tag()->id());
   }
 
   nlohmann::json root;
