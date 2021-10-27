@@ -17,6 +17,8 @@
 
 #include <rmf_task_sequence/events/GoToPlace.hpp>
 
+#include "utils.hpp"
+
 namespace rmf_task_sequence {
 namespace events {
 
@@ -171,20 +173,6 @@ class GoToPlace::Description::Implementation
 public:
 
   rmf_traffic::agv::Plan::Goal destination;
-
-  static std::string waypoint_name(
-    const std::size_t index,
-    const Parameters& parameters)
-  {
-    const auto& graph = parameters.planner()->get_configuration().graph();
-    if (index < graph.num_waypoints())
-    {
-      if (const auto* name = graph.get_waypoint(index).name())
-        return *name;
-    }
-
-    return "#" + std::to_string(index);
-  }
 };
 
 //==============================================================================
@@ -215,31 +203,27 @@ Header GoToPlace::Description::generate_header(
   const State& initial_state,
   const Parameters& parameters) const
 {
-  const auto fail = [](const std::string& msg)
-    {
-      throw std::runtime_error(
-              "[GoToPlace::Description::generate_header] " + msg);
-    };
+  const std::string& fail_header = "[GoToPlace::Description::generate_header]";
 
   const auto start_wp_opt = initial_state.waypoint();
   if (!start_wp_opt)
-    fail("Initial state is missing a waypoint");
+    utils::fail(fail_header, "Initial state is missing a waypoint");
 
   const auto start_wp = *start_wp_opt;
 
   const auto& graph = parameters.planner()->get_configuration().graph();
   if (graph.num_waypoints() <= start_wp)
   {
-    fail("Initial waypoint [" + std::to_string(start_wp)
+    utils::fail(fail_header, "Initial waypoint [" + std::to_string(start_wp)
       + "] is outside the graph [" + std::to_string(graph.num_waypoints())
       + "]");
   }
 
-  const auto start_name = Implementation::waypoint_name(start_wp, parameters);
+  const auto start_name = utils::waypoint_name(start_wp, parameters);
 
   if (graph.num_waypoints() <= _pimpl->destination.waypoint())
   {
-    fail("Destination waypoint ["
+    utils::fail(fail_header, "Destination waypoint ["
       + std::to_string(_pimpl->destination.waypoint())
       + "] is outside the graph [" + std::to_string(graph.num_waypoints())
       + "]");
@@ -252,7 +236,7 @@ Header GoToPlace::Description::generate_header(
 
   if (!estimate.has_value())
   {
-    fail("Cannot find a path from ["
+    utils::fail(fail_header, "Cannot find a path from ["
       + start_name + "] to [" + goal_name_ + "]");
   }
 
@@ -279,7 +263,7 @@ auto GoToPlace::Description::destination(Goal new_goal) -> Description&
 std::string GoToPlace::Description::destination_name(
   const Parameters& parameters) const
 {
-  return Implementation::waypoint_name(
+  return utils::waypoint_name(
     _pimpl->destination.waypoint(), parameters);
 }
 
