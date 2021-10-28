@@ -15,28 +15,21 @@
  *
 */
 
-#ifndef RMF_TASK_SEQUENCE__EVENTS__WAITFOR_HPP
-#define RMF_TASK_SEQUENCE__EVENTS__WAITFOR_HPP
-
-#include <rmf_traffic/Time.hpp>
+#ifndef RMF_TASK_SEQUENCE__EVENTS__CALL_HPP
+#define RMF_TASK_SEQUENCE__EVENTS__CALL_HPP
 
 #include <rmf_task_sequence/Event.hpp>
+#include <rmf_task_sequence/detail/ContactCard.hpp>
 
 namespace rmf_task_sequence {
 namespace events {
 
 //==============================================================================
-/// A WaitFor event encompasses having the robot sit in place and wait for a
-/// period of time to pass.
-///
-/// The Model of this event may be useful for calculating the Models of other
-/// phases that include a period of time where the robot is waiting for a
-/// process to finish. E.g. the PickUp and DropOff Models use WaitFor::Model to
-/// calculate how much the robot's battery drains while waiting for the payload
-/// to be transferred.
-class WaitFor
+/// Make a phone call
+class Call
 {
 public:
+  using ContactCard = detail::ContactCard;
 
   class Description;
   using DescriptionPtr = std::shared_ptr<Description>;
@@ -46,31 +39,42 @@ public:
 };
 
 //==============================================================================
-class WaitFor::Description : public Event::Description
+class Call::Description : public Event::Description
 {
 public:
 
-  /// Make a WaitFor phase description
+  /// Make a Call description.
   ///
-  /// \param[in] wait_duration
-  ///   The duration of time that the phase should be waiting.
-  static DescriptionPtr make(rmf_traffic::Duration wait_duration);
+  /// \param[in] contact
+  ///   The contact of the entity to call
+  ///
+  /// \param[in] call_duration_estimate
+  ///   An estimate for how long it will take for the call to complete
+  static DescriptionPtr make(
+    ContactCard contact,
+    rmf_traffic::Duration call_duration_estimate);
 
-  /// Get the duration of the wait
-  rmf_traffic::Duration duration() const;
+  /// Get the contact
+  const ContactCard& contact() const;
 
-  /// Set the duration of the wait
-  Description& duration(rmf_traffic::Duration new_duration);
+  /// Set the contact
+  Description& contact(ContactCard new_contact);
+
+  /// Get the call duration estimate
+  rmf_traffic::Duration call_duration_estimate() const;
+
+  /// Set the action duration estimate
+  Description& call_duration_estimate(rmf_traffic::Duration new_duration);
 
   // Documentation inherited
   Activity::ConstModelPtr make_model(
-    rmf_task::State invariant_initial_state,
-    const rmf_task::Parameters& parameters) const final;
+    State invariant_initial_state,
+    const Parameters& parameters) const final;
 
   // Documentation inherited
-  rmf_task::Header generate_header(
+  Header generate_header(
     const rmf_task::State& initial_state,
-    const rmf_task::Parameters& parameters) const final;
+    const Parameters& parameters) const final;
 
   class Implementation;
 private:
@@ -81,4 +85,4 @@ private:
 } // namespace events
 } // namespace rmf_task_sequence
 
-#endif // RMF_TASK_SEQUENCE__PHASES__WAITFOR_HPP
+#endif // RMF_TASK_SEQUENCE__EVENTS__CALL_HPP
