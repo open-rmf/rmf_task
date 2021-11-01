@@ -29,7 +29,7 @@ public:
   VersionedString name;
   VersionedString detail;
   Log log;
-  std::vector<Event::ConstActivePtr> dependencies;
+  std::vector<Event::ConstStatePtr> dependencies;
 
 };
 
@@ -37,7 +37,7 @@ public:
 std::shared_ptr<SimpleEvent> SimpleEvent::make(std::string name,
   std::string detail,
   Event::Status initial_status,
-  std::vector<Event::ConstActivePtr> dependencies)
+  std::vector<Event::ConstStatePtr> dependencies)
 {
   SimpleEvent output;
   output._pimpl = rmf_utils::make_unique_impl<Implementation>(
@@ -104,14 +104,14 @@ Log& SimpleEvent::update_log()
 }
 
 //==============================================================================
-std::vector<Event::ConstActivePtr> SimpleEvent::dependencies() const
+std::vector<Event::ConstStatePtr> SimpleEvent::dependencies() const
 {
   return _pimpl->dependencies;
 }
 
 //==============================================================================
 SimpleEvent& SimpleEvent::update_dependencies(
-  std::vector<ConstActivePtr> new_dependencies)
+  std::vector<ConstStatePtr> new_dependencies)
 {
   _pimpl->dependencies = new_dependencies;
   return *this;

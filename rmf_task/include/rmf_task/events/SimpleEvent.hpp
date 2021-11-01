@@ -32,7 +32,7 @@ namespace events {
 /// satisfy the Phase interface's finish_event() function. Your Phase
 /// implementation can create an instance of this class and then manage its
 /// fields directly.
-class SimpleEvent : public Event::Active
+class SimpleEvent : public Event::State
 {
 public:
 
@@ -40,7 +40,7 @@ public:
     std::string name,
     std::string detail,
     Status initial_status,
-    std::vector<ConstActivePtr> dependencies = {});
+    std::vector<ConstStatePtr> dependencies = {});
 
   // Documentation inherited
   Status status() const final;
@@ -67,11 +67,11 @@ public:
   Log& update_log();
 
   // Documentation inherited
-  std::vector<ConstActivePtr> dependencies() const final;
+  std::vector<ConstStatePtr> dependencies() const final;
 
   /// Update the dependencies
   SimpleEvent& update_dependencies(
-    std::vector<ConstActivePtr> new_dependencies);
+    std::vector<ConstStatePtr> new_dependencies);
 
   class Implementation;
 private:

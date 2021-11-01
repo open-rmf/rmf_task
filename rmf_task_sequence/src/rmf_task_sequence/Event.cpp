@@ -15,56 +15,51 @@
  *
 */
 
-#include <rmf_task_sequence/Phase.hpp>
+#include <rmf_task_sequence/Event.hpp>
 
 namespace rmf_task_sequence {
 
 //==============================================================================
-class Phase::Activator::Implementation
+class Event::Initializer::Implementation
 {
 public:
 
-  std::unordered_map<std::type_index, Activate<Phase::Description>> activators;
+  std::unordered_map<std::type_index, Initialize<Description>> initializers;
 
 };
 
 //==============================================================================
-Phase::Activator::Activator()
+Event::Initializer::Initializer()
 : _pimpl(rmf_utils::make_impl<Implementation>())
 {
   // Do nothing
 }
 
 //==============================================================================
-Phase::ActivePtr Phase::Activator::activate(
-  std::function<State()> get_state,
-  ConstTagPtr tag,
-  const Description& description,
-  std::optional<nlohmann::json> backup_state,
-  std::function<void(rmf_task::Phase::ConstSnapshotPtr)> update,
-  std::function<void(Active::Backup)> checkpoint,
-  std::function<void()> finished) const
+Event::StandbyPtr Event::Initializer::initialize(
+  std::function<rmf_task::State()> get_state,
+  const ConstParametersPtr& parameters,
+  const Event::Description& description,
+  std::optional<std::string> backup_state)
 {
   const auto& type = typeid(description);
-  const auto it = _pimpl->activators.find(type);
-  if (it == _pimpl->activators.end())
+  const auto it = _pimpl->initializers.find(type);
+  if (it == _pimpl->initializers.end())
     return nullptr;
 
   return it->second(
     std::move(get_state),
-    std::move(tag),
+    parameters,
     description,
-    std::move(backup_state),
-    std::move(update),
-    std::move(checkpoint),
-    std::move(finished));
+    std::move(backup_state));
 }
 
 //==============================================================================
-void Phase::Activator::_add_activator(
-  std::type_index type, Activate<Phase::Description> activator)
+void Event::Initializer::_add_initializer(
+  std::type_index type,
+  Initialize<Event::Description> initializer)
 {
-  _pimpl->activators.insert_or_assign(type, std::move(activator));
+  _pimpl->initializers.insert_or_assign(type, std::move(initializer));
 }
 
 } // namespace rmf_task_sequence

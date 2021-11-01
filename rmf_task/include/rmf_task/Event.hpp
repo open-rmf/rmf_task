@@ -81,8 +81,8 @@ public:
     Finished
   };
 
-  class Active;
-  using ConstActivePtr = std::shared_ptr<const Active>;
+  class State;
+  using ConstStatePtr = std::shared_ptr<const State>;
 
   class Snapshot;
   using ConstSnapshotPtr = std::shared_ptr<const Snapshot>;
@@ -91,12 +91,12 @@ public:
 
 //==============================================================================
 /// The interface to an active event.
-class Event::Active
+class Event::State
 {
 public:
 
   using Status = Event::Status;
-  using ConstActivePtr = Event::ConstActivePtr;
+  using ConstStatePtr = Event::ConstStatePtr;
 
   /// The current Status of this event
   virtual Status status() const = 0;
@@ -115,10 +115,10 @@ public:
   virtual Log::View log() const = 0;
 
   /// Get more granular dependencies of this event, if any exist.
-  virtual std::vector<ConstActivePtr> dependencies() const = 0;
+  virtual std::vector<ConstStatePtr> dependencies() const = 0;
 
   // Virtual destructor
-  virtual ~Active() = default;
+  virtual ~State() = default;
 };
 
 //==============================================================================
@@ -126,12 +126,12 @@ public:
 /// original event is arbitrarily changed, and there is no risk of a race
 /// condition, as long as the snapshot is not being created while the event
 /// is changing.
-class Event::Snapshot : public Event::Active
+class Event::Snapshot : public Event::State
 {
 public:
 
   /// Make a snapshot of the current state of an Event
-  static ConstSnapshotPtr make(const Active& other);
+  static ConstSnapshotPtr make(const State& other);
 
   // Documentation inherited
   Status status() const final;
@@ -146,7 +146,7 @@ public:
   Log::View log() const final;
 
   // Documentation inherited
-  std::vector<ConstActivePtr> dependencies() const final;
+  std::vector<ConstStatePtr> dependencies() const final;
 
   class Implementation;
 private:

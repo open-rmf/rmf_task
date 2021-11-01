@@ -75,7 +75,7 @@ auto RestoreBackup::Active::tag() const -> ConstTagPtr
 }
 
 //==============================================================================
-Event::ConstActivePtr RestoreBackup::Active::final_event() const
+Event::ConstStatePtr RestoreBackup::Active::final_event() const
 {
   return _pimpl->event;
 }

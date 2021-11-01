@@ -42,7 +42,7 @@ rmf_task::Phase::ConstTagPtr MockPhase::Active::tag() const
 }
 
 //==============================================================================
-rmf_task::Event::ConstActivePtr MockPhase::Active::final_event() const
+rmf_task::Event::ConstStatePtr MockPhase::Active::final_event() const
 {
   return _event;
 }

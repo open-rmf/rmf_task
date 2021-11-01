@@ -115,7 +115,7 @@ public:
   virtual ConstTagPtr tag() const = 0;
 
   /// The Event that needs to finish for this phase to be complete
-  virtual Event::ConstActivePtr final_event() const = 0;
+  virtual Event::ConstStatePtr final_event() const = 0;
 
   /// The estimated finish time for this phase
   virtual rmf_traffic::Time estimate_finish_time() const = 0;
@@ -136,7 +136,7 @@ public:
   ConstTagPtr tag() const final;
 
   // Documentation inherited
-  Event::ConstActivePtr final_event() const final;
+  Event::ConstStatePtr final_event() const final;
 
   // Documentation inherited
   rmf_traffic::Time estimate_finish_time() const final;

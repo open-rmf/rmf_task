@@ -34,17 +34,135 @@ class Event : public rmf_task::Event
 {
 public:
 
-  class Active : public Activity::Active {};
+  // Event::Active simply uses the Activity::Active API
+  using Active = Activity::Active;
   using ActivePtr = std::shared_ptr<Active>;
 
-  class Activator;
-  using ActivatorPtr = std::shared_ptr<Activator>;
-  using ConstActivatorPtr = std::shared_ptr<const Activator>;
-
-  class Description : public Activity::Description {};
+  // Event::Description simply uses the Activity::Description API
+  using Description = Activity::Description;
   using ConstDescriptionPtr = std::shared_ptr<const Description>;
+
+  class Standby;
+  using StandbyPtr = std::shared_ptr<Standby>;
+
+  class Initializer;
+  using InitializerPtr = std::shared_ptr<Initializer>;
+  using ConstInitializerPtr = std::shared_ptr<const Initializer>;
+};
+
+//==============================================================================
+/// The interface of an event that is in a standby mode. This interface is what
+/// will be provided by the Event::Initializer. When the right conditions are
+/// met for the event to begin, the owner of the event should trigger the
+/// begin() function.
+class Event::Standby
+{
+public:
+
+  /// Get the state of this Standby event
+  virtual const ConstStatePtr& state() const = 0;
+
+  /// Estimate how long this event will take once it has started
+  virtual rmf_traffic::Duration duration_estimate() const = 0;
+
+  /// Tell this event to begin. This function should be implemented to always
+  /// return the same Event::Active instance if it gets called more than once.
+  ///
+  /// \param[in] update
+  ///   A callback that will be triggered when a notable change happens for this
+  ///   event.
+  ///
+  /// \param[in] checkpoint
+  ///   A callback that will be triggered when the event reaches a "checkpoint"
+  ///   meaning that the task state should be backed up.
+  virtual ActivePtr begin(
+    std::function<void()> update,
+    std::function<void()> checkpoint) = 0;
+
+  // Virtual destructor
+  virtual ~Standby() = default;
+};
+
+//==============================================================================
+/// The Event::Initializer class is the Event equivalent to the
+/// rmf_task::Activator class. It consumes an Event::Description and produces
+///
+class Event::Initializer
+{
+public:
+
+  /// Construct an empty Initializer
+  Initializer();
+
+  /// Signature for initializing an Event
+  ///
+  /// \tparam Description
+  ///   A class that implements the Event::Description interface
+  ///
+  /// \param[in] get_state
+  ///   A callback for retrieving the current state of the robot
+  ///
+  /// \param[in] parameters
+  ///   A reference to the parameters for the robot
+  ///
+  /// \param[in] description
+  ///   The down-casted description of the event
+  ///
+  /// \param[in] backup_state
+  ///   The serialized backup state of the Event, if the Event is being restored
+  ///   from a crash or disconnection. If the Event is not being restored, a
+  ///   std::nullopt will be passed in here.
+  ///
+  /// \return an Event in a Standby state
+  template<typename Description>
+  using Initialize =
+  std::function<
+  StandbyPtr(
+    std::function<rmf_task::State()> get_state,
+    const ConstParametersPtr& parameters,
+    const Description& description,
+    std::optional<std::string> backup_state)
+  >;
+
+  /// Add a callback to convert from a Description to an event in standby mode
+  template<typename Desc>
+  void add_initializer(Initialize<Desc> initializer);
+
+  /// Initialize an event
+  ///
+  /// \param[in] get_state
+  ///   A callback for retrieving the current state of the robot
+  ///
+  /// \param[in] parameters
+  ///   A reference to the parameters for the robot
+  ///
+  /// \param[in] description
+  ///   The description of the event
+  ///
+  /// \param[in] backup_state
+  ///   The serialized backup state of the Event, if the Event is being restored
+  ///   from a crash or disconnection. If the Event is not being restored, a
+  ///   std::nullopt will be passed in here.
+  ///
+  /// \return an Event in a Standby state
+  StandbyPtr initialize(
+    std::function<rmf_task::State()> get_state,
+    const ConstParametersPtr& parameters,
+    const Event::Description& description,
+    std::optional<std::string> backup_state);
+
+  class Implementation;
+private:
+  /// \private
+  void _add_initializer(
+    std::type_index type,
+    Initialize<Event::Description> initializer);
+
+  rmf_utils::impl_ptr<Implementation> _pimpl;
 };
 
 } // namespace rmf_task_sequence
+
+#include <rmf_task_sequence/detail/impl_Event.hpp>
 
 #endif // RMF_TASK_SEQUENCE__EVENT_HPP

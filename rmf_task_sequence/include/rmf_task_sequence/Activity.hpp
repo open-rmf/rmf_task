@@ -173,7 +173,7 @@ public:
   /// arguments that are given to Phase::Description::make_model(~).
   ///
   /// \param[in] descriptions
-  ///   The Phase descriptions that are being modelled. The ordering of the
+  ///   The Phase descriptions that are being modeled. The ordering of the
   ///   descriptions may impact model outcomes. The order of the descriptions
   ///   in the vector should reflect the actual order that the phases would
   ///   occur in.

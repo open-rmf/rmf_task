@@ -34,13 +34,13 @@ public:
   /// Signature for activating a task
   ///
   /// \tparam Description
-  ///   A class that implements the Request::Description interface
+  ///   A class that implements the Task::Description interface
   ///
   /// \param[in] get_state
   ///   A callback for retrieving the current state of the robot
   ///
   /// \param[in] parameters
-  ///   A reference to the parameters for the roboth
+  ///   A reference to the parameters for the robot
   ///
   /// \param[in] booking
   ///   An immutable reference to the booking information for the task
@@ -80,7 +80,7 @@ public:
       std::function<void()> task_finished)
     >;
 
-  /// Add a callback to convert from a Request into an active Task.
+  /// Add a callback to convert from a Description into an active Task.
   ///
   /// \tparam Description
   ///   A class that implements the Request::Description interface
@@ -90,7 +90,7 @@ public:
   template<typename Description>
   void add_activator(Activate<Description> activator);
 
-  /// Activate a Task object based on a Request::Description.
+  /// Activate a Task object based on a Request.
   ///
   /// \param[in] get_state
   ///   A callback for retrieving the current state of the robot
