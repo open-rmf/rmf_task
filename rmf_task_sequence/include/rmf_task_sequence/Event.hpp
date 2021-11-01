@@ -118,7 +118,7 @@ public:
   using Initialize =
   std::function<
   StandbyPtr(
-    std::function<rmf_task::State()> get_state,
+    const std::function<rmf_task::State()>& get_state,
     const ConstParametersPtr& parameters,
     const Description& description,
     std::optional<std::string> backup_state)
@@ -146,10 +146,10 @@ public:
   ///
   /// \return an Event in a Standby state
   StandbyPtr initialize(
-    std::function<rmf_task::State()> get_state,
+    const std::function<rmf_task::State()>& get_state,
     const ConstParametersPtr& parameters,
     const Event::Description& description,
-    std::optional<std::string> backup_state);
+    std::optional<std::string> backup_state) const;
 
   class Implementation;
 private:

@@ -16,6 +16,7 @@
 */
 
 #include <rmf_task_sequence/events/Sequence.hpp>
+#include <rmf_task/events/SimpleEvent.hpp>
 
 #include <nlohmann/json.hpp>
 
@@ -174,6 +175,77 @@ Header Sequence::Description::generate_header(
 {
   return _pimpl->generate_header(initial_state, parameters);
 }
+
+//==============================================================================
+class SequenceStandby : public Event::Standby
+{
+public:
+
+  static Event::StandbyPtr make_fresh(
+    const Event::ConstInitializerPtr& initializer,
+    const std::function<rmf_task::State()>& get_state,
+    const ConstParametersPtr& parameters,
+    const Sequence::Description& description)
+  {
+    std::vector<Event::StandbyPtr> elements;
+    for (const auto& desc : description.elements())
+    {
+      elements.push_back(
+        initializer->initialize(get_state, parameters, *desc, std::nullopt));
+    }
+
+    return std::make_shared<SequenceStandby>(description, std::move(elements));
+  }
+
+  static Event::StandbyPtr make_restore(
+    const Event::ConstInitializerPtr& initializer,
+    const std::function<rmf_task::State()>& get_state,
+    const ConstParametersPtr& parameters,
+    const Sequence::Description& description,
+    const std::string& backup)
+  {
+
+
+    std::vector<Event::StandbyPtr> elements;
+
+  }
+
+
+  const Event::ConstStatePtr& state() const final
+  {
+    return _state;
+  }
+
+  rmf_traffic::Duration duration_estimate() const final
+  {
+
+  }
+
+  Event::ActivePtr begin(std::function<void ()> update, std::function<void ()> checkpoint) final
+  {
+
+  }
+
+  SequenceStandby(
+    const Sequence::Description& desc,
+    std::vector<Event::StandbyPtr> elements)
+  : _elements(std::move(elements))
+  {
+    std::vector<Event::ConstStatePtr> element_states;
+    for (const auto& element : _elements)
+      element_states.emplace_back(element->state());
+
+    _state = rmf_task::events::SimpleEvent::make(
+      desc.category().value_or("Sequence"),
+      desc.detail().value_or(""),
+      rmf_task::Event::Status::Standby,
+      std::move(element_states));
+  }
+
+private:
+  std::vector<Event::StandbyPtr> _elements;
+  Event::ConstStatePtr _state;
+};
 
 } // namespace events
 } // namespace rmf_task_sequence

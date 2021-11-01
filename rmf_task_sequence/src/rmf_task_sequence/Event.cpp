@@ -37,10 +37,10 @@ Event::Initializer::Initializer()
 
 //==============================================================================
 Event::StandbyPtr Event::Initializer::initialize(
-  std::function<rmf_task::State()> get_state,
+  const std::function<rmf_task::State()>& get_state,
   const ConstParametersPtr& parameters,
   const Event::Description& description,
-  std::optional<std::string> backup_state)
+  std::optional<std::string> backup_state) const
 {
   const auto& type = typeid(description);
   const auto it = _pimpl->initializers.find(type);
