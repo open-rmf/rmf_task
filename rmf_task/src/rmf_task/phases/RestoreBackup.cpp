@@ -105,7 +105,7 @@ void RestoreBackup::Active::restoration_failed(const std::string& error_message)
 //==============================================================================
 void RestoreBackup::Active::restoration_succeeded()
 {
-  _pimpl->event->update_status(Event::Status::Finished);
+  _pimpl->event->update_status(Event::Status::Completed);
 }
 
 //==============================================================================

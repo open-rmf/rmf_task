@@ -25,6 +25,7 @@ class Event::Initializer::Implementation
 public:
 
   std::unordered_map<std::type_index, Initialize<Description>> initializers;
+  std::unordered_map<std::type_index, Restore<Description>> restorers;
 
 };
 
@@ -40,7 +41,7 @@ Event::StandbyPtr Event::Initializer::initialize(
   const std::function<rmf_task::State()>& get_state,
   const ConstParametersPtr& parameters,
   const Event::Description& description,
-  std::optional<std::string> backup_state) const
+  std::function<void()> update) const
 {
   const auto& type = typeid(description);
   const auto it = _pimpl->initializers.find(type);
@@ -48,18 +49,45 @@ Event::StandbyPtr Event::Initializer::initialize(
     return nullptr;
 
   return it->second(
-    std::move(get_state),
+    get_state,
     parameters,
     description,
-    std::move(backup_state));
+    std::move(update));
 }
 
 //==============================================================================
-void Event::Initializer::_add_initializer(
+Event::ActivePtr Event::Initializer::restore(
+  const std::function<rmf_task::State()>& get_state,
+  const ConstParametersPtr& parameters,
+  const Event::Description& description,
+  const nlohmann::json& backup,
+  std::function<void()> update,
+  std::function<void()> checkpoint,
+  std::function<void()> finished) const
+{
+  const auto& type = typeid(description);
+  const auto it = _pimpl->restorers.find(type);
+  if (it == _pimpl->restorers.end())
+    return nullptr;
+
+  return it->second(
+    get_state,
+    parameters,
+    description,
+    backup,
+    std::move(update),
+    std::move(checkpoint),
+    std::move(finished));
+}
+
+//==============================================================================
+void Event::Initializer::_add(
   std::type_index type,
-  Initialize<Event::Description> initializer)
+  Initialize<Event::Description> initializer,
+  Restore<Event::Description> restorer)
 {
   _pimpl->initializers.insert_or_assign(type, std::move(initializer));
+  _pimpl->restorers.insert_or_assign(type, std::move(restorer));
 }
 
 } // namespace rmf_task_sequence

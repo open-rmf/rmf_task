@@ -73,11 +73,16 @@ public:
   SimpleEvent& update_dependencies(
     std::vector<ConstStatePtr> new_dependencies);
 
+  /// Add one dependency to the state
+  SimpleEvent& add_dependency(ConstStatePtr new_dependency);
+
   class Implementation;
 private:
   SimpleEvent();
   rmf_utils::unique_impl_ptr<Implementation> _pimpl;
 };
+
+using SimpleEventPtr = std::shared_ptr<SimpleEvent>;
 
 } // namespace events
 } // namespace rmf_task

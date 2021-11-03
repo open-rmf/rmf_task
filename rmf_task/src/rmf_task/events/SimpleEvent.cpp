@@ -118,6 +118,13 @@ SimpleEvent& SimpleEvent::update_dependencies(
 }
 
 //==============================================================================
+SimpleEvent& SimpleEvent::add_dependency(ConstStatePtr new_dependency)
+{
+  _pimpl->dependencies.push_back(new_dependency);
+  return *this;
+}
+
+//==============================================================================
 SimpleEvent::SimpleEvent()
 {
   // Do nothing

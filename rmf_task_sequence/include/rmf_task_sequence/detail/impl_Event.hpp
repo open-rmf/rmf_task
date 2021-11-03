@@ -24,22 +24,42 @@ namespace rmf_task_sequence {
 
 //==============================================================================
 template<typename Desc>
-void Event::Initializer::add_initializer(Initialize<Desc> initializer)
+void Event::Initializer::add(
+  Initialize<Desc> initializer,
+  Restore<Desc> restorer)
 {
-  _add_initializer(
+  _add(
     typeid(Desc),
     [initializer](
-      std::function<rmf_task::State()> get_state,
+      const std::function<rmf_task::State()>& get_state,
       const ConstParametersPtr& parameters,
       const Event::Description& description,
-      std::optional<std::string> backup_state)
-  {
-    return initializer(
-      std::move(get_state),
-      parameters,
-      static_cast<const Desc&>(description),
-      std::move(backup_state));
-  });
+      std::function<void()> update)
+      {
+        return initializer(
+          get_state,
+          parameters,
+          static_cast<const Desc&>(description),
+          std::move(update));
+      },
+    [restorer](
+      const std::function<rmf_task::State()>& get_state,
+      const ConstParametersPtr& parameters,
+      const Event::Description& description,
+      const nlohmann::json& backup,
+      std::function<void()> update,
+      std::function<void()> checkpoint,
+      std::function<void()> finished)
+      {
+        return restorer(
+          get_state,
+          parameters,
+          static_cast<const Desc&>(description),
+          backup,
+          std::move(update),
+          std::move(checkpoint),
+          std::move(finished));
+      });
 }
 
 } // namespace rmf_task_sequence

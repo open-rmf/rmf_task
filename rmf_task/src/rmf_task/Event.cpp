@@ -38,6 +38,45 @@ std::vector<Event::ConstStatePtr> snapshot_dependencies(
 } // anonymous namespace
 
 //==============================================================================
+Event::Status Event::sequence_status(Status earlier, Status later)
+{
+  // If either status "needs attention" then we elevate that status, in order
+  // of criticality.
+  for (const auto& s :
+    {Status::Failed, Status::Error, Status::Blocked, Status::Uninitialized})
+  {
+    if (earlier == s || later == s)
+      return s;
+  }
+
+  // If the earlier status is "finished" then we use the later status
+  for (const auto& s :
+    {Status::Completed, Status::Killed, Status::Canceled, Status::Skipped})
+  {
+    if (earlier == s)
+      return later;
+  }
+
+  // If the earlier status is not finished, then we use the earlier status
+  return earlier;
+}
+
+//==============================================================================
+bool Event::State::finished() const
+{
+  switch (status())
+  {
+    case Status::Skipped:
+    case Status::Canceled:
+    case Status::Killed:
+    case Status::Completed:
+      return true;
+    default:
+      return false;
+  }
+}
+
+//==============================================================================
 class Event::Snapshot::Implementation
 {
 public:
