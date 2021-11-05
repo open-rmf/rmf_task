@@ -16,6 +16,7 @@
 */
 
 #include <rmf_task_sequence/events/Repeat.hpp>
+#include <rmf_task_sequence/events/While.hpp>
 #include <rmf_task_sequence/Activity.hpp>
 
 namespace rmf_task_sequence {
@@ -24,56 +25,51 @@ namespace events {
 //==============================================================================
 class Model
 {
-  // No definition of Model class. Description::make_mode() will return an
-  // Activity::SequenceModel
+  // No definition of Model class. Description::make_mode() will return a
+  // Repeat::Model
 };
 
 //==============================================================================
-class Repeat::Description::Implementation
+class While::Description::Implementation
 {
 public:
 
   Event::ConstDescriptionPtr event;
-  std::size_t repetitions;
+  std::function<bool()> completed;
+  rmf_traffic::Duration while_duration_estimate;
 };
 
 //==============================================================================
-auto Repeat::Description::make(
+auto While::Description::make(
   Event::ConstDescriptionPtr event,
-  std::size_t repetitions) -> DescriptionPtr
+  std::function<bool()> completed,
+  rmf_traffic::Duration while_duration_estimate) -> DescriptionPtr
 {
-  if (repetitions == 0)
-  {
-    /* INDENT-OFF */
-    throw std::invalid_argument(
-      "The number of repetitions has to be greater than zero");
-    /* INDENT-ON */
-  }
-
   auto output = std::shared_ptr<Description>(new Description);
   output->_pimpl =
     rmf_utils::make_impl<Implementation>(
       Implementation{
         std::move(event),
-        repetitions});
+        std::move(completed),
+        while_duration_estimate});
 
   return output;
 }
 
 //==============================================================================
-Repeat::Description::Description()
+While::Description::Description()
 {
   // Do nothing
 }
 
 //==============================================================================
-auto Repeat::Description::event() const -> const Event::ConstDescriptionPtr
+auto While::Description::event() const -> const Event::ConstDescriptionPtr
 {
   return _pimpl->event;
 }
 
 //==============================================================================
-auto Repeat::Description::event(
+auto While::Description::event(
   Event::ConstDescriptionPtr new_event)-> Description&
 {
   _pimpl->event = std::move(new_event);
@@ -81,36 +77,63 @@ auto Repeat::Description::event(
 }
 
 //==============================================================================
-std::size_t Repeat::Description::repetitions() const
+const std::function<bool()> While::Description::completed() const
 {
-  return _pimpl->repetitions;
+  return _pimpl->completed;
 }
 
 //==============================================================================
-auto Repeat::Description::repetitions(
-  std::size_t new_repetitions)-> Description&
+auto While::Description::completed(
+  std::function<bool()> new_completed)-> Description&
 {
-  _pimpl->repetitions = new_repetitions;
+  _pimpl->completed = std::move(new_completed);
   return *this;
 }
 
 //==============================================================================
-Activity::ConstModelPtr Repeat::Description::make_model(
-  State invariant_initial_state,
-  const Parameters& parameters) const
+const rmf_traffic::Duration While::Description::while_duration_estimate() const
 {
-  std::vector<Activity::ConstDescriptionPtr> descriptions = {};
-  for (std::size_t i = 0; i < _pimpl->repetitions; ++i)
-    descriptions.push_back(_pimpl->event);
-
-  return Activity::SequenceModel::make(
-    descriptions,
-    invariant_initial_state,
-    parameters);
+  return _pimpl->while_duration_estimate;
 }
 
 //==============================================================================
-Header Repeat::Description::generate_header(
+auto While::Description::while_duration_estimate(
+  rmf_traffic::Duration new_duration)-> Description&
+{
+  _pimpl->while_duration_estimate = new_duration;
+  return *this;
+}
+
+//==============================================================================
+Activity::ConstModelPtr While::Description::make_model(
+  State invariant_initial_state,
+  const Parameters& parameters) const
+{
+  const auto& event_header = _pimpl->event->generate_header(
+    invariant_initial_state, parameters);
+  const auto& event_estimate = event_header.original_duration_estimate();
+
+  // TODO(YV) Warn users if while_duration_estimate is smaller than
+  // event estimate
+  const std::size_t repetitions = std::max((std::size_t)1, static_cast<
+    std::size_t>(_pimpl->while_duration_estimate / event_estimate));
+
+  const auto repeat_event = Repeat::Description::make(
+    _pimpl->event,
+    repetitions);
+
+  if (repeat_event)
+  {
+    return repeat_event->make_model(
+      invariant_initial_state,
+      parameters);
+  }
+
+  return nullptr;
+}
+
+//==============================================================================
+Header While::Description::generate_header(
   const State& state, const Parameters& parameters) const
 {
   const auto& original_header =
@@ -118,14 +141,13 @@ Header Repeat::Description::generate_header(
   const std::string& original_category = original_header.category();
   const auto& estimate = original_header.original_duration_estimate();
 
-  const std::string& category = "Repeating [" + original_category + " ]";
-  const std::string& detail = category + " " +
-    std::to_string(_pimpl->repetitions) + " times";
+  const std::string& category = "While [" + original_category + " ]";
+  const std::string& detail = category + " indefinitely";
 
   return Header(
     category,
     detail,
-    _pimpl->repetitions * estimate);
+    _pimpl->while_duration_estimate);
 }
 
 } // namespace events
