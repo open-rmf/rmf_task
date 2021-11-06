@@ -210,7 +210,7 @@ class SequenceStandby : public Event::Standby
 public:
 
   static Event::StandbyPtr initiate(
-    const Event::ConstInitializerPtr& initializer,
+    const Event::Initializer& initializer,
     const std::function<rmf_task::State()>& get_state,
     const ConstParametersPtr& parameters,
     const Sequence::Description& description,
@@ -226,7 +226,7 @@ public:
     std::vector<Event::StandbyPtr> elements;
     for (const auto& desc : description.elements())
     {
-      auto element = initializer->initialize(
+      auto element = initializer.initialize(
         get_state, parameters, *desc, update);
 
       state->add_dependency(element->state());
@@ -281,6 +281,11 @@ public:
 
   static void update_status(rmf_task::events::SimpleEvent& state)
   {
+    if (state.status() == Event::Status::Canceled
+        || state.status() == Event::Status::Killed
+        || state.status() == Event::Status::Skipped)
+      return;
+
     Event::Status status = Event::Status::Completed;
     for (const auto& dep : state.dependencies())
       status = Event::sequence_status(status, dep->status());
@@ -304,7 +309,7 @@ class SequenceActive
 public:
 
   static Event::ActivePtr restore(
-    const Event::ConstInitializerPtr& initializer,
+    const Event::Initializer& initializer,
     const std::function<rmf_task::State()>& get_state,
     const ConstParametersPtr& parameters,
     const Sequence::Description& description,
@@ -352,7 +357,11 @@ public:
     }
 
     auto active = std::make_shared<SequenceActive>(
-      elements, std::move(state), std::move(checkpoint), std::move(finished));
+      current_event_index,
+      std::move(state),
+      parent_update,
+      std::move(checkpoint),
+      std::move(finished));
 
     const auto event_finished = [me = active->weak_from_this()]()
       {
@@ -361,7 +370,7 @@ public:
       };
 
     const auto& current_event_state = current_event_json["state"];
-    active->_current = initializer->restore(
+    active->_current = initializer.restore(
       get_state,
       parameters,
       *element_descriptions.at(current_event_index),
@@ -374,29 +383,33 @@ public:
     for (std::size_t i = current_event_index+1; i < element_descriptions.size(); ++i)
     {
       const auto& desc = element_descriptions[i];
-      auto element = initializer->initialize(
+      auto element = initializer.initialize(
         get_state, parameters, *desc, update);
 
       active->_state->add_dependency(element->state());
-      active->_remaining.emplace_back(std::move(element));
+      elements.emplace_back(std::move(element));
     }
 
-    std::reverse(active->_remaining.begin(), active->_remaining.end());
+    std::reverse(elements.begin(), elements.end());
+
+    active->_reverse_remaining = std::move(elements);
 
     BoolGuard lock(active->_inside_next);
     while (active->_current->state()->finished())
     {
-      if (active->_remaining.empty())
+      if (active->_reverse_remaining.empty())
       {
         SequenceStandby::update_status(*active->_state);
         return active;
       }
 
-      const auto next_event = active->_remaining.back();
-      active->_remaining.pop_back();
+      ++active->_current_event_index_plus_one;
+      const auto next_event = active->_reverse_remaining.back();
+      active->_reverse_remaining.pop_back();
       active->_current = next_event->begin(active->_checkpoint, event_finished);
     }
 
+    SequenceStandby::update_status(*active->_state);
     return active;
   }
 
@@ -411,10 +424,42 @@ public:
     if (_current)
       estimate += _current->remaining_time_estimate();
 
-    for (const auto& element : _remaining)
+    for (const auto& element : _reverse_remaining)
       estimate += element->duration_estimate();
 
     return estimate;
+  }
+
+  Backup backup() const final
+  {
+    nlohmann::json current_event_json;
+    current_event_json["index"] = _current_event_index_plus_one - 1;
+    current_event_json["state"] = _current->backup().state();
+
+    nlohmann::json backup_json;
+    backup_json["schema_version"] = "0.1";
+    backup_json["current_event"] = std::move(current_event_json);
+
+    return Backup::make(_next_backup_sequence_number++, backup_json);
+  }
+
+  Resume interrupt(std::function<void()> task_is_interrupted) final
+  {
+    return _current->interrupt(std::move(task_is_interrupted));
+  }
+
+  void cancel()
+  {
+    _reverse_remaining.clear();
+    _state->update_status(Event::Status::Canceled);
+    _current->cancel();
+  }
+
+  void kill()
+  {
+    _reverse_remaining.clear();
+    _state->update_status(Event::Status::Killed);
+    _current->kill();
   }
 
   SequenceActive(
@@ -424,7 +469,23 @@ public:
     std::function<void()> checkpoint,
     std::function<void()> finished)
   : _current(nullptr),
-    _remaining(elements),
+    _reverse_remaining(elements),
+    _state(std::move(state)),
+    _parent_update(std::move(parent_update)),
+    _checkpoint(std::move(checkpoint)),
+    _sequence_finished(std::move(finished))
+  {
+    // Do nothing
+  }
+
+  SequenceActive(
+    uint64_t current_event_index,
+    rmf_task::events::SimpleEventPtr state,
+    std::function<void()> parent_update,
+    std::function<void()> checkpoint,
+    std::function<void()> finished)
+  : _current(nullptr),
+    _current_event_index_plus_one(current_event_index+1),
     _state(std::move(state)),
     _parent_update(std::move(parent_update)),
     _checkpoint(std::move(checkpoint)),
@@ -448,15 +509,16 @@ public:
 
     do
     {
-      if (_remaining.empty())
+      if (_reverse_remaining.empty())
       {
         SequenceStandby::update_status(*_state);
         _sequence_finished();
         return;
       }
 
-      const auto next_event = _remaining.back();
-      _remaining.pop_back();
+      ++_current_event_index_plus_one;
+      const auto next_event = _reverse_remaining.back();
+      _reverse_remaining.pop_back();
       _current = next_event->begin(_checkpoint, event_finished);
     } while (_current->state()->finished());
 
@@ -469,7 +531,8 @@ private:
   static const nlohmann::json_schema::json_validator backup_schema_validator;
 
   Event::ActivePtr _current;
-  std::vector<Event::StandbyPtr> _remaining;
+  uint64_t _current_event_index_plus_one = 0;
+  std::vector<Event::StandbyPtr> _reverse_remaining;
   rmf_task::events::SimpleEventPtr _state;
   std::function<void()> _parent_update;
   std::function<void()> _checkpoint;
@@ -478,6 +541,7 @@ private:
   // We need to make sure that next() never gets called recursively by events
   // that finish as soon as they are activated
   bool _inside_next = false;
+  mutable uint64_t _next_backup_sequence_number = 0;
 };
 
 //==============================================================================
@@ -501,6 +565,52 @@ const nlohmann::json_schema::json_validator
 SequenceActive::backup_schema_validator =
   nlohmann::json_schema::json_validator(
   schemas::backup_EventSequence_v0_1);
+
+//==============================================================================
+void Sequence::add(const Event::InitializerPtr& initializer)
+{
+  add(*initializer, initializer);
+}
+
+//==============================================================================
+void Sequence::add(
+  Event::Initializer& add_to,
+  const Event::ConstInitializerPtr& initialize_from)
+{
+  add_to.add<Sequence::Description>(
+    [initialize_from](
+      const std::function<rmf_task::State()>& get_state,
+      const ConstParametersPtr& parameters,
+      const Sequence::Description& description,
+      std::function<void()> update)
+    {
+      return SequenceStandby::initiate(
+        *initialize_from,
+        get_state,
+        parameters,
+        description,
+        std::move(update));
+    },
+    [initialize_from](
+      const std::function<rmf_task::State()>& get_state,
+      const ConstParametersPtr& parameters,
+      const Sequence::Description& description,
+      const nlohmann::json& backup_state,
+      std::function<void()> update,
+      std::function<void()> checkpoint,
+      std::function<void()> finished)
+    {
+      return SequenceActive::restore(
+        *initialize_from,
+        get_state,
+        parameters,
+        description,
+        backup_state,
+        std::move(update),
+        std::move(checkpoint),
+        std::move(finished));
+    });
+}
 
 } // namespace events
 } // namespace rmf_task_sequence

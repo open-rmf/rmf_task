@@ -31,12 +31,27 @@ class Sequence : public Event
 {
 public:
 
-  /// Make an initializer for Event Sequences
+  /// Give an initializer the ability to initialize event sequences
   ///
   /// \param[in] initializer
-  ///   The Initializer that should be used to initialize other events
-  static Initializer::Initialize<Sequence::Description>
-  make_initializer(ConstInitializerPtr initializer);
+  ///   The Initializer that should be used to initialize other events, and
+  ///   also will be given the ability to initialize event sequences. This is
+  ///   equivalent to the overload of this function, but where add_to and
+  ///   initialize_from are the same initializer.
+  static void add(const Event::InitializerPtr& initializer);
+
+  /// Give an initializer the ability to initialize event sequences
+  ///
+  /// \param[in] add_to
+  ///   This Initializer will be given the ability to initialize event sequences
+  ///
+  /// \param[in] initialize_from
+  ///   This Initializer will be used by the Event Sequence to initialize the
+  ///   events that it depends on. This may be a different initializer than the
+  ///   one that the event sequence is added to.
+  static void add(
+    Event::Initializer& add_to,
+    const Event::ConstInitializerPtr& initialize_from);
 
   class Description;
 };
