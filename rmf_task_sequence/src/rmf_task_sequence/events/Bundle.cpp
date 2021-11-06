@@ -15,7 +15,7 @@
  *
 */
 
-#include <rmf_task_sequence/events/Sequence.hpp>
+#include <rmf_task_sequence/events/Bundle.hpp>
 #include <rmf_task/events/SimpleEvent.hpp>
 
 #include <nlohmann/json.hpp>
@@ -48,11 +48,12 @@ nlohmann::json convert_to_json(const std::string& input)
 } // anonymous namespace
 
 //==============================================================================
-class Sequence::Description::Implementation
+class Bundle::Description::Implementation
 {
 public:
 
-  Elements elements;
+  Dependencies dependencies;
+  Type type;
   std::optional<std::string> category;
   std::optional<std::string> detail;
 
@@ -61,7 +62,38 @@ public:
     if (category.has_value())
       return *category;
 
-    return "Sequence";
+    switch (type)
+    {
+      case Type::Sequence:
+        return "Sequence";
+      case Type::ParallelAll:
+        return "Parallel All";
+      case Type::ParallelAny:
+        return "One of";
+    }
+
+    return "<?Undefined Bundle>";
+  }
+
+  rmf_traffic::Duration adjust_estimate(
+    std::optional<rmf_traffic::Duration> current_estimate,
+    rmf_traffic::Duration next_dependency_estimate) const
+  {
+    if (current_estimate.has_value())
+    {
+      if (Type::ParallelAll == type)
+        return std::max(*current_estimate, next_dependency_estimate);
+      else if (Type::ParallelAny == type)
+        return std::min(*current_estimate, next_dependency_estimate);
+    }
+    else
+    {
+      if (Type::ParallelAll == type || Type::ParallelAny == type)
+        return next_dependency_estimate;
+    }
+
+    return current_estimate.value_or(rmf_traffic::Duration(0))
+      + next_dependency_estimate;
   }
 
   Header generate_header(
@@ -72,14 +104,15 @@ public:
     if (!detail.has_value())
       detail_json = std::vector<nlohmann::json>();
 
-    rmf_traffic::Duration duration_estimate = rmf_traffic::Duration(0);
+    std::optional<rmf_traffic::Duration> duration_estimate;
 
-    for (const auto& element : elements)
+    for (const auto& element : dependencies)
     {
       const auto element_header =
         element->generate_header(initial_state, parameters);
 
-      duration_estimate += element_header.original_duration_estimate();
+      duration_estimate = adjust_estimate(
+        duration_estimate, element_header.original_duration_estimate());
 
       initial_state =
         element->make_model(initial_state, parameters)
@@ -103,18 +136,20 @@ public:
     return Header(
       generate_category(),
       std::move(output_detail),
-      duration_estimate);
+      duration_estimate.value_or(rmf_traffic::Duration(0)));
   }
 };
 
 //==============================================================================
-Sequence::Description::Description(
-  Elements elements,
+Bundle::Description::Description(
+  Dependencies dependencies,
+  Type type,
   std::optional<std::string> category,
   std::optional<std::string> detail)
 : _pimpl(rmf_utils::make_impl<Implementation>(
    Implementation{
-     std::move(elements),
+     std::move(dependencies),
+     type,
      std::move(category),
      std::move(detail)
    }))
@@ -123,26 +158,26 @@ Sequence::Description::Description(
 }
 
 //==============================================================================
-auto Sequence::Description::elements() const -> const Elements&
+auto Bundle::Description::dependencies() const -> const Dependencies&
 {
-  return _pimpl->elements;
+  return _pimpl->dependencies;
 }
 
 //==============================================================================
-auto Sequence::Description::elements(Elements new_elements) -> Description&
+auto Bundle::Description::dependencies(Dependencies new_dependencies) -> Description&
 {
-  _pimpl->elements = std::move(new_elements);
+  _pimpl->dependencies = std::move(new_dependencies);
   return *this;
 }
 
 //==============================================================================
-const std::optional<std::string>& Sequence::Description::category() const
+const std::optional<std::string>& Bundle::Description::category() const
 {
   return _pimpl->category;
 }
 
 //==============================================================================
-auto Sequence::Description::category(std::optional<std::string> new_category)
+auto Bundle::Description::category(std::optional<std::string> new_category)
 -> Description&
 {
   _pimpl->category = std::move(new_category);
@@ -150,13 +185,13 @@ auto Sequence::Description::category(std::optional<std::string> new_category)
 }
 
 //==============================================================================
-const std::optional<std::string>& Sequence::Description::detail() const
+const std::optional<std::string>& Bundle::Description::detail() const
 {
   return _pimpl->detail;
 }
 
 //==============================================================================
-auto Sequence::Description::detail(std::optional<std::string> new_detail)
+auto Bundle::Description::detail(std::optional<std::string> new_detail)
 -> Description&
 {
   _pimpl->detail = std::move(new_detail);
@@ -164,18 +199,18 @@ auto Sequence::Description::detail(std::optional<std::string> new_detail)
 }
 
 //==============================================================================
-Activity::ConstModelPtr Sequence::Description::make_model(
+Activity::ConstModelPtr Bundle::Description::make_model(
   rmf_task::State invariant_initial_state,
   const Parameters& parameters) const
 {
   return Activity::SequenceModel::make(
-    _pimpl->elements,
+    _pimpl->dependencies,
     std::move(invariant_initial_state),
     parameters);
 }
 
 //==============================================================================
-Header Sequence::Description::generate_header(
+Header Bundle::Description::generate_header(
   const rmf_task::State& initial_state,
   const Parameters& parameters) const
 {
@@ -213,7 +248,7 @@ public:
     const Event::Initializer& initializer,
     const std::function<rmf_task::State()>& get_state,
     const ConstParametersPtr& parameters,
-    const Sequence::Description& description,
+    const Bundle::Description& description,
     std::function<void()> parent_update)
   {
     auto state = make_state(description);
@@ -223,22 +258,22 @@ public:
         parent_update();
       };
 
-    std::vector<Event::StandbyPtr> elements;
-    for (const auto& desc : description.elements())
+    std::vector<Event::StandbyPtr> dependencies;
+    for (const auto& desc : description.dependencies())
     {
       auto element = initializer.initialize(
         get_state, parameters, *desc, update);
 
       state->add_dependency(element->state());
 
-      elements.emplace_back(std::move(element));
+      dependencies.emplace_back(std::move(element));
     }
 
-    std::reverse(elements.begin(), elements.end());
+    std::reverse(dependencies.begin(), dependencies.end());
 
     update_status(*state);
     return std::make_shared<SequenceStandby>(
-      std::move(elements), std::move(state), std::move(parent_update));
+      std::move(dependencies), std::move(state), std::move(parent_update));
   }
 
   Event::ConstStatePtr state() const final
@@ -249,7 +284,7 @@ public:
   rmf_traffic::Duration duration_estimate() const final
   {
     auto estimate = rmf_traffic::Duration(0);
-    for (const auto& element : _elements)
+    for (const auto& element : _dependencies)
       estimate += element->duration_estimate();
 
     return estimate;
@@ -260,10 +295,10 @@ public:
     std::function<void()> finish) final;
 
   SequenceStandby(
-    std::vector<Event::StandbyPtr> elements,
+    std::vector<Event::StandbyPtr> dependencies,
     rmf_task::events::SimpleEventPtr state,
     std::function<void()> parent_update)
-  : _elements(std::move(elements)),
+  : _dependencies(std::move(dependencies)),
     _state(std::move(state)),
     _parent_update(std::move(parent_update))
   {
@@ -271,7 +306,7 @@ public:
   }
 
   static rmf_task::events::SimpleEventPtr make_state(
-    const Sequence::Description& description)
+    const Bundle::Description& description)
   {
     return rmf_task::events::SimpleEvent::make(
       description.category().value_or("Sequence"),
@@ -295,7 +330,7 @@ public:
 
 private:
 
-  std::vector<Event::StandbyPtr> _elements;
+  std::vector<Event::StandbyPtr> _dependencies;
   rmf_task::events::SimpleEventPtr _state;
   std::function<void()> _parent_update;
   std::shared_ptr<SequenceActive> _active;
@@ -312,7 +347,7 @@ public:
     const Event::Initializer& initializer,
     const std::function<rmf_task::State()>& get_state,
     const ConstParametersPtr& parameters,
-    const Sequence::Description& description,
+    const Bundle::Description& description,
     const std::string& backup,
     std::function<void()> parent_update,
     std::function<void()> checkpoint,
@@ -325,7 +360,7 @@ public:
         parent_update();
       };
 
-    std::vector<Event::StandbyPtr> elements;
+    std::vector<Event::StandbyPtr> dependencies;
 
     const auto backup_state = nlohmann::json::parse(backup);
     if (const auto result =
@@ -336,24 +371,24 @@ public:
         + "\nOriginal backup state:\n```" + backup + "\n```");
       state->update_status(Event::Status::Error);
       return std::make_shared<SequenceActive>(
-        elements, std::move(state), nullptr, nullptr, nullptr);
+        dependencies, std::move(state), nullptr, nullptr, nullptr);
     }
 
     const auto& current_event_json = backup_state["current_event"];
     const auto current_event_index =
       current_event_json["index"].get<uint64_t>();
 
-    const auto& element_descriptions = description.elements();
+    const auto& element_descriptions = description.dependencies();
     if (element_descriptions.size() <= current_event_index)
     {
       state->update_log().error(
         "Failed to restore backup. Index ["
         + std::to_string(current_event_index) + "] is too high for ["
-        + std::to_string(description.elements().size()) + "] event elements. "
+        + std::to_string(description.dependencies().size()) + "] event dependencies. "
         "Original text:\n```\n" + backup + "\n```");
       state->update_status(Event::Status::Error);
       return std::make_shared<SequenceActive>(
-        elements, std::move(state), nullptr, nullptr, nullptr);
+        dependencies, std::move(state), nullptr, nullptr, nullptr);
     }
 
     auto active = std::make_shared<SequenceActive>(
@@ -387,12 +422,12 @@ public:
         get_state, parameters, *desc, update);
 
       active->_state->add_dependency(element->state());
-      elements.emplace_back(std::move(element));
+      dependencies.emplace_back(std::move(element));
     }
 
-    std::reverse(elements.begin(), elements.end());
+    std::reverse(dependencies.begin(), dependencies.end());
 
-    active->_reverse_remaining = std::move(elements);
+    active->_reverse_remaining = std::move(dependencies);
 
     BoolGuard lock(active->_inside_next);
     while (active->_current->state()->finished())
@@ -463,13 +498,13 @@ public:
   }
 
   SequenceActive(
-    std::vector<Event::StandbyPtr> elements,
+    std::vector<Event::StandbyPtr> dependencies,
     rmf_task::events::SimpleEventPtr state,
     std::function<void()> parent_update,
     std::function<void()> checkpoint,
     std::function<void()> finished)
   : _current(nullptr),
-    _reverse_remaining(elements),
+    _reverse_remaining(dependencies),
     _state(std::move(state)),
     _parent_update(std::move(parent_update)),
     _checkpoint(std::move(checkpoint)),
@@ -553,7 +588,7 @@ Event::ActivePtr SequenceStandby::begin(
     return _active;
 
   _active = std::make_shared<SequenceActive>(
-    std::move(_elements), _state, _parent_update,
+    std::move(_dependencies), _state, _parent_update,
     std::move(checkpoint), std::move(finish));
 
   _active->next();
@@ -567,21 +602,21 @@ SequenceActive::backup_schema_validator =
   schemas::backup_EventSequence_v0_1);
 
 //==============================================================================
-void Sequence::add(const Event::InitializerPtr& initializer)
+void Bundle::add(const Event::InitializerPtr& initializer)
 {
   add(*initializer, initializer);
 }
 
 //==============================================================================
-void Sequence::add(
+void Bundle::add(
   Event::Initializer& add_to,
   const Event::ConstInitializerPtr& initialize_from)
 {
-  add_to.add<Sequence::Description>(
+  add_to.add<Bundle::Description>(
     [initialize_from](
       const std::function<rmf_task::State()>& get_state,
       const ConstParametersPtr& parameters,
-      const Sequence::Description& description,
+      const Bundle::Description& description,
       std::function<void()> update)
     {
       return SequenceStandby::initiate(
@@ -594,7 +629,7 @@ void Sequence::add(
     [initialize_from](
       const std::function<rmf_task::State()>& get_state,
       const ConstParametersPtr& parameters,
-      const Sequence::Description& description,
+      const Bundle::Description& description,
       const nlohmann::json& backup_state,
       std::function<void()> update,
       std::function<void()> checkpoint,

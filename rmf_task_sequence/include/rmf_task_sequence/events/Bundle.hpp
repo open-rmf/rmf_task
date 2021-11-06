@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef RMF_TASK_SEQUENCE__EVENTS__SEQUENCE_HPP
-#define RMF_TASK_SEQUENCE__EVENTS__SEQUENCE_HPP
+#ifndef RMF_TASK_SEQUENCE__EVENTS__BUNDLE_HPP
+#define RMF_TASK_SEQUENCE__EVENTS__BUNDLE_HPP
 
 #include <rmf_task_sequence/Event.hpp>
 
@@ -27,11 +27,27 @@ namespace rmf_task_sequence {
 namespace events {
 
 //==============================================================================
-class Sequence : public Event
+class Bundle : public Event
 {
 public:
 
-  /// Give an initializer the ability to initialize event sequences
+  enum Type
+  {
+    /// The bundle's dependencies will be executed one-by-one in sequence. The
+    /// bundle will finished when the last of its events reaches a finished
+    /// status.
+    Sequence,
+
+    /// The bundle will execute its dependencies in parallel and will finish
+    /// when all of its dependencies are finished.
+    ParallelAll,
+
+    /// The bundle will execute its dependencies in parallel and will finished
+    /// when any (one or more) of its dependencies finishes.
+    ParallelAny
+  };
+
+  /// Give an initializer the ability to initialize event bundles
   ///
   /// \param[in] initializer
   ///   The Initializer that should be used to initialize other events, and
@@ -57,36 +73,44 @@ public:
 };
 
 //==============================================================================
-class Sequence::Description : public Event::Description
+class Bundle::Description : public Event::Description
 {
 public:
 
-  using Elements = std::vector<Event::ConstDescriptionPtr>;
+  using Dependencies = std::vector<Event::ConstDescriptionPtr>;
 
   /// Construct a Sequence Description
   ///
-  /// \param[in] elements
-  ///   These are the events that the sequence will run through. Each event in
-  ///   the sequence will be in Standby mode until the previous one reaches a
-  ///   finished status.
+  /// \param[in] dependencies
+  ///   These are the events that the bundle will depend on.
+  ///
+  /// \param[in] type
+  ///   The type of the bundle, which determines its behavior.
   ///
   /// \param[in] category
-  ///   Optionally give a category to this sequence. If left unspecified, the
-  ///   category will simply be "Sequence".
+  ///   Optionally give a category to this bundle. If left unspecified, the
+  ///   category will be based on its type.
   ///
   /// \param[in] detail
-  ///   Optionally give some detail to this sequence. If left unspecified, the
+  ///   Optionally give some detail to this bundle. If left unspecified, the
   ///   detail will simply aggregate the details of the dependencies.
   Description(
-    Elements elements,
+    Dependencies dependencies,
+    Type type,
     std::optional<std::string> category = std::nullopt,
     std::optional<std::string> detail = std::nullopt);
 
   /// Get the elements of the sequence
-  const Elements& elements() const;
+  const Dependencies& dependencies() const;
 
   /// Change the elements of the sequence
-  Description& elements(Elements new_elements);
+  Description& dependencies(Dependencies new_elements);
+
+  /// Get the type of bundle this is
+  Type type() const;
+
+  /// Change the type of bundle that this is
+  Description& type(Type new_type);
 
   /// Get the category settings
   const std::optional<std::string>& category() const;
@@ -119,4 +143,4 @@ private:
 } // namespace rmf_task_sequence
 
 
-#endif // RMF_TASK_SEQUENCE__EVENTS__SEQUENCE_HPP
+#endif // RMF_TASK_SEQUENCE__EVENTS__BUNDLE_HPP
