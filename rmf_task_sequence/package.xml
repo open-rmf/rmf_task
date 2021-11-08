@@ -10,6 +10,7 @@
   <author>Grey</author>
 
   <depend>rmf_task</depend>
+  <depend>rmf_api_msgs</depend>
   <depend>nlohmann-json3-dev</depend>
   <depend>nlohmann_json_schema_validator_vendor</depend>
 
