@@ -20,6 +20,7 @@ endif()
 
 include(GNUInstallDirs)
 
+find_package(rmf_api_msgs REQUIRED)
 find_package(rmf_task REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(nlohmann_json_schema_validator_vendor REQUIRED)
@@ -47,7 +48,7 @@ target_include_directories(rmf_task_sequence
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-    $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include> # for auto-generated headers
+    $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/rmf_api_generate_schema_headers/include> # for auto-generated schema headers
 )
 
 if(BUILD_TESTING AND ament_cmake_catch2_FOUND AND rmf_cmake_uncrustify_FOUND)
