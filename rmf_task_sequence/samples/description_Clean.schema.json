@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://open-rmf.org/rmf_task_sequence/description_Clean/0.1",
+  "title": "Pick Up Description",
+  "description": "The description of a Pick Up task",
+  "properties": {
+    "zone": {
+      "type": "string",
+      "enum": ["pharmacy", "ward_0", "ward_1", "ward_2", "kitchen"]
+    },
+    "type": {
+      "type": "string",
+      "enum": ["vacuum", "mop"]
+    }
+  },
+  "required": ["zone", "type"]
+}
