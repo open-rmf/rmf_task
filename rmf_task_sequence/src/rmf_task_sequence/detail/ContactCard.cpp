@@ -18,7 +18,7 @@
 #include <rmf_task_sequence/detail/ContactCard.hpp>
 
 namespace rmf_task_sequence {
-namespace detail{
+namespace detail {
 
 //==============================================================================
 class ContactCard::Implementation
@@ -38,12 +38,12 @@ ContactCard::ContactCard(
   const std::string& email,
   PhoneNumber number)
 : _pimpl(rmf_utils::make_impl<Implementation>(
-  Implementation{
-    name,
-    address,
-    email,
-    std::move(number)
-  }))
+      Implementation{
+        name,
+        address,
+        email,
+        std::move(number)
+      }))
 {
   // Do nothing
 }

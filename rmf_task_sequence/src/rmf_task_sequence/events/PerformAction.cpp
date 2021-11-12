@@ -61,13 +61,13 @@ PerformAction::Model::Model(
 {
   _invariant_battery_drain =
     parameters.ambient_sink()->compute_change_in_charge(
-      rmf_traffic::time::to_seconds(_invariant_duration));
+    rmf_traffic::time::to_seconds(_invariant_duration));
 
   if (_use_tool_sink && parameters.tool_sink() != nullptr)
   {
     _invariant_battery_drain +=
       parameters.tool_sink()->compute_change_in_charge(
-        rmf_traffic::time::to_seconds(_invariant_duration));
+      rmf_traffic::time::to_seconds(_invariant_duration));
   }
 }
 
@@ -209,11 +209,11 @@ Activity::ConstModelPtr PerformAction::Description::make_model(
   if (_pimpl->expected_finish_location.has_value())
   {
     const auto& goal = _pimpl->expected_finish_location.value();
-   invariant_finish_state.waypoint(goal.waypoint());
-   if (goal.orientation() != nullptr)
-   {
-     invariant_finish_state.orientation(*goal.orientation());
-   }
+    invariant_finish_state.waypoint(goal.waypoint());
+    if (goal.orientation() != nullptr)
+    {
+      invariant_finish_state.orientation(*goal.orientation());
+    }
   }
 
   return std::make_shared<Model>(

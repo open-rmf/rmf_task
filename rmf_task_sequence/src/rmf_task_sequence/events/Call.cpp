@@ -109,9 +109,9 @@ auto Call::Description::make(
   auto output = std::shared_ptr<Description>(new Description);
   output->_pimpl =
     rmf_utils::make_impl<Implementation>(
-      Implementation{
-        std::move(contact),
-        wait_duration});
+    Implementation{
+      std::move(contact),
+      wait_duration});
 
   return output;
 }

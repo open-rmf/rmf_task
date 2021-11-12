@@ -46,16 +46,16 @@ auto Repeat::Description::make(
   {
     /* INDENT-OFF */
     throw std::invalid_argument(
-      "The number of repetitions has to be greater than zero");
+            "The number of repetitions has to be greater than zero");
     /* INDENT-ON */
   }
 
   auto output = std::shared_ptr<Description>(new Description);
   output->_pimpl =
     rmf_utils::make_impl<Implementation>(
-      Implementation{
-        std::move(event),
-        repetitions});
+    Implementation{
+      std::move(event),
+      repetitions});
 
   return output;
 }

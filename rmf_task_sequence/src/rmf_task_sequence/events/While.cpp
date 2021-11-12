@@ -48,10 +48,10 @@ auto While::Description::make(
   auto output = std::shared_ptr<Description>(new Description);
   output->_pimpl =
     rmf_utils::make_impl<Implementation>(
-      Implementation{
-        std::move(event),
-        std::move(completed),
-        while_duration_estimate});
+    Implementation{
+      std::move(event),
+      std::move(completed),
+      while_duration_estimate});
 
   return output;
 }
@@ -116,7 +116,7 @@ Activity::ConstModelPtr While::Description::make_model(
   // TODO(YV) Warn users if while_duration_estimate is smaller than
   // event estimate
   const std::size_t repetitions = std::max((std::size_t)1, static_cast<
-    std::size_t>(_pimpl->while_duration_estimate / event_estimate));
+        std::size_t>(_pimpl->while_duration_estimate / event_estimate));
 
   const auto repeat_event = Repeat::Description::make(
     _pimpl->event,
