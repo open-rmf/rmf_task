@@ -198,14 +198,14 @@ private:
     _pending_stages(Description::Implementation::get_stages(description)),
     _cancel_sequence_initial_id(_pending_stages.size()+1)
   {
-    const auto model = description.make_model(
-      std::chrono::steady_clock::now(),
-      *_parameters);
+    // const auto model = description.make_model(
+    //   std::chrono::steady_clock::now(),
+    //   *_parameters);
     // TODO: fix
     const auto header = Header(
       "",
       "",
-      model->invariant_duration());
+      rmf_traffic::Duration{0});
 
     _tag = std::make_shared<Tag>(_booking, header);
   }

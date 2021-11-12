@@ -30,4 +30,10 @@ SCENARIO("Test ContactCard")
     "baz",
     PhoneNumber{42, 11311}
   };
+  CHECK(contact.name() == "foo");
+  CHECK(contact.address() == "bar");
+  CHECK(contact.email() == "baz");
+  CHECK(contact.number().country_code == 42);
+  CHECK(contact.number().number == 11311);
+
 }
