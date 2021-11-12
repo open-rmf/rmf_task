@@ -24,20 +24,19 @@ namespace rmf_task_sequence {
 namespace detail {
 
 //==============================================================================
-struct PhoneNumber
-{
-  /// The country code without "+""
-  uint32_t country_code;
-
-  /// The phone number
-  uint32_t number;
-};
-
-//==============================================================================
 /// Store contact details for telecommunication
 class ContactCard
 {
 public:
+
+  struct PhoneNumber
+  {
+    /// The country code without "+""
+    uint32_t country_code;
+
+    /// The phone number
+    uint32_t number;
+  };
 
   /// Constructor
   ///

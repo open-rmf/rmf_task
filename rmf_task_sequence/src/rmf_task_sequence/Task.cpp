@@ -145,7 +145,7 @@ public:
   void rewind(uint64_t phase_id) final;
 
   /// Get a weak reference to this object
-  std::weak_ptr<Active> weak_from_this() const;
+  // std::weak_ptr<Active> weak_from_this() const;
 
   static const nlohmann::json_schema::json_validator backup_schema_validator;
 
@@ -198,7 +198,16 @@ private:
     _pending_stages(Description::Implementation::get_stages(description)),
     _cancel_sequence_initial_id(_pending_stages.size()+1)
   {
-    // Do nothing
+    const auto model = description.make_model(
+      std::chrono::steady_clock::now(),
+      *_parameters);
+    // TODO: fix
+    const auto header = Header(
+      "",
+      "",
+      model->invariant_duration());
+
+    _tag = std::make_shared<Tag>(_booking, header);
   }
 
   Phase::ConstActivatorPtr _phase_activator;
@@ -206,6 +215,7 @@ private:
   std::function<State()> _get_state;
   ConstParametersPtr _parameters;
   ConstBookingPtr _booking;
+  ConstTagPtr _tag;
   std::function<void(Phase::ConstSnapshotPtr)> _update;
   std::function<void(Backup)> _checkpoint;
   std::function<void(Phase::ConstCompletedPtr)> _phase_finished;
@@ -257,11 +267,75 @@ auto Task::Builder::add_phase(
 }
 
 //==============================================================================
+const std::vector<Phase::ConstCompletedPtr>&
+Task::Active::completed_phases() const
+{
+  return _completed_phases;
+}
+
+//==============================================================================
+Phase::ConstActivePtr Task::Active::active_phase() const
+{
+  return _active_phase;
+}
+
+//==============================================================================
+const std::vector<Phase::Pending>& Task::Active::pending_phases() const
+{
+  return _pending_phases;
+}
+
+//==============================================================================
+const Task::ConstTagPtr& Task::Active::tag() const
+{
+  return _tag;
+}
+
+//==============================================================================
+rmf_traffic::Time Task::Active::estimate_finish_time() const
+{
+  // TODO fix
+  const auto now = _clock();
+  return now;
+}
+
+//==============================================================================
 auto Task::Active::backup() const -> Backup
 {
   return _generate_backup(
     _active_phase->tag()->id(),
     _active_phase->backup());
+}
+
+//==============================================================================
+Task::Active::Resume Task::Active::interrupt(
+  std::function<void()> task_is_interrupted)
+{
+  return rmf_task::Task::Active::make_resumer(task_is_interrupted);
+}
+
+//==============================================================================
+void Task::Active::cancel()
+{
+  // TODO
+}
+
+//==============================================================================
+void Task::Active::kill()
+{
+  // TODO
+}
+
+//==============================================================================
+void Task::Active::skip(uint64_t phase_id, bool value)
+{
+  // TODO
+}
+
+//==============================================================================
+void Task::Active::rewind(uint64_t phase_id)
+{
+  // TODO
 }
 
 //==============================================================================

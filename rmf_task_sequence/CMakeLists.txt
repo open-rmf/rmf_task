@@ -25,13 +25,11 @@ find_package(nlohmann_json REQUIRED)
 find_package(nlohmann_json_schema_validator_vendor REQUIRED)
 
 find_package(ament_cmake_catch2 QUIET)
-find_package(rmf_cmake_uncrustify QUIET)
+find_package(ament_cmake_uncrustify QUIET)
 
 # ===== RMF Task Sequence Library
 file(GLOB_RECURSE lib_srcs
   "src/rmf_task_sequence/*.cpp"
-  "src/rmf_task_sequence/phases/*.cpp"
-  "src/rmf_task_sequence/events/*.cpp"
 )
 
 add_library(rmf_task_sequence SHARED
@@ -52,7 +50,7 @@ target_include_directories(rmf_task_sequence
     $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include> # for auto-generated headers
 )
 
-if(BUILD_TESTING AND ament_cmake_catch2_FOUND AND rmf_cmake_uncrustify_FOUND)
+if(BUILD_TESTING AND ament_cmake_catch2_FOUND AND ament_cmake_uncrustify_FOUND)
   file(GLOB_RECURSE unit_test_srcs "test/*.cpp")
 
   ament_add_catch2(
@@ -60,6 +58,7 @@ if(BUILD_TESTING AND ament_cmake_catch2_FOUND AND rmf_cmake_uncrustify_FOUND)
     TIMEOUT 300)
   target_link_libraries(test_rmf_task_sequence
       rmf_task_sequence
+      rmf_task::rmf_task
   )
 
   target_include_directories(test_rmf_task_sequence
@@ -71,7 +70,7 @@ if(BUILD_TESTING AND ament_cmake_catch2_FOUND AND rmf_cmake_uncrustify_FOUND)
     NAMES "rmf_code_style.cfg"
     PATHS "${rmf_utils_DIR}/../../../share/rmf_utils/")
 
-  rmf_uncrustify(
+  ament_uncrustify(
     ARGN include src test
     CONFIG_FILE ${uncrustify_config_file}
     MAX_LINE_LENGTH 80

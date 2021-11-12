@@ -88,13 +88,13 @@ ContactCard& ContactCard::email(const std::string& new_email)
 }
 
 //==============================================================================
-const PhoneNumber& ContactCard::number() const
+const ContactCard::PhoneNumber& ContactCard::number() const
 {
   return _pimpl->number;
 }
 
 //==============================================================================
-ContactCard& ContactCard::number(PhoneNumber new_number)
+ContactCard& ContactCard::number(ContactCard::PhoneNumber new_number)
 {
   _pimpl->number = std::move(new_number);
   return *this;
