@@ -17,28 +17,19 @@
 
 #include <rmf_utils/catch.hpp>
 
-#include <rmf_task_sequence/events/Call.hpp>
+#include <rmf_task_sequence/events/GoToPlace.hpp>
 
 #include "../utils.hpp"
 
 using namespace std::chrono_literals;
 
-SCENARIO("Test Call")
+SCENARIO("Test GoToPlace")
 {
-  using ContactCard = rmf_task_sequence::detail::ContactCard;
-  using PhoneNumber = ContactCard::PhoneNumber;
-  using Call = rmf_task_sequence::events::Call;
+  using GoToPlace = rmf_task_sequence::events::GoToPlace;
+  using Goal = GoToPlace::Goal;
 
-  const auto number = PhoneNumber{42, 11311};
-  const auto contact = ContactCard{
-    "foo",
-    "bar",
-    "baz",
-    number
-  };
-
-  const auto duration = 10s;
-  auto description = Call::Description::make(contact, duration);
+  const auto goal = Goal{1};
+  auto description = GoToPlace::Description::make(goal);
 
   const auto parameters = make_test_parameters();
   const auto constraints = make_test_constraints();
@@ -52,22 +43,22 @@ SCENARIO("Test Call")
 
   WHEN("Testing getters")
   {
-    CHECK_CONTACT(description->contact(), "foo", "bar", "baz", number);
-    CHECK(description->call_duration_estimate() == duration);
+    CHECK(description->destination().waypoint() == goal.waypoint());
+    CHECK_FALSE(description->destination().orientation());
+    CHECK(description->destination_name(*parameters) == "#1");
   }
 
   WHEN("Testing setters")
   {
-    const auto new_number = PhoneNumber{11311, 42};
-    description->contact(
-      ContactCard{"FOO", "BAR", "BAZ", new_number});
-    CHECK_CONTACT(description->contact(), "FOO", "BAR", "BAZ", new_number);
-
-    description->call_duration_estimate(20s);
-    CHECK(description->call_duration_estimate() == 20s);
+    description->destination(Goal{2, 1.57});
+    CHECK(description->destination().waypoint() == 2);
+    REQUIRE(description->destination().orientation());
+    CHECK(abs(
+      *description->destination().orientation() - 1.57) < 1e-3);
+    CHECK(description->destination_name(*parameters) == "#2");
   }
 
-  WHEN("Testing model")
+  WHEN("Testing model and header")
   {
     // TODO(YV): Test model for cases where state is missing some parameters
     const auto model = description->make_model(
@@ -77,7 +68,18 @@ SCENARIO("Test Call")
 
     rmf_task::State expected_finish_state = initial_state;
     REQUIRE(expected_finish_state.time().has_value());
-    expected_finish_state.time(initial_state.time().value() + duration);
+    const auto duration_opt = estimate_travel_duration(
+      parameters->planner(),
+      initial_state,
+      goal);
+    REQUIRE(duration_opt.has_value());
+    expected_finish_state.waypoint(goal.waypoint())
+    .time(initial_state.time().value() + duration_opt.value());
+
+    if (goal.orientation())
+      expected_finish_state.orientation(*goal.orientation());
+    else
+      expected_finish_state.erase<rmf_task::State::CurrentOrientation>();
 
     CHECK_MODEL(
       *model,
@@ -85,16 +87,13 @@ SCENARIO("Test Call")
       *constraints,
       travel_estimator,
       expected_finish_state);
-  }
 
-  WHEN("Testing header")
-  {
     const auto header = description->generate_header(
       initial_state,
       *parameters);
 
     CHECK(!header.category().empty());
     CHECK(!header.detail().empty());
-    CHECK(header.original_duration_estimate() == duration);
+    CHECK(header.original_duration_estimate() == duration_opt.value());
   }
 }

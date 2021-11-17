@@ -17,18 +17,19 @@
 
 #include <rmf_utils/catch.hpp>
 
-#include <rmf_task_sequence/events/Call.hpp>
+#include <rmf_task_sequence/events/SMS.hpp>
 
 #include "../utils.hpp"
 
 using namespace std::chrono_literals;
 
-SCENARIO("Test Call")
+SCENARIO("Test SMS")
 {
   using ContactCard = rmf_task_sequence::detail::ContactCard;
   using PhoneNumber = ContactCard::PhoneNumber;
-  using Call = rmf_task_sequence::events::Call;
+  using SMS = rmf_task_sequence::events::SMS;
 
+  const std::string message = "hello world";
   const auto number = PhoneNumber{42, 11311};
   const auto contact = ContactCard{
     "foo",
@@ -37,8 +38,11 @@ SCENARIO("Test Call")
     number
   };
 
-  const auto duration = 10s;
-  auto description = Call::Description::make(contact, duration);
+  const auto duration = 1s;
+  auto description = SMS::Description::make(
+    message,
+    contact,
+    duration);
 
   const auto parameters = make_test_parameters();
   const auto constraints = make_test_constraints();
@@ -52,19 +56,24 @@ SCENARIO("Test Call")
 
   WHEN("Testing getters")
   {
+    CHECK(description->message() == message);
     CHECK_CONTACT(description->contact(), "foo", "bar", "baz", number);
-    CHECK(description->call_duration_estimate() == duration);
+    CHECK(description->sms_duration_estimate() == duration);
   }
 
   WHEN("Testing setters")
   {
+    const std::string new_message = "Hello World!!";
+    description->message(new_message);
+    CHECK(description->message() == new_message);
+
     const auto new_number = PhoneNumber{11311, 42};
     description->contact(
       ContactCard{"FOO", "BAR", "BAZ", new_number});
     CHECK_CONTACT(description->contact(), "FOO", "BAR", "BAZ", new_number);
 
-    description->call_duration_estimate(20s);
-    CHECK(description->call_duration_estimate() == 20s);
+    description->sms_duration_estimate(20s);
+    CHECK(description->sms_duration_estimate() == 20s);
   }
 
   WHEN("Testing model")

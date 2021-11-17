@@ -195,8 +195,7 @@ void CHECK_MODEL(
   const rmf_task::State& initial_state,
   const rmf_task::Constraints& constraints,
   const rmf_task::TravelEstimator& travel_estimator,
-  const rmf_task::State& expected_finish_state,
-  const rmf_traffic::Duration expected_invariant_duration)
+  const rmf_task::State& expected_finish_state)
 {
 
   const auto estimated_finish = model.estimate_finish(
@@ -207,8 +206,24 @@ void CHECK_MODEL(
   REQUIRE(estimated_finish.has_value());
 
   CHECK_STATE(estimated_finish.value(), expected_finish_state);
+}
 
-  CHECK(model.invariant_duration() - expected_invariant_duration < 100ms);
+//==============================================================================
+std::optional<rmf_traffic::Duration> estimate_travel_duration(
+  const std::shared_ptr<const rmf_traffic::agv::Planner>& planner,
+  const rmf_task::State& initial_state,
+  const rmf_traffic::agv::Planner::Goal& goal)
+{
+  const auto result =
+    planner->setup(initial_state.project_plan_start().value(), goal);
+
+  if (result.disconnected())
+    return std::nullopt;
+
+  if (!result.ideal_cost().has_value())
+    return std::nullopt;
+
+  return rmf_traffic::time::from_seconds(*result.ideal_cost());
 }
 
 } // anonymous namespace

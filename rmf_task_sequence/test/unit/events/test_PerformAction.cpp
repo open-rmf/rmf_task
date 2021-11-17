@@ -17,28 +17,24 @@
 
 #include <rmf_utils/catch.hpp>
 
-#include <rmf_task_sequence/events/Call.hpp>
+#include <rmf_task_sequence/events/PerformAction.hpp>
 
 #include "../utils.hpp"
 
 using namespace std::chrono_literals;
 
-SCENARIO("Test Call")
+SCENARIO("Test PerformAction")
 {
-  using ContactCard = rmf_task_sequence::detail::ContactCard;
-  using PhoneNumber = ContactCard::PhoneNumber;
-  using Call = rmf_task_sequence::events::Call;
-
-  const auto number = PhoneNumber{42, 11311};
-  const auto contact = ContactCard{
-    "foo",
-    "bar",
-    "baz",
-    number
-  };
-
+  using PerformAction = rmf_task_sequence::events::PerformAction;
   const auto duration = 10s;
-  auto description = Call::Description::make(contact, duration);
+  const std::string action_name = "test_action";
+  const rmf_traffic::agv::Planner::Goal finish_location{1};
+
+  auto description = PerformAction::Description::make(
+    action_name,
+    duration,
+    false,
+    finish_location);
 
   const auto parameters = make_test_parameters();
   const auto constraints = make_test_constraints();
@@ -52,19 +48,23 @@ SCENARIO("Test Call")
 
   WHEN("Testing getters")
   {
-    CHECK_CONTACT(description->contact(), "foo", "bar", "baz", number);
-    CHECK(description->call_duration_estimate() == duration);
+    CHECK(description->action_name() == action_name);
+    CHECK(description->action_duration_estimate() == duration);
+    CHECK(description->use_tool_sink() == false);
+    REQUIRE(description->expected_finish_location().has_value());
+    CHECK(description->expected_finish_location().value().waypoint() == 1);
   }
 
   WHEN("Testing setters")
   {
-    const auto new_number = PhoneNumber{11311, 42};
-    description->contact(
-      ContactCard{"FOO", "BAR", "BAZ", new_number});
-    CHECK_CONTACT(description->contact(), "FOO", "BAR", "BAZ", new_number);
-
-    description->call_duration_estimate(20s);
-    CHECK(description->call_duration_estimate() == 20s);
+    description->action_name("new_name");
+    CHECK(description->action_name() == "new_name");
+    description->action_duration_estimate(20s);
+    CHECK(description->action_duration_estimate() == 20s);
+    description->use_tool_sink(true);
+    CHECK(description->use_tool_sink() == true);
+    description->expected_finish_location(std::nullopt);
+    CHECK_FALSE(description->expected_finish_location().has_value());
   }
 
   WHEN("Testing model")
@@ -76,8 +76,9 @@ SCENARIO("Test Call")
     const auto travel_estimator = rmf_task::TravelEstimator(*parameters);
 
     rmf_task::State expected_finish_state = initial_state;
-    REQUIRE(expected_finish_state.time().has_value());
-    expected_finish_state.time(initial_state.time().value() + duration);
+    REQUIRE(initial_state.time().has_value());
+    expected_finish_state.time(initial_state.time().value() + duration)
+      .waypoint(1);
 
     CHECK_MODEL(
       *model,

@@ -17,28 +17,22 @@
 
 #include <rmf_utils/catch.hpp>
 
-#include <rmf_task_sequence/events/Call.hpp>
+#include <rmf_task_sequence/events/While.hpp>
+#include <rmf_task_sequence/events/WaitFor.hpp>
 
 #include "../utils.hpp"
 
 using namespace std::chrono_literals;
 
-SCENARIO("Test Call")
+SCENARIO("Test While")
 {
-  using ContactCard = rmf_task_sequence::detail::ContactCard;
-  using PhoneNumber = ContactCard::PhoneNumber;
-  using Call = rmf_task_sequence::events::Call;
+  using WaitFor = rmf_task_sequence::events::WaitFor;
+  using While = rmf_task_sequence::events::While;
 
-  const auto number = PhoneNumber{42, 11311};
-  const auto contact = ContactCard{
-    "foo",
-    "bar",
-    "baz",
-    number
-  };
-
-  const auto duration = 10s;
-  auto description = Call::Description::make(contact, duration);
+  const auto duration = 300s;
+  const auto event = WaitFor::Description::make(10s);
+  const auto completed = []() -> bool {return true;};
+  auto description = While::Description::make(event, completed, duration);
 
   const auto parameters = make_test_parameters();
   const auto constraints = make_test_constraints();
@@ -52,22 +46,22 @@ SCENARIO("Test Call")
 
   WHEN("Testing getters")
   {
-    CHECK_CONTACT(description->contact(), "foo", "bar", "baz", number);
-    CHECK(description->call_duration_estimate() == duration);
+    CHECK(description->event() == event);
+    CHECK(description->while_duration_estimate() == duration);
   }
 
   WHEN("Testing setters")
   {
-    const auto new_number = PhoneNumber{11311, 42};
-    description->contact(
-      ContactCard{"FOO", "BAR", "BAZ", new_number});
-    CHECK_CONTACT(description->contact(), "FOO", "BAR", "BAZ", new_number);
+    const auto new_event = WaitFor::Description::make(30s);
+    description->event(new_event);
+    // TODO(YV): More meaningful equality checks
+    CHECK(description->event() != event);
 
-    description->call_duration_estimate(20s);
-    CHECK(description->call_duration_estimate() == 20s);
+    description->while_duration_estimate(60s);
+    CHECK(description->while_duration_estimate() == 60s);
   }
 
-  WHEN("Testing model")
+  WHEN("Testing model and header")
   {
     // TODO(YV): Test model for cases where state is missing some parameters
     const auto model = description->make_model(
@@ -77,7 +71,10 @@ SCENARIO("Test Call")
 
     rmf_task::State expected_finish_state = initial_state;
     REQUIRE(expected_finish_state.time().has_value());
-    expected_finish_state.time(initial_state.time().value() + duration);
+    const auto repetitions = (int)(duration / event->duration());
+    const auto total_duration = repetitions * event->duration();
+    expected_finish_state
+    .time(initial_state.time().value() + total_duration);
 
     CHECK_MODEL(
       *model,
@@ -85,16 +82,13 @@ SCENARIO("Test Call")
       *constraints,
       travel_estimator,
       expected_finish_state);
-  }
 
-  WHEN("Testing header")
-  {
     const auto header = description->generate_header(
       initial_state,
       *parameters);
 
     CHECK(!header.category().empty());
     CHECK(!header.detail().empty());
-    CHECK(header.original_duration_estimate() == duration);
+    CHECK(header.original_duration_estimate() == total_duration);
   }
 }

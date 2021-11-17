@@ -17,28 +17,18 @@
 
 #include <rmf_utils/catch.hpp>
 
-#include <rmf_task_sequence/events/Call.hpp>
+#include <rmf_task_sequence/events/WaitFor.hpp>
 
 #include "../utils.hpp"
 
 using namespace std::chrono_literals;
 
-SCENARIO("Test Call")
+SCENARIO("Test WaitFor")
 {
-  using ContactCard = rmf_task_sequence::detail::ContactCard;
-  using PhoneNumber = ContactCard::PhoneNumber;
-  using Call = rmf_task_sequence::events::Call;
-
-  const auto number = PhoneNumber{42, 11311};
-  const auto contact = ContactCard{
-    "foo",
-    "bar",
-    "baz",
-    number
-  };
+  using WaitFor = rmf_task_sequence::events::WaitFor;
 
   const auto duration = 10s;
-  auto description = Call::Description::make(contact, duration);
+  auto description = WaitFor::Description::make(duration);
 
   const auto parameters = make_test_parameters();
   const auto constraints = make_test_constraints();
@@ -52,19 +42,13 @@ SCENARIO("Test Call")
 
   WHEN("Testing getters")
   {
-    CHECK_CONTACT(description->contact(), "foo", "bar", "baz", number);
-    CHECK(description->call_duration_estimate() == duration);
+    CHECK(description->duration() == duration);
   }
 
   WHEN("Testing setters")
   {
-    const auto new_number = PhoneNumber{11311, 42};
-    description->contact(
-      ContactCard{"FOO", "BAR", "BAZ", new_number});
-    CHECK_CONTACT(description->contact(), "FOO", "BAR", "BAZ", new_number);
-
-    description->call_duration_estimate(20s);
-    CHECK(description->call_duration_estimate() == 20s);
+    description->duration(20s);
+    CHECK(description->duration() == 20s);
   }
 
   WHEN("Testing model")
