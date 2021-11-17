@@ -130,5 +130,3 @@ export(
   FILE ${CMAKE_CURRENT_BINARY_DIR}/rmf_task_sequence-targets.cmake
   NAMESPACE rmf_task_sequence::
 )
-
-export(PACKAGE rmf_task_sequence)

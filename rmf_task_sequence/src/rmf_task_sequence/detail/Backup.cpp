@@ -40,7 +40,7 @@ Backup Backup::make(uint64_t seq, nlohmann::json state)
 {
   Backup backup;
   backup._pimpl = rmf_utils::make_impl<Implementation>(
-      Implementation{seq, state});
+    Implementation{seq, state});
   return backup;
 }
 
@@ -55,8 +55,6 @@ const nlohmann::json& Backup::state() const
 {
   return _pimpl->state;
 }
-
-
 
 
 } // namespace detail

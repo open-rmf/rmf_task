@@ -36,4 +36,29 @@ SCENARIO("Test ContactCard")
   CHECK(contact.number().country_code == 42);
   CHECK(contact.number().number == 11311);
 
+  WHEN("Setting name")
+  {
+    contact.name("FOO");
+    CHECK(contact.name() == "FOO");
+  }
+
+  WHEN("Setting address")
+  {
+    contact.address("BAR");
+    CHECK(contact.address() == "BAR");
+  }
+
+  WHEN("Setting email")
+  {
+    contact.email("BAZ");
+    CHECK(contact.email() == "BAZ");
+  }
+
+  WHEN("Setting number")
+  {
+    contact.number(PhoneNumber{11311, 42});
+    CHECK(contact.number().country_code == 11311);
+    CHECK(contact.number().number == 42);
+  }
+
 }
