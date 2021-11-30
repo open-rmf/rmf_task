@@ -78,7 +78,11 @@ if(BUILD_TESTING AND ament_cmake_catch2_FOUND AND rmf_cmake_uncrustify_FOUND)
 endif()
 
 # Generate the schema headers
-add_subdirectory(schemas)
+rmf_api_generate_schema_headers(
+  PACKAGE rmf_task_sequence
+  SCHEMAS_DIR ${CMAKE_CURRENT_LIST_DIR}/schemas
+)
+
 
 # Create cmake config files
 include(CMakePackageConfigHelpers)

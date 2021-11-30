@@ -67,12 +67,12 @@ public:
       case Type::Sequence:
         return "Sequence";
       case Type::ParallelAll:
-        return "Parallel All";
+        return "All of";
       case Type::ParallelAny:
         return "One of";
     }
 
-    return "<?Undefined Bundle>";
+    return "<?Undefined Bundle?>";
   }
 
   rmf_traffic::Duration adjust_estimate(
@@ -164,7 +164,8 @@ auto Bundle::Description::dependencies() const -> const Dependencies&
 }
 
 //==============================================================================
-auto Bundle::Description::dependencies(Dependencies new_dependencies) -> Description&
+auto Bundle::Description::dependencies(Dependencies new_dependencies)
+-> Description&
 {
   _pimpl->dependencies = std::move(new_dependencies);
   return *this;
