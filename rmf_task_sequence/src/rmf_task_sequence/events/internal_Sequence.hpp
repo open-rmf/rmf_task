@@ -19,11 +19,35 @@
 #define SRC__RMF_TASK_SEQUENCE__EVENTS__INTERNAL_SEQUENCE_HPP
 
 #include <rmf_task_sequence/events/Bundle.hpp>
+#include <rmf_task/events/SimpleEvent.hpp>
+
+#include <rmf_task_sequence/schemas/ErrorHandler.hpp>
+#include <rmf_task_sequence/schemas/backup_EventSequence_v0_1.hpp>
 
 namespace rmf_task_sequence {
 namespace events {
 namespace internal {
 
+//==============================================================================
+class BoolGuard
+{
+public:
+  BoolGuard(bool& value)
+  : _value(value)
+  {
+    _value = true;
+  }
+
+  ~BoolGuard()
+  {
+    _value = false;
+  }
+
+private:
+  bool& _value;
+};
+
+//==============================================================================
 class Sequence
 {
 public:
@@ -31,6 +55,107 @@ public:
   class Standby;
   class Active;
 
+};
+
+//==============================================================================
+class Sequence::Standby : public Event::Standby
+{
+public:
+
+  static Event::StandbyPtr initiate(
+    const Event::Initializer& initializer,
+    const std::function<rmf_task::State()>& get_state,
+    const ConstParametersPtr& parameters,
+    const Bundle::Description& description,
+    std::function<void()> parent_update);
+
+  Event::ConstStatePtr state() const final;
+
+  rmf_traffic::Duration duration_estimate() const final;
+
+  Event::ActivePtr begin(
+    std::function<void()> checkpoint,
+    std::function<void()> finish) final;
+
+  Standby(
+    std::vector<Event::StandbyPtr> dependencies,
+    rmf_task::events::SimpleEventPtr state,
+    std::function<void()> parent_update);
+
+  static rmf_task::events::SimpleEventPtr make_state(
+    const Bundle::Description& description);
+
+  static void update_status(rmf_task::events::SimpleEvent& state);
+
+private:
+
+  std::vector<Event::StandbyPtr> _dependencies;
+  rmf_task::events::SimpleEventPtr _state;
+  std::function<void()> _parent_update;
+  std::shared_ptr<Sequence::Active> _active;
+};
+
+//==============================================================================
+class Sequence::Active
+  : public Event::Active,
+    public std::enable_shared_from_this<Sequence::Active>
+{
+public:
+
+  static Event::ActivePtr restore(
+    const Event::Initializer& initializer,
+    const std::function<rmf_task::State()>& get_state,
+    const ConstParametersPtr& parameters,
+    const Bundle::Description& description,
+    const std::string& backup,
+    std::function<void()> parent_update,
+    std::function<void()> checkpoint,
+    std::function<void()> finished);
+
+  Event::ConstStatePtr state() const final;
+
+  rmf_traffic::Duration remaining_time_estimate() const final;
+
+  Backup backup() const final;
+
+  Resume interrupt(std::function<void()> task_is_interrupted) final;
+
+  void cancel();
+
+  void kill();
+
+  Active(
+    std::vector<Event::StandbyPtr> dependencies,
+    rmf_task::events::SimpleEventPtr state,
+    std::function<void()> parent_update,
+    std::function<void()> checkpoint,
+    std::function<void()> finished);
+
+  Active(
+    uint64_t current_event_index,
+    rmf_task::events::SimpleEventPtr state,
+    std::function<void()> parent_update,
+    std::function<void()> checkpoint,
+    std::function<void()> finished);
+
+  void next();
+
+private:
+
+  static const nlohmann::json_schema::json_validator backup_schema_validator;
+
+  Event::ActivePtr _current;
+  uint64_t _current_event_index_plus_one = 0;
+  std::vector<Event::StandbyPtr> _reverse_remaining;
+  rmf_task::events::SimpleEventPtr _state;
+  std::function<void()> _parent_update;
+  std::function<void()> _checkpoint;
+  std::function<void()> _sequence_finished;
+
+  // We need to make sure that next() never gets called recursively by events
+  // that finish as soon as they are activated
+  bool _inside_next = false;
+  mutable uint64_t _next_backup_sequence_number = 0;
 };
 
 } // namespace internal

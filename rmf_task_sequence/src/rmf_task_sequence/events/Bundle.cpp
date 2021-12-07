@@ -24,6 +24,8 @@
 #include <rmf_task_sequence/schemas/ErrorHandler.hpp>
 #include <rmf_task_sequence/schemas/backup_EventSequence_v0_1.hpp>
 
+#include "internal_Sequence.hpp"
+
 #include <vector>
 
 namespace rmf_task_sequence {
@@ -45,6 +47,57 @@ nlohmann::json convert_to_json(const std::string& input)
 
   return output;
 }
+
+//==============================================================================
+Event::StandbyPtr initiate(
+  const Event::Initializer& initializer,
+  const std::function<rmf_task::State()>& get_state,
+  const ConstParametersPtr& parameters,
+  const Bundle::Description& description,
+  std::function<void()> parent_update)
+{
+  if (description.type() == Bundle::Type::Sequence)
+  {
+    return internal::Sequence::Standby::initiate(
+      initializer,
+      get_state,
+      parameters,
+      description,
+      std::move(parent_update));
+  }
+
+  throw std::runtime_error(
+    "Bundle type not yet implemented: " + std::to_string(description.type()));
+}
+
+//==============================================================================
+Event::ActivePtr restore(
+  const Event::Initializer& initializer,
+  const std::function<rmf_task::State()>& get_state,
+  const ConstParametersPtr& parameters,
+  const Bundle::Description& description,
+  const std::string& backup,
+  std::function<void()> parent_update,
+  std::function<void()> checkpoint,
+  std::function<void()> finished)
+{
+  if (description.type() == Bundle::Type::Sequence)
+  {
+    return internal::Sequence::Active::restore(
+      initializer,
+      get_state,
+      parameters,
+      description,
+      backup,
+      parent_update,
+      checkpoint,
+      finished);
+  }
+
+  throw std::runtime_error(
+    "Bundle type not yet implemented: " + std::to_string(description.type()));
+}
+
 } // anonymous namespace
 
 //==============================================================================
@@ -219,390 +272,6 @@ Header Bundle::Description::generate_header(
 }
 
 //==============================================================================
-class BoolGuard
-{
-public:
-  BoolGuard(bool& value)
-  : _value(value)
-  {
-    _value = true;
-  }
-
-  ~BoolGuard()
-  {
-    _value = false;
-  }
-
-private:
-  bool& _value;
-};
-
-//==============================================================================
-class SequenceActive;
-
-//==============================================================================
-class SequenceStandby : public Event::Standby
-{
-public:
-
-  static Event::StandbyPtr initiate(
-    const Event::Initializer& initializer,
-    const std::function<rmf_task::State()>& get_state,
-    const ConstParametersPtr& parameters,
-    const Bundle::Description& description,
-    std::function<void()> parent_update)
-  {
-    auto state = make_state(description);
-    const auto update = [parent_update = std::move(parent_update), state]()
-      {
-        update_status(*state);
-        parent_update();
-      };
-
-    std::vector<Event::StandbyPtr> dependencies;
-    for (const auto& desc : description.dependencies())
-    {
-      auto element = initializer.initialize(
-        get_state, parameters, *desc, update);
-
-      state->add_dependency(element->state());
-
-      dependencies.emplace_back(std::move(element));
-    }
-
-    std::reverse(dependencies.begin(), dependencies.end());
-
-    update_status(*state);
-    return std::make_shared<SequenceStandby>(
-      std::move(dependencies), std::move(state), std::move(parent_update));
-  }
-
-  Event::ConstStatePtr state() const final
-  {
-    return _state;
-  }
-
-  rmf_traffic::Duration duration_estimate() const final
-  {
-    auto estimate = rmf_traffic::Duration(0);
-    for (const auto& element : _dependencies)
-      estimate += element->duration_estimate();
-
-    return estimate;
-  }
-
-  Event::ActivePtr begin(
-    std::function<void()> checkpoint,
-    std::function<void()> finish) final;
-
-  SequenceStandby(
-    std::vector<Event::StandbyPtr> dependencies,
-    rmf_task::events::SimpleEventPtr state,
-    std::function<void()> parent_update)
-  : _dependencies(std::move(dependencies)),
-    _state(std::move(state)),
-    _parent_update(std::move(parent_update))
-  {
-    // Do nothing
-  }
-
-  static rmf_task::events::SimpleEventPtr make_state(
-    const Bundle::Description& description)
-  {
-    return rmf_task::events::SimpleEvent::make(
-      description.category().value_or("Sequence"),
-      description.detail().value_or(""),
-      rmf_task::Event::Status::Standby);
-  }
-
-  static void update_status(rmf_task::events::SimpleEvent& state)
-  {
-    if (state.status() == Event::Status::Canceled
-        || state.status() == Event::Status::Killed
-        || state.status() == Event::Status::Skipped)
-      return;
-
-    Event::Status status = Event::Status::Completed;
-    for (const auto& dep : state.dependencies())
-      status = Event::sequence_status(status, dep->status());
-
-    state.update_status(status);
-  }
-
-private:
-
-  std::vector<Event::StandbyPtr> _dependencies;
-  rmf_task::events::SimpleEventPtr _state;
-  std::function<void()> _parent_update;
-  std::shared_ptr<SequenceActive> _active;
-};
-
-//==============================================================================
-class SequenceActive
-  : public Event::Active,
-    public std::enable_shared_from_this<SequenceActive>
-{
-public:
-
-  static Event::ActivePtr restore(
-    const Event::Initializer& initializer,
-    const std::function<rmf_task::State()>& get_state,
-    const ConstParametersPtr& parameters,
-    const Bundle::Description& description,
-    const std::string& backup,
-    std::function<void()> parent_update,
-    std::function<void()> checkpoint,
-    std::function<void()> finished)
-  {
-    auto state = SequenceStandby::make_state(description);
-    const auto update = [parent_update = std::move(parent_update), state]()
-      {
-        SequenceStandby::update_status(*state);
-        parent_update();
-      };
-
-    std::vector<Event::StandbyPtr> dependencies;
-
-    const auto backup_state = nlohmann::json::parse(backup);
-    if (const auto result =
-      schemas::ErrorHandler::has_error(backup_schema_validator, backup_state))
-    {
-      state->update_log().error(
-        "Parsing failed while restoring backup: " + result->message
-        + "\nOriginal backup state:\n```" + backup + "\n```");
-      state->update_status(Event::Status::Error);
-      return std::make_shared<SequenceActive>(
-        dependencies, std::move(state), nullptr, nullptr, nullptr);
-    }
-
-    const auto& current_event_json = backup_state["current_event"];
-    const auto current_event_index =
-      current_event_json["index"].get<uint64_t>();
-
-    const auto& element_descriptions = description.dependencies();
-    if (element_descriptions.size() <= current_event_index)
-    {
-      state->update_log().error(
-        "Failed to restore backup. Index ["
-        + std::to_string(current_event_index) + "] is too high for ["
-        + std::to_string(description.dependencies().size()) + "] event dependencies. "
-        "Original text:\n```\n" + backup + "\n```");
-      state->update_status(Event::Status::Error);
-      return std::make_shared<SequenceActive>(
-        dependencies, std::move(state), nullptr, nullptr, nullptr);
-    }
-
-    auto active = std::make_shared<SequenceActive>(
-      current_event_index,
-      std::move(state),
-      parent_update,
-      std::move(checkpoint),
-      std::move(finished));
-
-    const auto event_finished = [me = active->weak_from_this()]()
-      {
-        if (const auto self = me.lock())
-          self->next();
-      };
-
-    const auto& current_event_state = current_event_json["state"];
-    active->_current = initializer.restore(
-      get_state,
-      parameters,
-      *element_descriptions.at(current_event_index),
-      current_event_state,
-      update,
-      checkpoint,
-      event_finished);
-    state->add_dependency(active->state());
-
-    for (std::size_t i = current_event_index+1; i < element_descriptions.size(); ++i)
-    {
-      const auto& desc = element_descriptions[i];
-      auto element = initializer.initialize(
-        get_state, parameters, *desc, update);
-
-      active->_state->add_dependency(element->state());
-      dependencies.emplace_back(std::move(element));
-    }
-
-    std::reverse(dependencies.begin(), dependencies.end());
-
-    active->_reverse_remaining = std::move(dependencies);
-
-    BoolGuard lock(active->_inside_next);
-    while (active->_current->state()->finished())
-    {
-      if (active->_reverse_remaining.empty())
-      {
-        SequenceStandby::update_status(*active->_state);
-        return active;
-      }
-
-      ++active->_current_event_index_plus_one;
-      const auto next_event = active->_reverse_remaining.back();
-      active->_reverse_remaining.pop_back();
-      active->_current = next_event->begin(active->_checkpoint, event_finished);
-    }
-
-    SequenceStandby::update_status(*active->_state);
-    return active;
-  }
-
-  Event::ConstStatePtr state() const final
-  {
-    return _state;
-  }
-
-  rmf_traffic::Duration remaining_time_estimate() const final
-  {
-    auto estimate = rmf_traffic::Duration(0);
-    if (_current)
-      estimate += _current->remaining_time_estimate();
-
-    for (const auto& element : _reverse_remaining)
-      estimate += element->duration_estimate();
-
-    return estimate;
-  }
-
-  Backup backup() const final
-  {
-    nlohmann::json current_event_json;
-    current_event_json["index"] = _current_event_index_plus_one - 1;
-    current_event_json["state"] = _current->backup().state();
-
-    nlohmann::json backup_json;
-    backup_json["schema_version"] = "0.1";
-    backup_json["current_event"] = std::move(current_event_json);
-
-    return Backup::make(_next_backup_sequence_number++, backup_json);
-  }
-
-  Resume interrupt(std::function<void()> task_is_interrupted) final
-  {
-    return _current->interrupt(std::move(task_is_interrupted));
-  }
-
-  void cancel()
-  {
-    _reverse_remaining.clear();
-    _state->update_status(Event::Status::Canceled);
-    _current->cancel();
-  }
-
-  void kill()
-  {
-    _reverse_remaining.clear();
-    _state->update_status(Event::Status::Killed);
-    _current->kill();
-  }
-
-  SequenceActive(
-    std::vector<Event::StandbyPtr> dependencies,
-    rmf_task::events::SimpleEventPtr state,
-    std::function<void()> parent_update,
-    std::function<void()> checkpoint,
-    std::function<void()> finished)
-  : _current(nullptr),
-    _reverse_remaining(dependencies),
-    _state(std::move(state)),
-    _parent_update(std::move(parent_update)),
-    _checkpoint(std::move(checkpoint)),
-    _sequence_finished(std::move(finished))
-  {
-    // Do nothing
-  }
-
-  SequenceActive(
-    uint64_t current_event_index,
-    rmf_task::events::SimpleEventPtr state,
-    std::function<void()> parent_update,
-    std::function<void()> checkpoint,
-    std::function<void()> finished)
-  : _current(nullptr),
-    _current_event_index_plus_one(current_event_index+1),
-    _state(std::move(state)),
-    _parent_update(std::move(parent_update)),
-    _checkpoint(std::move(checkpoint)),
-    _sequence_finished(std::move(finished))
-  {
-    // Do nothing
-  }
-
-  void next()
-  {
-    if (_inside_next)
-      return;
-
-    BoolGuard lock(_inside_next);
-
-    const auto event_finished = [me = weak_from_this()]()
-      {
-        if (const auto self = me.lock())
-          self->next();
-      };
-
-    do
-    {
-      if (_reverse_remaining.empty())
-      {
-        SequenceStandby::update_status(*_state);
-        _sequence_finished();
-        return;
-      }
-
-      ++_current_event_index_plus_one;
-      const auto next_event = _reverse_remaining.back();
-      _reverse_remaining.pop_back();
-      _current = next_event->begin(_checkpoint, event_finished);
-    } while (_current->state()->finished());
-
-    SequenceStandby::update_status(*_state);
-    _parent_update();
-  }
-
-private:
-
-  static const nlohmann::json_schema::json_validator backup_schema_validator;
-
-  Event::ActivePtr _current;
-  uint64_t _current_event_index_plus_one = 0;
-  std::vector<Event::StandbyPtr> _reverse_remaining;
-  rmf_task::events::SimpleEventPtr _state;
-  std::function<void()> _parent_update;
-  std::function<void()> _checkpoint;
-  std::function<void()> _sequence_finished;
-
-  // We need to make sure that next() never gets called recursively by events
-  // that finish as soon as they are activated
-  bool _inside_next = false;
-  mutable uint64_t _next_backup_sequence_number = 0;
-};
-
-//==============================================================================
-Event::ActivePtr SequenceStandby::begin(
-  std::function<void()> checkpoint,
-  std::function<void()> finish)
-{
-  if (_active)
-    return _active;
-
-  _active = std::make_shared<SequenceActive>(
-    std::move(_dependencies), _state, _parent_update,
-    std::move(checkpoint), std::move(finish));
-
-  _active->next();
-  return _active;
-}
-
-//==============================================================================
-const nlohmann::json_schema::json_validator
-SequenceActive::backup_schema_validator =
-  nlohmann::json_schema::json_validator(
-  schemas::backup_EventSequence_v0_1);
-
-//==============================================================================
 void Bundle::add(const Event::InitializerPtr& initializer)
 {
   add(*initializer, initializer);
@@ -620,7 +289,7 @@ void Bundle::add(
       const Bundle::Description& description,
       std::function<void()> update)
     {
-      return SequenceStandby::initiate(
+      return initiate(
         *initialize_from,
         get_state,
         parameters,
@@ -636,7 +305,7 @@ void Bundle::add(
       std::function<void()> checkpoint,
       std::function<void()> finished)
     {
-      return SequenceActive::restore(
+      return restore(
         *initialize_from,
         get_state,
         parameters,
