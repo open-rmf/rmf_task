@@ -148,8 +148,9 @@ public:
   /// \param[in]
   ///
   /// \return an estimated state for the robot when the phase is finished.
-  virtual std::optional<State> estimate_finish(
+  virtual std::optional<Estimate> estimate_finish(
     State initial_state,
+    rmf_traffic::Time earliest_arrival_time,
     const Constraints& constraints,
     const TravelEstimator& travel_estimator) const = 0;
 
@@ -192,8 +193,9 @@ public:
     const Parameters& parameters);
 
   // Documentation inherited
-  std::optional<rmf_task::State> estimate_finish(
+  std::optional<rmf_task::Estimate> estimate_finish(
     State initial_state,
+    rmf_traffic::Time earliest_arrival_time,
     const Constraints& constraints,
     const TravelEstimator& travel_estimator) const final;
 

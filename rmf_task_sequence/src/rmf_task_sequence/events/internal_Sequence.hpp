@@ -19,7 +19,7 @@
 #define SRC__RMF_TASK_SEQUENCE__EVENTS__INTERNAL_SEQUENCE_HPP
 
 #include <rmf_task_sequence/events/Bundle.hpp>
-#include <rmf_task/events/SimpleEvent.hpp>
+#include <rmf_task/events/SimpleEventState.hpp>
 
 #include <rmf_task_sequence/schemas/ErrorHandler.hpp>
 #include <rmf_task_sequence/schemas/backup_EventSequence_v0_1.hpp>
@@ -64,6 +64,7 @@ public:
 
   static Event::StandbyPtr initiate(
     const Event::Initializer& initializer,
+    const Event::AssignIDPtr& id,
     const std::function<rmf_task::State()>& get_state,
     const ConstParametersPtr& parameters,
     const Bundle::Description& description,
@@ -79,18 +80,19 @@ public:
 
   Standby(
     std::vector<Event::StandbyPtr> dependencies,
-    rmf_task::events::SimpleEventPtr state,
+    rmf_task::events::SimpleEventStatePtr state,
     std::function<void()> parent_update);
 
-  static rmf_task::events::SimpleEventPtr make_state(
+  static rmf_task::events::SimpleEventStatePtr make_state(
+    const Event::AssignIDPtr& id,
     const Bundle::Description& description);
 
-  static void update_status(rmf_task::events::SimpleEvent& state);
+  static void update_status(rmf_task::events::SimpleEventState& state);
 
 private:
 
   std::vector<Event::StandbyPtr> _dependencies;
-  rmf_task::events::SimpleEventPtr _state;
+  rmf_task::events::SimpleEventStatePtr _state;
   std::function<void()> _parent_update;
   std::shared_ptr<Sequence::Active> _active;
 };
@@ -104,6 +106,7 @@ public:
 
   static Event::ActivePtr restore(
     const Event::Initializer& initializer,
+    const Event::AssignIDPtr& id,
     const std::function<rmf_task::State()>& get_state,
     const ConstParametersPtr& parameters,
     const Bundle::Description& description,
@@ -126,14 +129,14 @@ public:
 
   Active(
     std::vector<Event::StandbyPtr> dependencies,
-    rmf_task::events::SimpleEventPtr state,
+    rmf_task::events::SimpleEventStatePtr state,
     std::function<void()> parent_update,
     std::function<void()> checkpoint,
     std::function<void()> finished);
 
   Active(
     uint64_t current_event_index,
-    rmf_task::events::SimpleEventPtr state,
+    rmf_task::events::SimpleEventStatePtr state,
     std::function<void()> parent_update,
     std::function<void()> checkpoint,
     std::function<void()> finished);
@@ -147,7 +150,7 @@ private:
   Event::ActivePtr _current;
   uint64_t _current_event_index_plus_one = 0;
   std::vector<Event::StandbyPtr> _reverse_remaining;
-  rmf_task::events::SimpleEventPtr _state;
+  rmf_task::events::SimpleEventStatePtr _state;
   std::function<void()> _parent_update;
   std::function<void()> _checkpoint;
   std::function<void()> _sequence_finished;

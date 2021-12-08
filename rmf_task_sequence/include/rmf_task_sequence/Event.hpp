@@ -121,6 +121,9 @@ public:
   /// \tparam Description
   ///   A class that implements the Event::Description interface
   ///
+  /// \param[in] id
+  ///   An object to help assign an ID to each event
+  ///
   /// \param[in] get_state
   ///   A callback for retrieving the current state of the robot
   ///
@@ -147,6 +150,7 @@ public:
   using Initialize =
   std::function<
   StandbyPtr(
+    const AssignIDPtr& id,
     const std::function<rmf_task::State()>& get_state,
     const ConstParametersPtr& parameters,
     const Description& description,
@@ -157,6 +161,9 @@ public:
   ///
   /// \tparam Description
   ///   A class that implements the Event::Description interface
+  ///
+  /// \param[in] id
+  ///   An object to help assign an ID to each event
   ///
   /// \param[in] get_state
   ///   A callback for retrieving the current state of the robot
@@ -190,6 +197,7 @@ public:
   using Restore =
   std::function<
   ActivePtr(
+    const AssignIDPtr& id,
     const std::function<rmf_task::State()>& get_state,
     const ConstParametersPtr& parameters,
     const Description& description,
@@ -206,6 +214,9 @@ public:
     Restore<Desc> restorer);
 
   /// Initialize an event
+  ///
+  /// \param[in] id
+  ///   An object to help assign an ID to each event
   ///
   /// \param[in] get_state
   ///   A callback for retrieving the current state of the robot
@@ -225,6 +236,7 @@ public:
   ///
   /// \return an Event in a Standby state
   StandbyPtr initialize(
+    const AssignIDPtr& id,
     const std::function<rmf_task::State()>& get_state,
     const ConstParametersPtr& parameters,
     const Event::Description& description,
@@ -232,8 +244,8 @@ public:
 
   /// Signature for restoring an Event
   ///
-  /// \tparam Description
-  ///   A class that implements the Event::Description interface
+  /// \param[in] id
+  ///   An object to help assign an ID to each event
   ///
   /// \param[in] get_state
   ///   A callback for retrieving the current state of the robot
@@ -264,6 +276,7 @@ public:
   ///
   /// \return a restored Event in an Active state
   ActivePtr restore(
+    const AssignIDPtr& id,
     const std::function<rmf_task::State()>& get_state,
     const ConstParametersPtr& parameters,
     const Event::Description& description,

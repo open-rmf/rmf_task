@@ -44,7 +44,7 @@ public:
   /// Make an active RestoreBackup phase
   static ActivePtr make(
     const std::string& backup_state_str,
-    rmf_traffic::Time estimated_finish_time);
+    rmf_traffic::Duration estimated_remaining_time);
 
   // Documentation inherited
   ConstTagPtr tag() const final;
@@ -53,7 +53,7 @@ public:
   Event::ConstStatePtr final_event() const final;
 
   // Documentation inherited
-  rmf_traffic::Time estimate_finish_time() const final;
+  rmf_traffic::Duration estimate_remaining_time() const final;
 
   /// Call this function if the parsing fails
   void parsing_failed(const std::string& error_message);

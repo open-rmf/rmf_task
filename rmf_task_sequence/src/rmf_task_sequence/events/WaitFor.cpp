@@ -30,8 +30,9 @@ public:
     rmf_traffic::Duration duration,
     const rmf_task::Parameters& parameters);
 
-  std::optional<State> estimate_finish(
+  std::optional<Estimate> estimate_finish(
     rmf_task::State initial_state,
+    rmf_traffic::Time earliest_arrival_time,
     const Constraints& constraints,
     const TravelEstimator& travel_estimator) const final;
 
@@ -121,8 +122,9 @@ WaitFor::Model::Model(
 }
 
 //==============================================================================
-std::optional<State> WaitFor::Model::estimate_finish(
+std::optional<Estimate> WaitFor::Model::estimate_finish(
   State state,
+  rmf_traffic::Time earliest_arrival_time,
   const Constraints& constraints,
   const TravelEstimator&) const
 {
@@ -134,7 +136,7 @@ std::optional<State> WaitFor::Model::estimate_finish(
   if (state.battery_soc().value() <= _invariant_battery_drain)
     return std::nullopt;
 
-  return state;
+  return Estimate(state, earliest_arrival_time);
 }
 
 //==============================================================================

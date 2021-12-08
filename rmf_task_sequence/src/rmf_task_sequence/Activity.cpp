@@ -58,22 +58,37 @@ Activity::ConstModelPtr Activity::SequenceModel::make(
 }
 
 //==============================================================================
-std::optional<rmf_task::State> Activity::SequenceModel::estimate_finish(
+std::optional<Estimate> Activity::SequenceModel::estimate_finish(
   rmf_task::State initial_state,
+  rmf_traffic::Time earliest_arrival_time,
   const rmf_task::Constraints& constraints,
   const rmf_task::TravelEstimator& travel_estimator) const
 {
-  std::optional<rmf_task::State> finish_state = std::move(initial_state);
+  rmf_task::State finish_state = std::move(initial_state);
+  std::optional<rmf_traffic::Time> wait_until;
   for (const auto& model : _pimpl->models)
   {
-    finish_state = model->estimate_finish(
-      std::move(*finish_state), constraints, travel_estimator);
+    const auto estimate = model->estimate_finish(
+      std::move(finish_state),
+      earliest_arrival_time,
+      constraints,
+      travel_estimator);
 
-    if (!finish_state.has_value())
+    if (!estimate.has_value())
       return std::nullopt;
+
+    finish_state = estimate->finish_state();
+    if (!wait_until.has_value())
+      wait_until = estimate->wait_until();
   }
 
-  return *finish_state;
+  if (!wait_until.has_value())
+  {
+    // This means that the models are empty, which is probably an error...
+    wait_until = earliest_arrival_time;
+  }
+
+  return Estimate(std::move(finish_state), *wait_until);
 }
 
 //==============================================================================

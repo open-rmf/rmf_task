@@ -31,18 +31,21 @@ void Event::Initializer::add(
   _add(
     typeid(Desc),
     [initializer](
+      const AssignIDPtr& id,
       const std::function<rmf_task::State()>& get_state,
       const ConstParametersPtr& parameters,
       const Event::Description& description,
       std::function<void()> update)
       {
         return initializer(
+          id,
           get_state,
           parameters,
           static_cast<const Desc&>(description),
           std::move(update));
       },
     [restorer](
+      const AssignIDPtr& id,
       const std::function<rmf_task::State()>& get_state,
       const ConstParametersPtr& parameters,
       const Event::Description& description,
@@ -52,6 +55,7 @@ void Event::Initializer::add(
       std::function<void()> finished)
       {
         return restorer(
+          id,
           get_state,
           parameters,
           static_cast<const Desc&>(description),

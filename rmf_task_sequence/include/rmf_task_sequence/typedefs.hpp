@@ -20,6 +20,7 @@
 
 #include <rmf_task/Header.hpp>
 #include <rmf_task/State.hpp>
+#include <rmf_task/Estimate.hpp>
 #include <rmf_task/Parameters.hpp>
 #include <rmf_task/Constraints.hpp>
 #include <rmf_task/Estimate.hpp>
@@ -29,6 +30,7 @@ namespace rmf_task_sequence {
 
 using Header = rmf_task::Header;
 using State = rmf_task::State;
+using Estimate = rmf_task::Estimate;
 using Parameters = rmf_task::Parameters;
 using ConstParametersPtr = rmf_task::ConstParametersPtr;
 using Constraints = rmf_task::Constraints;

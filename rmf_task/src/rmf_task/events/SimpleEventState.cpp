@@ -15,16 +15,17 @@
  *
 */
 
-#include <rmf_task/events/SimpleEvent.hpp>
+#include <rmf_task/events/SimpleEventState.hpp>
 
 namespace rmf_task {
 namespace events {
 
 //==============================================================================
-class SimpleEvent::Implementation
+class SimpleEventState::Implementation
 {
 public:
 
+  uint64_t id;
   Status status;
   VersionedString name;
   VersionedString detail;
@@ -34,14 +35,17 @@ public:
 };
 
 //==============================================================================
-std::shared_ptr<SimpleEvent> SimpleEvent::make(std::string name,
+std::shared_ptr<SimpleEventState> SimpleEventState::make(
+  uint64_t id,
+  std::string name,
   std::string detail,
   Event::Status initial_status,
   std::vector<Event::ConstStatePtr> dependencies)
 {
-  SimpleEvent output;
+  SimpleEventState output;
   output._pimpl = rmf_utils::make_unique_impl<Implementation>(
     Implementation{
+      id,
       initial_status,
       std::move(name),
       std::move(detail),
@@ -49,68 +53,74 @@ std::shared_ptr<SimpleEvent> SimpleEvent::make(std::string name,
       std::move(dependencies)
     });
 
-  return std::make_shared<SimpleEvent>(std::move(output));
+  return std::make_shared<SimpleEventState>(std::move(output));
 }
 
 //==============================================================================
-Event::Status SimpleEvent::status() const
+uint64_t SimpleEventState::id() const
+{
+  return _pimpl->id;
+}
+
+//==============================================================================
+Event::Status SimpleEventState::status() const
 {
   return _pimpl->status;
 }
 
 //==============================================================================
-SimpleEvent& SimpleEvent::update_status(Event::Status new_status)
+SimpleEventState& SimpleEventState::update_status(Event::Status new_status)
 {
   _pimpl->status = new_status;
   return *this;
 }
 
 //==============================================================================
-VersionedString::View SimpleEvent::name() const
+VersionedString::View SimpleEventState::name() const
 {
   return _pimpl->name.view();
 }
 
 //==============================================================================
-SimpleEvent& SimpleEvent::update_name(std::string new_name)
+SimpleEventState& SimpleEventState::update_name(std::string new_name)
 {
   _pimpl->name.update(std::move(new_name));
   return *this;
 }
 
 //==============================================================================
-VersionedString::View SimpleEvent::detail() const
+VersionedString::View SimpleEventState::detail() const
 {
   return _pimpl->detail.view();
 }
 
 //==============================================================================
-SimpleEvent& SimpleEvent::update_detail(std::string new_detail)
+SimpleEventState& SimpleEventState::update_detail(std::string new_detail)
 {
   _pimpl->detail.update(std::move(new_detail));
   return *this;
 }
 
 //==============================================================================
-Log::View SimpleEvent::log() const
+Log::View SimpleEventState::log() const
 {
   return _pimpl->log.view();
 }
 
 //==============================================================================
-Log& SimpleEvent::update_log()
+Log& SimpleEventState::update_log()
 {
   return _pimpl->log;
 }
 
 //==============================================================================
-std::vector<Event::ConstStatePtr> SimpleEvent::dependencies() const
+std::vector<Event::ConstStatePtr> SimpleEventState::dependencies() const
 {
   return _pimpl->dependencies;
 }
 
 //==============================================================================
-SimpleEvent& SimpleEvent::update_dependencies(
+SimpleEventState& SimpleEventState::update_dependencies(
   std::vector<ConstStatePtr> new_dependencies)
 {
   _pimpl->dependencies = new_dependencies;
@@ -118,14 +128,14 @@ SimpleEvent& SimpleEvent::update_dependencies(
 }
 
 //==============================================================================
-SimpleEvent& SimpleEvent::add_dependency(ConstStatePtr new_dependency)
+SimpleEventState& SimpleEventState::add_dependency(ConstStatePtr new_dependency)
 {
   _pimpl->dependencies.push_back(new_dependency);
   return *this;
 }
 
 //==============================================================================
-SimpleEvent::SimpleEvent()
+SimpleEventState::SimpleEventState()
 {
   // Do nothing
 }

@@ -81,6 +81,7 @@ class Event::Snapshot::Implementation
 {
 public:
 
+  uint64_t id;
   Status status;
   VersionedString::View name;
   VersionedString::View detail;
@@ -95,6 +96,7 @@ auto Event::Snapshot::make(const State& other) -> ConstSnapshotPtr
   Snapshot output;
   output._pimpl = rmf_utils::make_impl<Implementation>(
     Implementation{
+      other.id(),
       other.status(),
       other.name(),
       other.detail(),
@@ -103,6 +105,12 @@ auto Event::Snapshot::make(const State& other) -> ConstSnapshotPtr
     });
 
   return std::make_shared<Snapshot>(std::move(output));
+}
+
+//==============================================================================
+uint64_t Event::Snapshot::id() const
+{
+  return _pimpl->id;
 }
 
 //==============================================================================
@@ -139,6 +147,32 @@ std::vector<Event::ConstStatePtr> Event::Snapshot::dependencies() const
 Event::Snapshot::Snapshot()
 {
   // Do nothing
+}
+
+//==============================================================================
+class Event::AssignID::Implementation
+{
+public:
+  mutable uint64_t next_id = 0;
+};
+
+//==============================================================================
+Event::AssignIDPtr Event::AssignID::make()
+{
+  return std::make_shared<AssignID>();
+}
+
+//==============================================================================
+Event::AssignID::AssignID()
+: _pimpl(rmf_utils::make_unique_impl<Implementation>())
+{
+  // Do nothing
+}
+
+//==============================================================================
+uint64_t Event::AssignID::assign() const
+{
+  return _pimpl->next_id++;
 }
 
 } // namespace rmf_task

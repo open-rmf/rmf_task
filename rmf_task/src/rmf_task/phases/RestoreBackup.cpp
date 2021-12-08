@@ -16,7 +16,7 @@
 */
 
 #include <rmf_task/phases/RestoreBackup.hpp>
-#include <rmf_task/events/SimpleEvent.hpp>
+#include <rmf_task/events/SimpleEventState.hpp>
 
 namespace rmf_task {
 namespace phases {
@@ -38,32 +38,33 @@ public:
 
   Implementation(
     const std::string& backup_state_str,
-    rmf_traffic::Time estimated_finish_time_)
+    rmf_traffic::Duration estimated_remaining_time_)
   : tag(make_tag()),
-    event(events::SimpleEvent::make(
+    event(events::SimpleEventState::make(
+        0,
         tag->header().category(),
         tag->header().detail(),
         rmf_task::Event::Status::Underway)),
-    estimated_finish_time(estimated_finish_time_)
+    estimated_remaining_time(estimated_remaining_time_)
   {
     event->update_log().info(
       "Parsing backup state:\n```\n" + backup_state_str + "\n```");
   }
 
   ConstTagPtr tag;
-  std::shared_ptr<events::SimpleEvent> event;
-  rmf_traffic::Time estimated_finish_time;
+  std::shared_ptr<events::SimpleEventState> event;
+  rmf_traffic::Duration estimated_remaining_time;
 
 };
 
 //==============================================================================
 auto RestoreBackup::Active::make(
   const std::string& backup_state_str,
-  rmf_traffic::Time estimated_finish_time) -> ActivePtr
+  rmf_traffic::Duration estimated_remaining_time) -> ActivePtr
 {
   Active output;
   output._pimpl = rmf_utils::make_unique_impl<Implementation>(
-    std::move(backup_state_str), estimated_finish_time);
+    std::move(backup_state_str), estimated_remaining_time);
 
   return std::make_shared<Active>(std::move(output));
 }
@@ -81,9 +82,9 @@ Event::ConstStatePtr RestoreBackup::Active::final_event() const
 }
 
 //==============================================================================
-rmf_traffic::Time RestoreBackup::Active::estimate_finish_time() const
+rmf_traffic::Duration RestoreBackup::Active::estimate_remaining_time() const
 {
-  return _pimpl->estimated_finish_time;
+  return _pimpl->estimated_remaining_time;
 }
 
 //==============================================================================

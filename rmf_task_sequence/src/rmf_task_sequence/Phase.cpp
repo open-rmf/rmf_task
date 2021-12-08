@@ -37,7 +37,8 @@ Phase::Activator::Activator()
 
 //==============================================================================
 Phase::ActivePtr Phase::Activator::activate(
-  std::function<State()> get_state,
+  const std::function<State()>& get_state,
+  const ConstParametersPtr& parameters,
   ConstTagPtr tag,
   const Description& description,
   std::optional<nlohmann::json> backup_state,
@@ -51,7 +52,8 @@ Phase::ActivePtr Phase::Activator::activate(
     return nullptr;
 
   return it->second(
-    std::move(get_state),
+    get_state,
+    parameters,
     std::move(tag),
     description,
     std::move(backup_state),

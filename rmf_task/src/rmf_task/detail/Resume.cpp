@@ -21,6 +21,12 @@ namespace rmf_task {
 namespace detail {
 
 //==============================================================================
+Resume Resume::make(std::function<void()> callback)
+{
+  return Implementation::make(std::move(callback));
+}
+
+//==============================================================================
 void Resume::operator()() const
 {
   _pimpl->trigger();

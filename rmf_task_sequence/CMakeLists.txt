@@ -52,10 +52,10 @@ target_include_directories(rmf_task_sequence
 )
 
 if(BUILD_TESTING AND ament_cmake_catch2_FOUND AND rmf_cmake_uncrustify_FOUND)
-  file(GLOB_RECURSE unit_test_srcs "test/*.cpp")
+  file(GLOB_RECURSE test_srcs "test/*.cpp")
 
   ament_add_catch2(
-    test_rmf_task_sequence test/main.cpp ${unit_test_srcs}
+    test_rmf_task_sequence test/main.cpp ${test_srcs}
     TIMEOUT 300)
   target_link_libraries(test_rmf_task_sequence
       rmf_task_sequence

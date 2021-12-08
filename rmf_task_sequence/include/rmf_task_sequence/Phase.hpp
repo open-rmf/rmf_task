@@ -66,6 +66,9 @@ public:
   /// \param[in] get_state
   ///   A callback for getting the current state of the robot
   ///
+  /// \param[in] parameters
+  ///   A reference to the parameters for the robot
+  ///
   /// \param[in] tag
   ///   The tag of this phase
   ///
@@ -95,7 +98,8 @@ public:
   using Activate =
     std::function<
     ActivePtr(
-      std::function<State()> get_state,
+      const std::function<State()>& get_state,
+      const ConstParametersPtr& parameters,
       ConstTagPtr tag,
       const Description& description,
       std::optional<nlohmann::json> backup_state,
@@ -115,6 +119,9 @@ public:
   ///
   /// \param[in] get_state
   ///   A callback for getting the current state of the robot
+  ///
+  /// \param[in] parameters
+  ///   A reference to the parameters for the robot
   ///
   /// \param[in] tag
   ///   The tag of this phase
@@ -139,7 +146,8 @@ public:
   ///
   /// \return an active, running instance of the described phase.
   ActivePtr activate(
-    std::function<State()> get_state,
+    const std::function<State()>& get_state,
+    const ConstParametersPtr& parameters,
     ConstTagPtr tag,
     const Description& description,
     std::optional<nlohmann::json> backup_state,

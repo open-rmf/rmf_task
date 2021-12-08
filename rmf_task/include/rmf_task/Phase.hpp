@@ -118,7 +118,7 @@ public:
   virtual Event::ConstStatePtr final_event() const = 0;
 
   /// The estimated finish time for this phase
-  virtual rmf_traffic::Time estimate_finish_time() const = 0;
+  virtual rmf_traffic::Duration estimate_remaining_time() const = 0;
 
   // Virtual destructor
   virtual ~Active() = default;
@@ -139,7 +139,7 @@ public:
   Event::ConstStatePtr final_event() const final;
 
   // Documentation inherited
-  rmf_traffic::Time estimate_finish_time() const final;
+  rmf_traffic::Duration estimate_remaining_time() const final;
 
   class Implementation;
 private:

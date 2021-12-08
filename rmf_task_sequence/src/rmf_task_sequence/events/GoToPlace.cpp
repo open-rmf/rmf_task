@@ -52,8 +52,9 @@ public:
     Goal goal);
 
   // Documentation inherited
-  std::optional<State> estimate_finish(
+  std::optional<Estimate> estimate_finish(
     State initial_state,
+    rmf_traffic::Time earliest_arrival_time,
     const Constraints& constraints,
     const TravelEstimator& estimator) const final;
 
@@ -111,8 +112,9 @@ Activity::ConstModelPtr GoToPlace::Model::make(
 }
 
 //==============================================================================
-std::optional<State> GoToPlace::Model::estimate_finish(
+std::optional<Estimate> GoToPlace::Model::estimate_finish(
   State initial_state,
+  rmf_traffic::Time earliest_arrival_time,
   const Constraints& constraints,
   const TravelEstimator& travel_estimator) const
 {
@@ -126,7 +128,13 @@ std::optional<State> GoToPlace::Model::estimate_finish(
   if (!travel.has_value())
     return std::nullopt;
 
-  finish.time(finish.time().value() + travel->duration());
+  const auto arrival_time =
+    std::max(
+      initial_state.time().value() + travel->duration(),
+      earliest_arrival_time);
+
+  const auto wait_until_time = arrival_time - travel->duration();
+  finish.time(wait_until_time + travel->duration());
   auto battery_soc = finish.battery_soc().value();
 
   if (constraints.drain_battery())
@@ -138,7 +146,7 @@ std::optional<State> GoToPlace::Model::estimate_finish(
   if (battery_soc <= battery_threshold)
     return std::nullopt;
 
-  return finish;
+  return Estimate(finish, wait_until_time);
 }
 
 //==============================================================================

@@ -40,6 +40,7 @@ public:
 
   // Declaration
   class Description;
+  using DescriptionPtr = std::shared_ptr<Description>;
   using ConstDescriptionPtr = std::shared_ptr<const Description>;
 
   class Model;
@@ -95,7 +96,7 @@ public:
   ///
   /// \param[in] detail
   ///   Any detailed information that will go into the Task::Tag
-  ConstDescriptionPtr build(
+  DescriptionPtr build(
     std::string category,
     std::string detail);
 
@@ -114,28 +115,26 @@ public:
     rmf_traffic::Time earliest_start_time,
     const Parameters& parameters) const final;
 
-  class Implementation;
-private:
-  rmf_utils::impl_ptr<Implementation> _pimpl;
-};
+  /// Get the category for this task
+  const std::string& category() const;
 
-//==============================================================================
-class Task::Model : public rmf_task::Task::Model
-{
-public:
+  /// Change the category for this task
+  Description& category(std::string new_category);
 
-  // Documentation inherited
-  std::optional<rmf_task::Estimate> estimate_finish(
+  /// Get the details for this task
+  const std::string& detail() const;
+
+  /// Change the details for this task
+  Description& detail(std::string new_detail);
+
+  Header generate_header(
     const State& initial_state,
-    const Constraints& task_planning_constraints,
-    const TravelEstimator& travel_estimator) const final;
-
-  // Documentation inherited
-  rmf_traffic::Duration invariant_duration() const final;
+    const Parameters& parameters) const;
 
   class Implementation;
 private:
-  rmf_utils::unique_impl_ptr<Implementation> _pimpl;
+  Description();
+  rmf_utils::impl_ptr<Implementation> _pimpl;
 };
 
 } // namespace rmf_task_sequence

@@ -38,6 +38,7 @@ Event::Initializer::Initializer()
 
 //==============================================================================
 Event::StandbyPtr Event::Initializer::initialize(
+  const AssignIDPtr& id,
   const std::function<rmf_task::State()>& get_state,
   const ConstParametersPtr& parameters,
   const Event::Description& description,
@@ -49,6 +50,7 @@ Event::StandbyPtr Event::Initializer::initialize(
     return nullptr;
 
   return it->second(
+    id,
     get_state,
     parameters,
     description,
@@ -57,6 +59,7 @@ Event::StandbyPtr Event::Initializer::initialize(
 
 //==============================================================================
 Event::ActivePtr Event::Initializer::restore(
+  const AssignIDPtr& id,
   const std::function<rmf_task::State()>& get_state,
   const ConstParametersPtr& parameters,
   const Event::Description& description,
@@ -71,6 +74,7 @@ Event::ActivePtr Event::Initializer::restore(
     return nullptr;
 
   return it->second(
+    id,
     get_state,
     parameters,
     description,

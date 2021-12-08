@@ -15,59 +15,47 @@
  *
 */
 
-#include "MockEvent.hpp"
+#include <rmf_task_sequence/detail/Backup.hpp>
 
-namespace test_rmf_task {
+namespace rmf_task_sequence {
+namespace detail {
 
 //==============================================================================
-MockEvent::MockEvent(
-  uint64_t id_,
-  std::string name_,
-  std::string detail_,
-  Status initial_status)
-: _id(id_),
-  _status(initial_status),
-  _name(std::move(name_)),
-  _detail(std::move(detail_))
+class Backup::Implementation
+{
+public:
+
+  uint64_t seq;
+  nlohmann::json state;
+};
+
+//==============================================================================
+Backup::Backup()
 {
   // Do nothing
 }
 
 //==============================================================================
-uint64_t MockEvent::id() const
+Backup Backup::make(uint64_t seq, nlohmann::json state)
 {
-  return _id;
+  Backup backup;
+  backup._pimpl = rmf_utils::make_impl<Implementation>(
+    Implementation{seq, state});
+  return backup;
 }
 
 //==============================================================================
-auto MockEvent::status() const -> Status
+uint64_t Backup::sequence() const
 {
-  return _status;
+  return _pimpl->seq;
 }
 
 //==============================================================================
-rmf_task::VersionedString::View MockEvent::name() const
+const nlohmann::json& Backup::state() const
 {
-  return _name.view();
+  return _pimpl->state;
 }
 
-//==============================================================================
-rmf_task::VersionedString::View MockEvent::detail() const
-{
-  return _detail.view();
-}
 
-//==============================================================================
-rmf_task::Log::View MockEvent::log() const
-{
-  return _log.view();
-}
-
-//==============================================================================
-std::vector<rmf_task::Event::ConstStatePtr> MockEvent::dependencies() const
-{
-  return std::vector<rmf_task::Event::ConstStatePtr>(
-    _dependencies.begin(), _dependencies.end());
-}
-
-} // namespace test_rmf_task
+} // namespace detail
+} // namespace rmf_task_sequence

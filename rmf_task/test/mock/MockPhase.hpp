@@ -42,7 +42,7 @@ public:
 
     ConstTagPtr tag() const final;
     rmf_task::Event::ConstStatePtr final_event() const final;
-    rmf_traffic::Time estimate_finish_time() const final;
+    rmf_traffic::Duration estimate_remaining_time() const final;
 
     void send_update() const;
 

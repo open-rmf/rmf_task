@@ -24,12 +24,13 @@ namespace internal {
 //==============================================================================
 Event::StandbyPtr Sequence::Standby::initiate(
   const Event::Initializer& initializer,
+  const Event::AssignIDPtr& id,
   const std::function<rmf_task::State()>& get_state,
   const ConstParametersPtr& parameters,
   const Bundle::Description& description,
   std::function<void()> parent_update)
 {
-  auto state = make_state(description);
+  auto state = make_state(id, description);
   const auto update = [parent_update = std::move(parent_update), state]()
     {
       update_status(*state);
@@ -40,7 +41,7 @@ Event::StandbyPtr Sequence::Standby::initiate(
   for (const auto& desc : description.dependencies())
   {
     auto element = initializer.initialize(
-      get_state, parameters, *desc, update);
+      id, get_state, parameters, *desc, update);
 
     state->add_dependency(element->state());
 
@@ -72,7 +73,7 @@ rmf_traffic::Duration Sequence::Standby::duration_estimate() const
 
 Sequence::Standby::Standby(
   std::vector<Event::StandbyPtr> dependencies,
-  rmf_task::events::SimpleEventPtr state,
+  rmf_task::events::SimpleEventStatePtr state,
   std::function<void()> parent_update)
 : _dependencies(std::move(dependencies)),
   _state(std::move(state)),
@@ -98,17 +99,19 @@ Event::ActivePtr Sequence::Standby::begin(
 }
 
 //==============================================================================
-rmf_task::events::SimpleEventPtr Sequence::Standby::make_state(
+rmf_task::events::SimpleEventStatePtr Sequence::Standby::make_state(
+  const Event::AssignIDPtr& id,
   const Bundle::Description& description)
 {
-  return rmf_task::events::SimpleEvent::make(
+  return rmf_task::events::SimpleEventState::make(
+    id->assign(),
     description.category().value_or("Sequence"),
     description.detail().value_or(""),
     rmf_task::Event::Status::Standby);
 }
 
 //==============================================================================
-void Sequence::Standby::update_status(rmf_task::events::SimpleEvent& state)
+void Sequence::Standby::update_status(rmf_task::events::SimpleEventState& state)
 {
   if (state.status() == Event::Status::Canceled
       || state.status() == Event::Status::Killed
@@ -125,6 +128,7 @@ void Sequence::Standby::update_status(rmf_task::events::SimpleEvent& state)
 //==============================================================================
 Event::ActivePtr Sequence::Active::restore(
   const Event::Initializer& initializer,
+  const Event::AssignIDPtr& id,
   const std::function<rmf_task::State()>& get_state,
   const ConstParametersPtr& parameters,
   const Bundle::Description& description,
@@ -133,7 +137,7 @@ Event::ActivePtr Sequence::Active::restore(
   std::function<void()> checkpoint,
   std::function<void()> finished)
 {
-  auto state = Sequence::Standby::make_state(description);
+  auto state = Sequence::Standby::make_state(id, description);
   const auto update = [parent_update = std::move(parent_update), state]()
     {
       Sequence::Standby::update_status(*state);
@@ -186,6 +190,7 @@ Event::ActivePtr Sequence::Active::restore(
 
   const auto& current_event_state = current_event_json["state"];
   active->_current = initializer.restore(
+    id,
     get_state,
     parameters,
     *element_descriptions.at(current_event_index),
@@ -199,7 +204,7 @@ Event::ActivePtr Sequence::Active::restore(
   {
     const auto& desc = element_descriptions[i];
     auto element = initializer.initialize(
-      get_state, parameters, *desc, update);
+      id, get_state, parameters, *desc, update);
 
     active->_state->add_dependency(element->state());
     dependencies.emplace_back(std::move(element));
@@ -287,7 +292,7 @@ void Sequence::Active::kill()
 //==============================================================================
 Sequence::Active::Active(
   std::vector<Event::StandbyPtr> dependencies,
-  rmf_task::events::SimpleEventPtr state,
+  rmf_task::events::SimpleEventStatePtr state,
   std::function<void()> parent_update,
   std::function<void()> checkpoint,
   std::function<void()> finished)
@@ -304,7 +309,7 @@ Sequence::Active::Active(
 //==============================================================================
 Sequence::Active::Active(
   uint64_t current_event_index,
-  rmf_task::events::SimpleEventPtr state,
+  rmf_task::events::SimpleEventStatePtr state,
   std::function<void()> parent_update,
   std::function<void()> checkpoint,
   std::function<void()> finished)

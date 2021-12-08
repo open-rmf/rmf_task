@@ -16,7 +16,7 @@
 */
 
 #include <rmf_task_sequence/events/Bundle.hpp>
-#include <rmf_task/events/SimpleEvent.hpp>
+#include <rmf_task/events/SimpleEventState.hpp>
 
 #include <nlohmann/json.hpp>
 #include <nlohmann/json-schema.hpp>
@@ -51,6 +51,7 @@ nlohmann::json convert_to_json(const std::string& input)
 //==============================================================================
 Event::StandbyPtr initiate(
   const Event::Initializer& initializer,
+  const Event::AssignIDPtr& id,
   const std::function<rmf_task::State()>& get_state,
   const ConstParametersPtr& parameters,
   const Bundle::Description& description,
@@ -60,6 +61,7 @@ Event::StandbyPtr initiate(
   {
     return internal::Sequence::Standby::initiate(
       initializer,
+      id,
       get_state,
       parameters,
       description,
@@ -73,6 +75,7 @@ Event::StandbyPtr initiate(
 //==============================================================================
 Event::ActivePtr restore(
   const Event::Initializer& initializer,
+  const Event::AssignIDPtr& id,
   const std::function<rmf_task::State()>& get_state,
   const ConstParametersPtr& parameters,
   const Bundle::Description& description,
@@ -85,6 +88,7 @@ Event::ActivePtr restore(
   {
     return internal::Sequence::Active::restore(
       initializer,
+      id,
       get_state,
       parameters,
       description,
@@ -225,6 +229,19 @@ auto Bundle::Description::dependencies(Dependencies new_dependencies)
 }
 
 //==============================================================================
+auto Bundle::Description::type() const -> Type
+{
+  return _pimpl->type;
+}
+
+//==============================================================================
+auto Bundle::Description::type(Type new_type) -> Description&
+{
+  _pimpl->type = new_type;
+  return *this;
+}
+
+//==============================================================================
 const std::optional<std::string>& Bundle::Description::category() const
 {
   return _pimpl->category;
@@ -284,6 +301,7 @@ void Bundle::add(
 {
   add_to.add<Bundle::Description>(
     [initialize_from](
+      const AssignIDPtr& id,
       const std::function<rmf_task::State()>& get_state,
       const ConstParametersPtr& parameters,
       const Bundle::Description& description,
@@ -291,12 +309,14 @@ void Bundle::add(
     {
       return initiate(
         *initialize_from,
+        id,
         get_state,
         parameters,
         description,
         std::move(update));
     },
     [initialize_from](
+      const AssignIDPtr& id,
       const std::function<rmf_task::State()>& get_state,
       const ConstParametersPtr& parameters,
       const Bundle::Description& description,
@@ -307,6 +327,7 @@ void Bundle::add(
     {
       return restore(
         *initialize_from,
+        id,
         get_state,
         parameters,
         description,

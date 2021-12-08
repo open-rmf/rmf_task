@@ -91,6 +91,8 @@ public:
   class Snapshot;
   using ConstSnapshotPtr = std::shared_ptr<const Snapshot>;
 
+  class AssignID;
+  using AssignIDPtr = std::shared_ptr<const AssignID>;
 };
 
 //==============================================================================
@@ -101,6 +103,9 @@ public:
 
   using Status = Event::Status;
   using ConstStatePtr = Event::ConstStatePtr;
+
+  /// The ID of this event, which is unique within its phase
+  virtual uint64_t id() const = 0;
 
   /// The current Status of this event
   virtual Status status() const = 0;
@@ -139,6 +144,9 @@ public:
   static ConstSnapshotPtr make(const State& other);
 
   // Documentation inherited
+  uint64_t id() const final;
+
+  // Documentation inherited
   Status status() const final;
 
   // Documentation inherited
@@ -157,6 +165,26 @@ public:
 private:
   Snapshot();
   rmf_utils::impl_ptr<Implementation> _pimpl;
+};
+
+//==============================================================================
+/// A utility class that helps to assign unique IDs to events
+class Event::AssignID
+{
+public:
+
+  /// Make a shared_ptr<AssignID>
+  static AssignIDPtr make();
+
+  /// Constructor
+  AssignID();
+
+  /// Get a new unique ID
+  uint64_t assign() const;
+
+  class Implementation;
+private:
+  rmf_utils::unique_impl_ptr<Implementation> _pimpl;
 };
 
 } // namespace rmf_task

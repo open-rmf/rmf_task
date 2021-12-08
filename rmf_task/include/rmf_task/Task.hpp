@@ -194,7 +194,7 @@ public:
   virtual const ConstTagPtr& tag() const = 0;
 
   /// Estimate the overall finishing time of the task
-  virtual rmf_traffic::Time estimate_finish_time() const = 0;
+  virtual rmf_traffic::Duration estimate_remaining_time() const = 0;
 
   /// Get a backup for this Task
   virtual Backup backup() const = 0;

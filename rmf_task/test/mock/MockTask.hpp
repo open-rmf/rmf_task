@@ -44,7 +44,7 @@ public:
 
     const ConstTagPtr& tag() const override;
 
-    rmf_traffic::Time estimate_finish_time() const override;
+    rmf_traffic::Duration estimate_remaining_time() const override;
 
     Backup backup() const override;
 

@@ -57,6 +57,7 @@ public:
 
   class Implementation;
 private:
+  Backup();
   rmf_utils::impl_ptr<Implementation> _pimpl;
 };
 
