@@ -559,8 +559,7 @@ void Task::Active::_load_backup(std::string backup_state_str)
   const auto restore_phase = rmf_task::phases::RestoreBackup::Active::make(
     backup_state_str, rmf_traffic::Duration(0));
 
-  // TODO(MXG): Allow users to specify a custom clock for the log
-  const auto start_time = std::chrono::steady_clock::now();
+  const auto start_time = _clock();
 
   const auto failed_to_restore = [&]() -> void
     {
@@ -569,7 +568,7 @@ void Task::Active::_load_backup(std::string backup_state_str)
         std::make_shared<rmf_task::Phase::Completed>(
           rmf_task::Phase::Snapshot::make(*restore_phase),
           start_time,
-          std::chrono::steady_clock::now()));
+          _clock()));
 
       _finish_task();
     };
@@ -753,6 +752,7 @@ void Task::Active::_begin_next_stage(std::optional<nlohmann::json> restore)
       continue;
     }
 
+    const auto phase_id = tag->id();
     _current_phase_start_time = _clock();
     _active_phase = _phase_activator->activate(
       _get_state,
@@ -765,7 +765,7 @@ void Task::Active::_begin_next_stage(std::optional<nlohmann::json> restore)
         if (const auto self = me.lock())
           self->_update(snapshot);
       },
-      [me = weak_from_this(), id = _active_phase->tag()->id()](
+      [me = weak_from_this(), id = phase_id](
         Phase::Active::Backup backup)
       {
         if (const auto self = me.lock())
@@ -777,6 +777,8 @@ void Task::Active::_begin_next_stage(std::optional<nlohmann::json> restore)
           self->_finish_phase();
       });
 
+    _update(Phase::Snapshot::make(*_active_phase));
+    _issue_backup(phase_id, _active_phase->backup());
     return;
   }
 }
@@ -895,6 +897,16 @@ auto Task::make_activator(
         std::move(phase_finished),
         std::move(task_finished));
     };
+}
+
+//==============================================================================
+void Task::add(
+  rmf_task::Activator& activator,
+  Phase::ConstActivatorPtr phase_activator,
+  std::function<rmf_traffic::Time()> clock)
+{
+  activator.add_activator<Task::Description>(
+    make_activator(std::move(phase_activator), std::move(clock)));
 }
 
 } // namespace rmf_task_sequence

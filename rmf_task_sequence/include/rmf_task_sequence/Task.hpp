@@ -66,6 +66,26 @@ public:
     Phase::ConstActivatorPtr phase_activator,
     std::function<rmf_traffic::Time()> clock);
 
+  /// Add this task type to an Activator. This is an alternative to using
+  /// make_activator(~).
+  ///
+  /// \param[in] activator
+  ///   The task activator to add this task type to.
+  ///
+  /// \param[in] phase_activator
+  ///   A phase activator. It is recommended to fully initialize this phase
+  ///   activator (add all supported phases) before passing it to this function.
+  ///   The task activator will keep a reference to this phase activator, so
+  ///   modifying it while a task is activating a phase could cause data races
+  ///   and therefore undefined behavior.
+  ///
+  /// \param[in] clock
+  ///   A callback that gives the current time when called.
+  static void add(
+    rmf_task::Activator& activator,
+    Phase::ConstActivatorPtr phase_activator,
+    std::function<rmf_traffic::Time()> clock);
+
 };
 
 //==============================================================================

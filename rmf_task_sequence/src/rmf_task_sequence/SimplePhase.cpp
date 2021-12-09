@@ -111,6 +111,7 @@ void SimplePhase::add(
       std::function<void()> finished) -> ActivePtr
   {
     const auto phase = std::make_shared<Active>();
+    assert(tag != nullptr);
     phase->_tag = tag;
 
     std::function<void()> event_update =
@@ -120,7 +121,10 @@ void SimplePhase::add(
       ]()
       {
         if (const auto phase = weak.lock())
-          phase_update(Phase::Snapshot::make(*phase));
+        {
+          if (phase->_final_event)
+            phase_update(Phase::Snapshot::make(*phase));
+        }
       };
 
     std::function<void()> event_checkpoint =
@@ -130,7 +134,10 @@ void SimplePhase::add(
       ]()
       {
         if (const auto phase = weak.lock())
-          phase_checkpoint(phase->backup());
+        {
+          if (phase->_final_event)
+            phase_checkpoint(phase->backup());
+        }
       };
 
     const auto assign_id = Event::AssignID::make();

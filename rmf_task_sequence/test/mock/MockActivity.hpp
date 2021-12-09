@@ -112,6 +112,10 @@ public:
 
     void kill() final;
 
+    void update(rmf_task::Event::Status status, std::string text);
+
+    void complete();
+
     Signals signals;
     rmf_task::events::SimpleEventStatePtr state_data;
   };

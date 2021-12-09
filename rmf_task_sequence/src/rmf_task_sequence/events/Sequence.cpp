@@ -31,7 +31,7 @@ Event::StandbyPtr Sequence::Standby::initiate(
   std::function<void()> parent_update)
 {
   auto state = make_state(id, description);
-  const auto update = [parent_update = std::move(parent_update), state]()
+  const auto update = [parent_update, state]()
     {
       update_status(*state);
       parent_update();
@@ -354,6 +354,7 @@ void Sequence::Active::next()
 
   Sequence::Standby::update_status(*_state);
   _parent_update();
+  _checkpoint();
 }
 
 //==============================================================================

@@ -52,6 +52,7 @@ target_include_directories(rmf_task_sequence
 )
 
 if(BUILD_TESTING AND ament_cmake_catch2_FOUND AND rmf_cmake_uncrustify_FOUND)
+
   file(GLOB_RECURSE test_srcs "test/*.cpp")
 
   ament_add_catch2(

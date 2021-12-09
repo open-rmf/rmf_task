@@ -110,6 +110,10 @@ auto MockActivity::Active::make(
       id->assign(), "Mock Activity", "Mocking an activity",
       rmf_task::Event::Status::Underway);
   }
+  else
+  {
+    output->state_data->update_status(rmf_task::Event::Status::Underway);
+  }
 
   return output;
 }
@@ -156,6 +160,24 @@ void MockActivity::Active::cancel()
 void MockActivity::Active::kill()
 {
   state_data->update_status(rmf_task::Event::Status::Killed);
+  signals.finished();
+}
+
+//==============================================================================
+void MockActivity::Active::update(
+  rmf_task::Event::Status status,
+  std::string text)
+{
+  state_data->update_status(status);
+  state_data->update_log().info(std::move(text));
+  signals.update();
+}
+
+//==============================================================================
+void MockActivity::Active::complete()
+{
+  state_data->update_status(rmf_task::Event::Status::Completed);
+  state_data->update_log().info("Completed");
   signals.finished();
 }
 
