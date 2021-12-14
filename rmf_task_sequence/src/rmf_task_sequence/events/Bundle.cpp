@@ -69,7 +69,9 @@ Event::StandbyPtr initiate(
   }
 
   throw std::runtime_error(
-    "Bundle type not yet implemented: " + std::to_string(description.type()));
+    "[rmf_task_sequence::events::Bundle::initiate] "
+    "Bundle type not yet implemented: "
+    + std::to_string(description.type()));
 }
 
 //==============================================================================
@@ -123,10 +125,11 @@ public:
     {
       case Type::Sequence:
         return "Sequence";
-      case Type::ParallelAll:
-        return "All of";
-      case Type::ParallelAny:
-        return "One of";
+      // TODO(MXG): Bring back this code when we want to support other types
+//      case Type::ParallelAll:
+//        return "All of";
+//      case Type::ParallelAny:
+//        return "One of";
     }
 
     return "<?Undefined Bundle?>";
@@ -136,18 +139,19 @@ public:
     std::optional<rmf_traffic::Duration> current_estimate,
     rmf_traffic::Duration next_dependency_estimate) const
   {
-    if (current_estimate.has_value())
-    {
-      if (Type::ParallelAll == type)
-        return std::max(*current_estimate, next_dependency_estimate);
-      else if (Type::ParallelAny == type)
-        return std::min(*current_estimate, next_dependency_estimate);
-    }
-    else
-    {
-      if (Type::ParallelAll == type || Type::ParallelAny == type)
-        return next_dependency_estimate;
-    }
+    // TODO(MXG): Bring back this code when we want to support other types
+//    if (current_estimate.has_value())
+//    {
+//      if (Type::ParallelAll == type)
+//        return std::max(*current_estimate, next_dependency_estimate);
+//      else if (Type::ParallelAny == type)
+//        return std::min(*current_estimate, next_dependency_estimate);
+//    }
+//    else
+//    {
+//      if (Type::ParallelAll == type || Type::ParallelAny == type)
+//        return next_dependency_estimate;
+//    }
 
     return current_estimate.value_or(rmf_traffic::Duration(0))
       + next_dependency_estimate;
@@ -336,6 +340,33 @@ void Bundle::add(
         std::move(checkpoint),
         std::move(finished));
     });
+}
+
+//==============================================================================
+Event::ActivePtr Bundle::activate(
+  Type type,
+  std::vector<StandbyPtr> dependencies,
+  rmf_task::events::SimpleEventStatePtr state,
+  std::function<void()> update,
+  std::function<void()> checkpoint,
+  std::function<void()> finished)
+{
+  if (type == Bundle::Type::Sequence)
+  {
+    auto sequence = std::make_shared<internal::Sequence::Active>(
+      std::move(dependencies),
+      std::move(state),
+      std::move(update),
+      std::move(checkpoint),
+      std::move(finished));
+
+    sequence->next();
+    return sequence;
+  }
+
+  throw std::runtime_error(
+    "[rmf_task_sequence::events::Bundle::activate] "
+    "Bundle type not yet implemented: " + std::to_string(type));
 }
 
 } // namespace events

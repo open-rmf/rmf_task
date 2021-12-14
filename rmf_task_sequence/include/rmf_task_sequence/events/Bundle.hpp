@@ -19,6 +19,7 @@
 #define RMF_TASK_SEQUENCE__EVENTS__BUNDLE_HPP
 
 #include <rmf_task_sequence/Event.hpp>
+#include <rmf_task/events/SimpleEventState.hpp>
 
 #include <vector>
 #include <optional>
@@ -40,11 +41,13 @@ public:
 
     /// The bundle will execute its dependencies in parallel and will finish
     /// when all of its dependencies are finished.
-    ParallelAll,
+    // (Not implemented yet)
+//    ParallelAll,
 
     /// The bundle will execute its dependencies in parallel and will finished
     /// when any (one or more) of its dependencies finishes.
-    ParallelAny
+    // (Not implemented yet)
+//    ParallelAny
   };
 
   /// Give an initializer the ability to initialize event bundles
@@ -68,6 +71,35 @@ public:
   static void add(
     Event::Initializer& add_to,
     const Event::ConstInitializerPtr& initialize_from);
+
+  /// Activate a Bundle by directly providing the standby dependencies.
+  ///
+  /// \param[in] type
+  ///   The type of bundle to activate
+  ///
+  /// \param[in] dependencies
+  ///   The dependencies that are being bundled together
+  ///
+  /// \param[in] state
+  ///   The state to modify as the bundle progresses. This class will not modify
+  ///   the name or detail of the state.
+  ///
+  /// \param[in] update
+  ///   The callback that will be triggered when the bundle has an update.
+  ///
+  /// \param[in] checkpoint
+  ///   The callback that will be triggered when the bundle reaches a
+  ///   checkpoint.
+  ///
+  /// \param[in] finished
+  ///   The callback that will be triggered when the bundle is finished.
+  static ActivePtr activate(
+    Type type,
+    std::vector<StandbyPtr> dependencies,
+    rmf_task::events::SimpleEventStatePtr state,
+    std::function<void()> update,
+    std::function<void()> checkpoint,
+    std::function<void()> finished);
 
   class Description;
 };
