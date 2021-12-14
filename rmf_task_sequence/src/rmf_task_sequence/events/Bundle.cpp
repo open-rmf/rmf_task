@@ -343,24 +343,19 @@ void Bundle::add(
 }
 
 //==============================================================================
-Event::ActivePtr Bundle::activate(
+Event::StandbyPtr Bundle::standby(
   Type type,
   std::vector<StandbyPtr> dependencies,
   rmf_task::events::SimpleEventStatePtr state,
-  std::function<void()> update,
-  std::function<void()> checkpoint,
-  std::function<void()> finished)
+  std::function<void()> update)
 {
   if (type == Bundle::Type::Sequence)
   {
-    auto sequence = std::make_shared<internal::Sequence::Active>(
+    auto sequence = std::make_shared<internal::Sequence::Standby>(
       std::move(dependencies),
       std::move(state),
-      std::move(update),
-      std::move(checkpoint),
-      std::move(finished));
+      std::move(update));
 
-    sequence->next();
     return sequence;
   }
 

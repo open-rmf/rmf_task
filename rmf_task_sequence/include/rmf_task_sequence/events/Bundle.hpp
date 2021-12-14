@@ -72,7 +72,8 @@ public:
     Event::Initializer& add_to,
     const Event::ConstInitializerPtr& initialize_from);
 
-  /// Activate a Bundle by directly providing the standby dependencies.
+  /// Create a Bundle on standby by directly providing the standby dependencies
+  /// and the state object.
   ///
   /// \param[in] type
   ///   The type of bundle to activate
@@ -87,19 +88,11 @@ public:
   /// \param[in] update
   ///   The callback that will be triggered when the bundle has an update.
   ///
-  /// \param[in] checkpoint
-  ///   The callback that will be triggered when the bundle reaches a
-  ///   checkpoint.
-  ///
-  /// \param[in] finished
-  ///   The callback that will be triggered when the bundle is finished.
-  static ActivePtr activate(
+  static StandbyPtr standby(
     Type type,
     std::vector<StandbyPtr> dependencies,
     rmf_task::events::SimpleEventStatePtr state,
-    std::function<void()> update,
-    std::function<void()> checkpoint,
-    std::function<void()> finished);
+    std::function<void()> update);
 
   class Description;
 };
