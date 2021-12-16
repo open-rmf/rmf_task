@@ -185,4 +185,6 @@ private:
 
 } // namespace rmf_task_sequence
 
+#include <rmf_task_sequence/detail/impl_Task.hpp>
+
 #endif // RMF_TASK_SEQUENCE__TASK_HPP
