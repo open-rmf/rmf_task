@@ -41,7 +41,8 @@ public:
     std::string name,
     std::string detail,
     Status initial_status,
-    std::vector<ConstStatePtr> dependencies = {});
+    std::vector<ConstStatePtr> dependencies = {},
+    std::function<rmf_traffic::Time()> clock = nullptr);
 
   // Documentation inherited
   uint64_t id() const final;

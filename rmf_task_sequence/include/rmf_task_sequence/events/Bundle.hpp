@@ -50,6 +50,8 @@ public:
 //    ParallelAny
   };
 
+  class Description;
+
   /// Give an initializer the ability to initialize event bundles
   ///
   /// \param[in] initializer
@@ -65,12 +67,46 @@ public:
   ///   This Initializer will be given the ability to initialize event sequences
   ///
   /// \param[in] initialize_from
-  ///   This Initializer will be used by the Event Sequence to initialize the
+  ///   This Initializer will be used by the Bundle to initialize the
   ///   events that it depends on. This may be a different initializer than the
   ///   one that the event sequence is added to.
   static void add(
     Event::Initializer& add_to,
     const Event::ConstInitializerPtr& initialize_from);
+
+  /// Given an event description, return a vector of other event descriptions.
+  template<typename OtherDesc>
+  using UnfoldDescription =
+    std::function<Bundle::Description(const OtherDesc&)>;
+
+  /// Give an initializer the ability to initialize an event bundle for some
+  /// other event description. This is useful when you want a certain event to
+  /// be implemented as a bundle of other events without requiring users to
+  /// explicitly specify an event bundle.
+  ///
+  /// This is also useful if there is an event type that is safe to initialize
+  /// when bundled in a specific way with other events but should not be run on
+  /// its own. You can keep the Description type of that event private to the
+  /// downstream user but load it into the initializer for this bundle.
+  ///
+  /// \param[in] unfold_description
+  ///   This will be used to produce the bundle to create
+  ///
+  /// \param[in] add_to
+  ///   This Initializer will be given the ability to initialize this type of
+  ///   event bundle.
+  ///
+  /// \param[in] initialize_from
+  ///   This Initializer will be used to initialize the dependencies of this
+  ///   Bundle.
+  template<typename OtherDesc>
+  static void unfold(
+    const UnfoldDescription<OtherDesc>& unfold_description,
+    Event::Initializer& add_to,
+    const Event::ConstInitializerPtr& initialize_from);
+
+  using UpdateFn = std::function<void()>;
+  using DependencySpecifiers = std::vector<std::function<StandbyPtr(UpdateFn)>>;
 
   /// Create a Bundle on standby by directly providing the standby dependencies
   /// and the state object.
@@ -79,7 +115,9 @@ public:
   ///   The type of bundle to activate
   ///
   /// \param[in] dependencies
-  ///   The dependencies that are being bundled together
+  ///   Factories for the dependencies that are being bundled together. Each
+  ///   factory should take in an update callback and then give back the
+  ///   StandbyPtr for the dependency.
   ///
   /// \param[in] state
   ///   The state to modify as the bundle progresses. This class will not modify
@@ -90,11 +128,36 @@ public:
   ///
   static StandbyPtr standby(
     Type type,
-    std::vector<StandbyPtr> dependencies,
+    const DependencySpecifiers& dependencies,
     rmf_task::events::SimpleEventStatePtr state,
     std::function<void()> update);
 
-  class Description;
+  /// Initiate a Bundle in Standby mode. For advanced use only.
+  ///
+  /// \warning It is not recommended to use this function directly. You should
+  /// consider using add(~) or unfold(~) with an initializer instead.
+  static Event::StandbyPtr initiate(
+    const Event::Initializer& initializer,
+    const Event::AssignIDPtr& id,
+    const std::function<rmf_task::State()>& get_state,
+    const ConstParametersPtr& parameters,
+    const Bundle::Description& description,
+    std::function<void()> update);
+
+  /// Restore a Bundle into Active mode. For advanced use only.
+  ///
+  /// \warning It is not recommended to use this function directly. You should
+  /// consider using add(~) or unfold(~) with an initializer instead.
+  static Event::ActivePtr restore(
+    const Event::Initializer& initializer,
+    const Event::AssignIDPtr& id,
+    const std::function<rmf_task::State()>& get_state,
+    const ConstParametersPtr& parameters,
+    const Bundle::Description& description,
+    const std::string& backup,
+    std::function<void()> update,
+    std::function<void()> checkpoint,
+    std::function<void()> finished);
 };
 
 //==============================================================================
@@ -167,5 +230,6 @@ private:
 } // namespace events
 } // namespace rmf_task_sequence
 
+#include <rmf_task_sequence/events/detail/impl_Bundle.hpp>
 
 #endif // RMF_TASK_SEQUENCE__EVENTS__BUNDLE_HPP

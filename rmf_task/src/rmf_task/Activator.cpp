@@ -37,7 +37,7 @@ Activator::Activator()
 
 //==============================================================================
 Task::ActivePtr Activator::activate(
-  std::function<State()> get_state,
+  const std::function<State()>& get_state,
   const ConstParametersPtr& parameters,
   const Request& request,
   std::function<void(Phase::ConstSnapshotPtr)> update,
@@ -58,7 +58,7 @@ Task::ActivePtr Activator::activate(
     return nullptr;
 
   return it->second(
-    std::move(get_state),
+    get_state,
     parameters,
     request.booking(),
     *request.description(),
@@ -71,7 +71,7 @@ Task::ActivePtr Activator::activate(
 
 //==============================================================================
 Task::ActivePtr Activator::restore(
-  std::function<State()> get_state,
+  const std::function<State()>& get_state,
   const ConstParametersPtr& parameters,
   const Request& request,
   std::string backup_state,
@@ -90,7 +90,7 @@ Task::ActivePtr Activator::restore(
     return nullptr;
 
   return it->second(
-    std::move(get_state),
+    get_state,
     parameters,
     request.booking(),
     *request.description(),

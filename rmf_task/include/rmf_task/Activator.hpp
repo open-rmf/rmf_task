@@ -69,7 +69,7 @@ public:
   using Activate =
     std::function<
     Task::ActivePtr(
-      std::function<State()> get_state,
+      const std::function<State()>& get_state,
       const ConstParametersPtr& parameters,
       const Task::ConstBookingPtr& booking,
       const Description& description,
@@ -116,7 +116,7 @@ public:
   ///
   /// \return an active, running instance of the requested task.
   Task::ActivePtr activate(
-    std::function<State()> get_state,
+    const std::function<State()>& get_state,
     const ConstParametersPtr& parameters,
     const Request& request,
     std::function<void(Phase::ConstSnapshotPtr)> update,
@@ -153,7 +153,7 @@ public:
   ///
   /// \return an active, running instance of the requested task.
   Task::ActivePtr restore(
-    std::function<State()> get_state,
+    const std::function<State()>& get_state,
     const ConstParametersPtr& parameters,
     const Request& request,
     std::string backup_state,
@@ -173,6 +173,8 @@ private:
   rmf_utils::impl_ptr<Implementation> _pimpl;
 };
 
+using ActivatorPtr = std::shared_ptr<Activator>;
+using ConstActivatorPtr = std::shared_ptr<const Activator>;
 
 } // namespace rmf_task
 

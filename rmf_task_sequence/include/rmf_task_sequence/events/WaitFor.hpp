@@ -56,6 +56,9 @@ public:
   ///   The duration of time that the phase should be waiting.
   static DescriptionPtr make(rmf_traffic::Duration wait_duration);
 
+  /// Constructor
+  Description(rmf_traffic::Duration duration_);
+
   /// Get the duration of the wait
   rmf_traffic::Duration duration() const;
 
@@ -74,7 +77,6 @@ public:
 
   class Implementation;
 private:
-  Description();
   rmf_utils::impl_ptr<Implementation> _pimpl;
 };
 

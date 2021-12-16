@@ -20,7 +20,7 @@
 #include <rmf_task_sequence/Event.hpp>
 #include <rmf_task_sequence/events/Bundle.hpp>
 #include <rmf_task_sequence/Task.hpp>
-#include <rmf_task_sequence/SimplePhase.hpp>
+#include <rmf_task_sequence/phases/SimplePhase.hpp>
 #include <rmf_task_sequence/events/Bundle.hpp>
 
 #include <rmf_battery/agv/BatterySystem.hpp>
@@ -49,14 +49,14 @@ rmf_task_sequence::Phase::ConstDescriptionPtr make_sequence_for_phase(
     std::make_shared<rmf_task_sequence::events::Bundle::Description>(
     descs, rmf_task_sequence::events::Bundle::Type::Sequence);
 
-  return rmf_task_sequence::SimplePhase::Description::make(sequence);
+  return rmf_task_sequence::phases::SimplePhase::Description::make(sequence);
 }
 
 //==============================================================================
 rmf_task_sequence::Phase::ConstDescriptionPtr make_phase(
   std::shared_ptr<MockActivity::Controller> ctrl)
 {
-  return rmf_task_sequence::SimplePhase::Description::make(
+  return rmf_task_sequence::phases::SimplePhase::Description::make(
     std::make_shared<MockActivity::Description>(std::move(ctrl)));
 }
 
@@ -123,7 +123,8 @@ SCENARIO("Test Event Sequences")
 
   const auto phase_activator =
     std::make_shared<rmf_task_sequence::Phase::Activator>();
-  rmf_task_sequence::SimplePhase::add(*phase_activator, event_initializer);
+  rmf_task_sequence::phases::SimplePhase::add(
+    *phase_activator, event_initializer);
 
   rmf_task::Activator task_activator;
   rmf_task_sequence::Task::add(

@@ -59,11 +59,14 @@ public:
 auto WaitFor::Description::make(rmf_traffic::Duration wait_duration)
 -> DescriptionPtr
 {
-  auto output = std::shared_ptr<Description>(new Description);
-  output->_pimpl =
-    rmf_utils::make_impl<Implementation>(Implementation{wait_duration});
+  return std::make_shared<Description>(wait_duration);
+}
 
-  return output;
+//==============================================================================
+WaitFor::Description::Description(rmf_traffic::Duration duration_)
+: _pimpl(rmf_utils::make_impl<Implementation>(Implementation{duration_}))
+{
+  // Do nothing
 }
 
 //==============================================================================
@@ -100,12 +103,6 @@ Header WaitFor::Description::generate_header(
     "Waiting",
     "Waiting for [" + std::to_string(seconds.count()) + "] seconds to elapse",
     _pimpl->duration);
-}
-
-//==============================================================================
-WaitFor::Description::Description()
-{
-  // Do nothing
 }
 
 //==============================================================================

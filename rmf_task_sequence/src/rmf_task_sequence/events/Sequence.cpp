@@ -38,19 +38,44 @@ Event::StandbyPtr Sequence::Standby::initiate(
     };
 
   std::vector<Event::StandbyPtr> dependencies;
+  dependencies.reserve(description.dependencies().size());
   for (const auto& desc : description.dependencies())
   {
     auto element = initializer.initialize(
       id, get_state, parameters, *desc, update);
 
-    state->add_dependency(element->state());
-
     dependencies.emplace_back(std::move(element));
   }
 
+  // We reverse the dependencies so we can always pop them off the back of the
+  // queue.
   std::reverse(dependencies.begin(), dependencies.end());
 
-  update_status(*state);
+  return std::make_shared<Sequence::Standby>(
+    std::move(dependencies), std::move(state), std::move(parent_update));
+}
+
+//==============================================================================
+Event::StandbyPtr Sequence::Standby::initiate(
+  const std::vector<MakeStandby>& dependencies_fn,
+  rmf_task::events::SimpleEventStatePtr state,
+  std::function<void()> parent_update)
+{
+  const auto update = [parent_update, state]()
+    {
+      update_status(*state);
+      parent_update();
+    };
+
+  std::vector<Event::StandbyPtr> dependencies;
+  dependencies.reserve(dependencies_fn.size());
+  for (const auto& fn : dependencies_fn)
+    dependencies.push_back(fn(update));
+
+  // We reverse the dependencies so we can always pop them off the back of the
+  // queue.
+  std::reverse(dependencies.begin(), dependencies.end());
+
   return std::make_shared<Sequence::Standby>(
     std::move(dependencies), std::move(state), std::move(parent_update));
 }
@@ -65,21 +90,28 @@ Event::ConstStatePtr Sequence::Standby::state() const
 rmf_traffic::Duration Sequence::Standby::duration_estimate() const
 {
   auto estimate = rmf_traffic::Duration(0);
-  for (const auto& element : _dependencies)
+  for (const auto& element : _reverse_dependencies)
     estimate += element->duration_estimate();
 
   return estimate;
 }
 
+//==============================================================================
 Sequence::Standby::Standby(
-  std::vector<Event::StandbyPtr> dependencies,
+  std::vector<Event::StandbyPtr> reverse_dependencies,
   rmf_task::events::SimpleEventStatePtr state,
   std::function<void()> parent_update)
-: _dependencies(std::move(dependencies)),
+: _reverse_dependencies(std::move(reverse_dependencies)),
   _state(std::move(state)),
   _parent_update(std::move(parent_update))
 {
-  // Do nothing
+  std::vector<rmf_task::Event::ConstStatePtr> state_deps;
+  state_deps.reserve(_reverse_dependencies.size());
+  for (auto rit = _reverse_dependencies.rbegin(); rit != _reverse_dependencies.rend(); ++rit)
+    state_deps.push_back((*rit)->state());
+
+  _state->update_dependencies(std::move(state_deps));
+  update_status(*state);
 }
 
 //==============================================================================
@@ -91,7 +123,7 @@ Event::ActivePtr Sequence::Standby::begin(
     return _active;
 
   _active = std::make_shared<Sequence::Active>(
-    std::move(_dependencies), _state, _parent_update,
+    std::move(_reverse_dependencies), _state, _parent_update,
     std::move(checkpoint), std::move(finish));
 
   _active->next();

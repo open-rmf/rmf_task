@@ -15,13 +15,14 @@
  *
 */
 
-#ifndef RMF_TASK_SEQUENCE__SIMPLEPHASE_HPP
-#define RMF_TASK_SEQUENCE__SIMPLEPHASE_HPP
+#ifndef RMF_TASK_SEQUENCE__PHASES__SIMPLEPHASE_HPP
+#define RMF_TASK_SEQUENCE__PHASES__SIMPLEPHASE_HPP
 
 #include <rmf_task_sequence/Phase.hpp>
 #include <rmf_task_sequence/Event.hpp>
 
 namespace rmf_task_sequence {
+namespace phases {
 
 //==============================================================================
 class SimplePhase : public Phase
@@ -95,6 +96,7 @@ private:
   rmf_utils::impl_ptr<Implementation> _pimpl;
 };
 
+} // namespace phases
 } // namespace rmf_task_sequence
 
-#endif // RMF_TASK_SEQUENCE__SIMPLEPHASE_HPP
+#endif // RMF_TASK_SEQUENCE__PHASES__SIMPLEPHASE_HPP

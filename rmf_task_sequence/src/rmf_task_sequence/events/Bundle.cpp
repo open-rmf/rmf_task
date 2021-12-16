@@ -47,9 +47,10 @@ nlohmann::json convert_to_json(const std::string& input)
 
   return output;
 }
+} // anonymous namespace
 
 //==============================================================================
-Event::StandbyPtr initiate(
+Event::StandbyPtr Bundle::initiate(
   const Event::Initializer& initializer,
   const Event::AssignIDPtr& id,
   const std::function<rmf_task::State()>& get_state,
@@ -75,7 +76,7 @@ Event::StandbyPtr initiate(
 }
 
 //==============================================================================
-Event::ActivePtr restore(
+Event::ActivePtr Bundle::restore(
   const Event::Initializer& initializer,
   const Event::AssignIDPtr& id,
   const std::function<rmf_task::State()>& get_state,
@@ -103,8 +104,6 @@ Event::ActivePtr restore(
   throw std::runtime_error(
     "Bundle type not yet implemented: " + std::to_string(description.type()));
 }
-
-} // anonymous namespace
 
 //==============================================================================
 class Bundle::Description::Implementation
@@ -345,13 +344,13 @@ void Bundle::add(
 //==============================================================================
 Event::StandbyPtr Bundle::standby(
   Type type,
-  std::vector<StandbyPtr> dependencies,
+  const std::vector<std::function<StandbyPtr(UpdateFn)>>& dependencies,
   rmf_task::events::SimpleEventStatePtr state,
   std::function<void()> update)
 {
   if (type == Bundle::Type::Sequence)
   {
-    auto sequence = std::make_shared<internal::Sequence::Standby>(
+    auto sequence = internal::Sequence::Standby::initiate(
       std::move(dependencies),
       std::move(state),
       std::move(update));

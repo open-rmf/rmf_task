@@ -254,6 +254,7 @@ SCENARIO("Grid World")
         delivery_wait,
         3,
         delivery_wait,
+        {{}},
         "1",
         now + rmf_traffic::time::from_seconds(0)),
 
@@ -262,6 +263,7 @@ SCENARIO("Grid World")
         delivery_wait,
         2,
         delivery_wait,
+        {{}},
         "2",
         now + rmf_traffic::time::from_seconds(0)),
 
@@ -270,6 +272,7 @@ SCENARIO("Grid World")
         delivery_wait,
         9,
         delivery_wait,
+        {{}},
         "3",
         now + rmf_traffic::time::from_seconds(0))
     };
@@ -337,6 +340,7 @@ SCENARIO("Grid World")
         delivery_wait,
         3,
         delivery_wait,
+        {{}},
         "1",
         now + rmf_traffic::time::from_seconds(0)),
 
@@ -345,6 +349,7 @@ SCENARIO("Grid World")
         delivery_wait,
         2,
         delivery_wait,
+        {{}},
         "2",
         now + rmf_traffic::time::from_seconds(0)),
 
@@ -353,6 +358,7 @@ SCENARIO("Grid World")
         delivery_wait,
         9,
         delivery_wait,
+        {{}},
         "3",
         now + rmf_traffic::time::from_seconds(0)),
 
@@ -361,6 +367,7 @@ SCENARIO("Grid World")
         delivery_wait,
         11,
         delivery_wait,
+        {{}},
         "4",
         now + rmf_traffic::time::from_seconds(50000)),
 
@@ -369,6 +376,7 @@ SCENARIO("Grid World")
         delivery_wait,
         0,
         delivery_wait,
+        {{}},
         "5",
         now + rmf_traffic::time::from_seconds(50000)),
 
@@ -377,6 +385,7 @@ SCENARIO("Grid World")
         delivery_wait,
         8,
         delivery_wait,
+        {{}},
         "6",
         now + rmf_traffic::time::from_seconds(60000)),
 
@@ -385,6 +394,7 @@ SCENARIO("Grid World")
         delivery_wait,
         14,
         delivery_wait,
+        {{}},
         "7",
         now + rmf_traffic::time::from_seconds(60000)),
 
@@ -393,6 +403,7 @@ SCENARIO("Grid World")
         delivery_wait,
         11,
         delivery_wait,
+        {{}},
         "8",
         now + rmf_traffic::time::from_seconds(60000)),
 
@@ -401,6 +412,7 @@ SCENARIO("Grid World")
         delivery_wait,
         0,
         delivery_wait,
+        {{}},
         "9",
         now + rmf_traffic::time::from_seconds(60000)),
 
@@ -409,6 +421,7 @@ SCENARIO("Grid World")
         delivery_wait,
         3,
         delivery_wait,
+        {{}},
         "10",
         now + rmf_traffic::time::from_seconds(60000)),
 
@@ -417,6 +430,7 @@ SCENARIO("Grid World")
         delivery_wait,
         12,
         delivery_wait,
+        {{}},
         "11",
         now + rmf_traffic::time::from_seconds(60000))
     };
@@ -484,6 +498,7 @@ SCENARIO("Grid World")
         delivery_wait,
         3,
         delivery_wait,
+        {{}},
         "1",
         now + rmf_traffic::time::from_seconds(0)),
 
@@ -492,6 +507,7 @@ SCENARIO("Grid World")
         delivery_wait,
         2,
         delivery_wait,
+        {{}},
         "2",
         now + rmf_traffic::time::from_seconds(0)),
 
@@ -500,6 +516,7 @@ SCENARIO("Grid World")
         delivery_wait,
         4,
         delivery_wait,
+        {{}},
         "3",
         now + rmf_traffic::time::from_seconds(0)),
 
@@ -508,6 +525,7 @@ SCENARIO("Grid World")
         delivery_wait,
         11,
         delivery_wait,
+        {{}},
         "4",
         now + rmf_traffic::time::from_seconds(50000))
     };
@@ -584,6 +602,7 @@ SCENARIO("Grid World")
         delivery_wait,
         3,
         delivery_wait,
+        {{}},
         "1",
         now + rmf_traffic::time::from_seconds(0)),
 
@@ -592,6 +611,7 @@ SCENARIO("Grid World")
         delivery_wait,
         7,
         delivery_wait,
+        {{}},
         "2",
         now + rmf_traffic::time::from_seconds(0)),
 
@@ -600,6 +620,7 @@ SCENARIO("Grid World")
         delivery_wait,
         12,
         delivery_wait,
+        {{}},
         "3",
         now + rmf_traffic::time::from_seconds(0)),
 
@@ -608,6 +629,7 @@ SCENARIO("Grid World")
         delivery_wait,
         11,
         delivery_wait,
+        {{}},
         "4",
         now + rmf_traffic::time::from_seconds(50000)),
 
@@ -616,6 +638,7 @@ SCENARIO("Grid World")
         delivery_wait,
         6,
         delivery_wait,
+        {{}},
         "5",
         now + rmf_traffic::time::from_seconds(50000)),
 
@@ -624,6 +647,7 @@ SCENARIO("Grid World")
         delivery_wait,
         9,
         delivery_wait,
+        {{}},
         "6",
         now + rmf_traffic::time::from_seconds(70000)),
 
@@ -632,6 +656,7 @@ SCENARIO("Grid World")
         delivery_wait,
         4,
         delivery_wait,
+        {{}},
         "7",
         now + rmf_traffic::time::from_seconds(70000)),
 
@@ -640,6 +665,7 @@ SCENARIO("Grid World")
         delivery_wait,
         11,
         delivery_wait,
+        {{}},
         "8",
         now + rmf_traffic::time::from_seconds(70000)),
 
@@ -648,6 +674,7 @@ SCENARIO("Grid World")
         delivery_wait,
         1,
         delivery_wait,
+        {{}},
         "9",
         now + rmf_traffic::time::from_seconds(70000)),
 
@@ -656,6 +683,7 @@ SCENARIO("Grid World")
         delivery_wait,
         5,
         delivery_wait,
+        {{}},
         "10",
         now + rmf_traffic::time::from_seconds(70000)),
 
@@ -664,6 +692,7 @@ SCENARIO("Grid World")
         delivery_wait,
         10,
         delivery_wait,
+        {{}},
         "11",
         now + rmf_traffic::time::from_seconds(70000))
     };
@@ -821,6 +850,7 @@ SCENARIO("Grid World")
         delivery_wait,
         3,
         delivery_wait,
+        {{}},
         "1",
         now + rmf_traffic::time::from_seconds(0)),
 
@@ -829,6 +859,7 @@ SCENARIO("Grid World")
         delivery_wait,
         2,
         delivery_wait,
+        {{}},
         "2",
         now + rmf_traffic::time::from_seconds(0)),
 
@@ -837,6 +868,7 @@ SCENARIO("Grid World")
         delivery_wait,
         9,
         delivery_wait,
+        {{}},
         "3",
         now + rmf_traffic::time::from_seconds(0))
     };
@@ -871,6 +903,7 @@ SCENARIO("Grid World")
         delivery_wait,
         9,
         delivery_wait,
+        {{}},
         "3",
         now + rmf_traffic::time::from_seconds(0),
         rmf_task::BinaryPriorityScheme::make_high_priority());
@@ -921,6 +954,7 @@ SCENARIO("Grid World")
         delivery_wait,
         3,
         delivery_wait,
+        {{}},
         "1",
         now + rmf_traffic::time::from_seconds(0),
         rmf_task::BinaryPriorityScheme::make_high_priority()),
@@ -930,6 +964,7 @@ SCENARIO("Grid World")
         delivery_wait,
         2,
         delivery_wait,
+        {{}},
         "2",
         now + rmf_traffic::time::from_seconds(0),
         rmf_task::BinaryPriorityScheme::make_high_priority()),
@@ -939,6 +974,7 @@ SCENARIO("Grid World")
         delivery_wait,
         9,
         delivery_wait,
+        {{}},
         "3",
         now + rmf_traffic::time::from_seconds(0),
         rmf_task::BinaryPriorityScheme::make_high_priority())
@@ -987,6 +1023,7 @@ SCENARIO("Grid World")
         delivery_wait,
         3,
         delivery_wait,
+        {{}},
         "1",
         now + rmf_traffic::time::from_seconds(0),
         rmf_task::BinaryPriorityScheme::make_high_priority()),
@@ -996,6 +1033,7 @@ SCENARIO("Grid World")
         delivery_wait,
         2,
         delivery_wait,
+        {{}},
         "2",
         now + rmf_traffic::time::from_seconds(0)),
 
@@ -1004,6 +1042,7 @@ SCENARIO("Grid World")
         delivery_wait,
         9,
         delivery_wait,
+        {{}},
         "3",
         now + rmf_traffic::time::from_seconds(0)),
 
@@ -1012,6 +1051,7 @@ SCENARIO("Grid World")
         delivery_wait,
         7,
         delivery_wait,
+        {{}},
         "4",
         now + rmf_traffic::time::from_seconds(0),
         rmf_task::BinaryPriorityScheme::make_high_priority())
@@ -1069,6 +1109,7 @@ SCENARIO("Grid World")
         delivery_wait,
         3,
         delivery_wait,
+        {{}},
         "1",
         now + rmf_traffic::time::from_seconds(0),
         rmf_task::BinaryPriorityScheme::make_high_priority()),
@@ -1078,6 +1119,7 @@ SCENARIO("Grid World")
         delivery_wait,
         2,
         delivery_wait,
+        {{}},
         "2",
         now + rmf_traffic::time::from_seconds(0)),
 
@@ -1086,6 +1128,7 @@ SCENARIO("Grid World")
         delivery_wait,
         9,
         delivery_wait,
+        {{}},
         "3",
         now + rmf_traffic::time::from_seconds(100000)),
 
@@ -1094,6 +1137,7 @@ SCENARIO("Grid World")
         delivery_wait,
         6,
         delivery_wait,
+        {{}},
         "4",
         now + rmf_traffic::time::from_seconds(100000),
         rmf_task::BinaryPriorityScheme::make_high_priority())
@@ -1153,6 +1197,7 @@ SCENARIO("Grid World")
         delivery_wait,
         3,
         delivery_wait,
+        {{}},
         "1",
         now + rmf_traffic::time::from_seconds(0)),
 
@@ -1161,6 +1206,7 @@ SCENARIO("Grid World")
         delivery_wait,
         2,
         delivery_wait,
+        {{}},
         "2",
         now + rmf_traffic::time::from_seconds(0)),
 
@@ -1169,6 +1215,7 @@ SCENARIO("Grid World")
         delivery_wait,
         9,
         delivery_wait,
+        {{}},
         "3",
         now + rmf_traffic::time::from_seconds(0)),
 
@@ -1177,6 +1224,7 @@ SCENARIO("Grid World")
         delivery_wait,
         6,
         delivery_wait,
+        {{}},
         "4",
         now + rmf_traffic::time::from_seconds(0))
     };
@@ -1217,6 +1265,7 @@ SCENARIO("Grid World")
           delivery_wait,
           3,
           delivery_wait,
+          {{}},
           "1",
           now + rmf_traffic::time::from_seconds(0)),
 
@@ -1225,6 +1274,7 @@ SCENARIO("Grid World")
           delivery_wait,
           2,
           delivery_wait,
+          {{}},
           "2",
           now + rmf_traffic::time::from_seconds(0)),
 
@@ -1233,6 +1283,7 @@ SCENARIO("Grid World")
           delivery_wait,
           9,
           delivery_wait,
+          {{}},
           "3",
           now + rmf_traffic::time::from_seconds(0),
           rmf_task::BinaryPriorityScheme::make_high_priority()),
@@ -1242,6 +1293,7 @@ SCENARIO("Grid World")
           delivery_wait,
           6,
           delivery_wait,
+          {{}},
           "4",
           now + rmf_traffic::time::from_seconds(0),
           rmf_task::BinaryPriorityScheme::make_high_priority())
@@ -1298,6 +1350,7 @@ SCENARIO("Grid World")
         delivery_wait,
         3,
         delivery_wait,
+        {{}},
         "1",
         now + rmf_traffic::time::from_seconds(0)),
 
@@ -1306,6 +1359,7 @@ SCENARIO("Grid World")
         delivery_wait,
         2,
         delivery_wait,
+        {{}},
         "2",
         now + rmf_traffic::time::from_seconds(0)),
 
@@ -1314,6 +1368,7 @@ SCENARIO("Grid World")
         delivery_wait,
         9,
         delivery_wait,
+        {{}},
         "3",
         now + rmf_traffic::time::from_seconds(0)),
 
@@ -1322,6 +1377,7 @@ SCENARIO("Grid World")
         delivery_wait,
         6,
         delivery_wait,
+        {{}},
         "4",
         now + rmf_traffic::time::from_seconds(0))
     };
@@ -1370,6 +1426,7 @@ SCENARIO("Grid World")
           delivery_wait,
           3,
           delivery_wait,
+          {{}},
           "1",
           now + rmf_traffic::time::from_seconds(0),
           rmf_task::BinaryPriorityScheme::make_high_priority()),
@@ -1379,6 +1436,7 @@ SCENARIO("Grid World")
           delivery_wait,
           2,
           delivery_wait,
+          {{}},
           "2",
           now + rmf_traffic::time::from_seconds(0),
           rmf_task::BinaryPriorityScheme::make_high_priority()),
@@ -1388,6 +1446,7 @@ SCENARIO("Grid World")
           delivery_wait,
           9,
           delivery_wait,
+          {{}},
           "3",
           now + rmf_traffic::time::from_seconds(0),
           rmf_task::BinaryPriorityScheme::make_high_priority()),
@@ -1397,6 +1456,7 @@ SCENARIO("Grid World")
           delivery_wait,
           6,
           delivery_wait,
+          {{}},
           "4",
           now + rmf_traffic::time::from_seconds(0))
       };
@@ -1466,6 +1526,7 @@ SCENARIO("Grid World")
         delivery_wait,
         3,
         delivery_wait,
+        {{}},
         "1",
         now + rmf_traffic::time::from_seconds(0)),
 
@@ -1474,6 +1535,7 @@ SCENARIO("Grid World")
         delivery_wait,
         2,
         delivery_wait,
+        {{}},
         "2",
         now + rmf_traffic::time::from_seconds(0)),
 
@@ -1482,6 +1544,7 @@ SCENARIO("Grid World")
         delivery_wait,
         4,
         delivery_wait,
+        {{}},
         "3",
         now + rmf_traffic::time::from_seconds(0)),
 
@@ -1490,6 +1553,7 @@ SCENARIO("Grid World")
         delivery_wait,
         11,
         delivery_wait,
+        {{}},
         "4",
         now + rmf_traffic::time::from_seconds(50000))
     };
@@ -1634,6 +1698,7 @@ SCENARIO("Grid World")
         delivery_wait,
         3,
         delivery_wait,
+        {{}},
         "1",
         now + rmf_traffic::time::from_seconds(0)),
 
@@ -1642,6 +1707,7 @@ SCENARIO("Grid World")
         delivery_wait,
         2,
         delivery_wait,
+        {{}},
         "2",
         now + rmf_traffic::time::from_seconds(0)),
 
@@ -1650,6 +1716,7 @@ SCENARIO("Grid World")
         delivery_wait,
         4,
         delivery_wait,
+        {{}},
         "3",
         now + rmf_traffic::time::from_seconds(0)),
 
@@ -1658,6 +1725,7 @@ SCENARIO("Grid World")
         delivery_wait,
         11,
         delivery_wait,
+        {{}},
         "4",
         now + rmf_traffic::time::from_seconds(50000))
     };

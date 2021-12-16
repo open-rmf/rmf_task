@@ -70,6 +70,13 @@ public:
     const Bundle::Description& description,
     std::function<void()> parent_update);
 
+  using MakeStandby = std::function<Event::StandbyPtr(Bundle::UpdateFn)>;
+
+  static Event::StandbyPtr initiate(
+    const std::vector<MakeStandby>& dependencies,
+    rmf_task::events::SimpleEventStatePtr state,
+    std::function<void()> update);
+
   Event::ConstStatePtr state() const final;
 
   rmf_traffic::Duration duration_estimate() const final;
@@ -79,7 +86,7 @@ public:
     std::function<void()> finish) final;
 
   Standby(
-    std::vector<Event::StandbyPtr> dependencies,
+    std::vector<Event::StandbyPtr> reverse_dependencies,
     rmf_task::events::SimpleEventStatePtr state,
     std::function<void()> parent_update);
 
@@ -91,7 +98,7 @@ public:
 
 private:
 
-  std::vector<Event::StandbyPtr> _dependencies;
+  std::vector<Event::StandbyPtr> _reverse_dependencies;
   rmf_task::events::SimpleEventStatePtr _state;
   std::function<void()> _parent_update;
   std::shared_ptr<Sequence::Active> _active;

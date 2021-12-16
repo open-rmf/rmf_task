@@ -86,6 +86,32 @@ public:
     Phase::ConstActivatorPtr phase_activator,
     std::function<rmf_traffic::Time()> clock);
 
+  /// Give an initializer the ability to build a sequence task for some other
+  /// task description.
+  ///
+  /// This is useful when the described task is best implemented as a sequence
+  /// of phases.
+  ///
+  /// \param[in] unfold_description
+  ///   This will be used to unfold the other description into a task sequence
+  ///   Description.
+  ///
+  /// \param[in] activator
+  ///   This activator will be given the ability to unfold and activate the
+  ///   OtherDesc type.
+  ///
+  /// \param[in] phase_activator
+  ///   This phase activator will be used to activate the task
+  ///
+  /// \param[in] clock
+  ///   A callback that gives the current time when called
+  template<typename OtherDesc>
+  static void unfold(
+    std::function<Description(const OtherDesc&)> unfold_description,
+    rmf_task::Activator& activator,
+    Phase::ConstActivatorPtr phase_activator,
+    std::function<rmf_traffic::Time()> clock);
+
 };
 
 //==============================================================================
@@ -116,7 +142,7 @@ public:
   ///
   /// \param[in] detail
   ///   Any detailed information that will go into the Task::Tag
-  DescriptionPtr build(
+  std::shared_ptr<Description> build(
     std::string category,
     std::string detail);
 

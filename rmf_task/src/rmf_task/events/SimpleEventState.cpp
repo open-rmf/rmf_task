@@ -40,7 +40,8 @@ std::shared_ptr<SimpleEventState> SimpleEventState::make(
   std::string name,
   std::string detail,
   Event::Status initial_status,
-  std::vector<Event::ConstStatePtr> dependencies)
+  std::vector<Event::ConstStatePtr> dependencies,
+  std::function<rmf_traffic::Time()> clock)
 {
   SimpleEventState output;
   output._pimpl = rmf_utils::make_unique_impl<Implementation>(
@@ -49,7 +50,7 @@ std::shared_ptr<SimpleEventState> SimpleEventState::make(
       initial_status,
       std::move(name),
       std::move(detail),
-      Log(),
+      Log(std::move(clock)),
       std::move(dependencies)
     });
 

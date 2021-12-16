@@ -25,16 +25,21 @@ namespace rmf_task {
 class Log::Implementation
 {
 public:
-  std::function<std::chrono::system_clock::time_point()> clock;
+  std::function<rmf_traffic::Time()> clock;
   std::shared_ptr<std::list<Log::Entry>> entries;
 
-  Implementation(std::function<std::chrono::system_clock::time_point()> clock_)
+  Implementation(std::function<rmf_traffic::Time()> clock_)
   : clock(std::move(clock_)),
     entries(std::make_shared<std::list<Log::Entry>>())
   {
     if (!clock)
     {
-      clock = []() { return std::chrono::system_clock::now(); };
+      clock = []()
+      {
+        return rmf_traffic::Time(
+          rmf_traffic::Duration(
+            std::chrono::system_clock::now().time_since_epoch()));
+      };
     }
   }
 
@@ -47,7 +52,7 @@ public:
 
   static Entry make(
     Tier tier,
-    std::chrono::system_clock::time_point time,
+    rmf_traffic::Time time,
     std::string text)
   {
     Log::Entry output;
@@ -62,7 +67,7 @@ public:
   }
 
   Tier tier;
-  std::chrono::system_clock::time_point time;
+  rmf_traffic::Time time;
   std::string text;
 
 };
@@ -218,8 +223,7 @@ auto Log::Reader::Implementation::read(const View& view) -> Iterable
 }
 
 //==============================================================================
-Log::Log(
-  std::function<std::chrono::system_clock::time_point()> clock)
+Log::Log(std::function<rmf_traffic::Time()> clock)
 : _pimpl(rmf_utils::make_impl<Implementation>(std::move(clock)))
 {
   // Do nothing
@@ -268,7 +272,7 @@ auto Log::Entry::tier() const -> Tier
 }
 
 //==============================================================================
-std::chrono::system_clock::time_point Log::Entry::time() const
+rmf_traffic::Time Log::Entry::time() const
 {
   return _pimpl->time;
 }

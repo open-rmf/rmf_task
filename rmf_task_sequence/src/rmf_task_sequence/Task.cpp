@@ -320,9 +320,9 @@ auto Task::Builder::add_phase(
 }
 
 //==============================================================================
-Task::DescriptionPtr Task::Builder::build(
+auto Task::Builder::build(
   std::string category,
-  std::string detail)
+  std::string detail) -> std::shared_ptr<Description>
 {
   return Description::Implementation::make(
     std::move(category),
@@ -874,7 +874,7 @@ auto Task::make_activator(
     phase_activator = std::move(phase_activator),
     clock = std::move(clock)
   ](
-    std::function<State()> get_state,
+    const std::function<State()>& get_state,
     const ConstParametersPtr& parameters,
     const ConstBookingPtr& booking,
     const Description& description,

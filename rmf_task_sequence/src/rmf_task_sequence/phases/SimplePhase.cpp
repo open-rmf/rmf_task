@@ -15,9 +15,10 @@
  *
 */
 
-#include <rmf_task_sequence/SimplePhase.hpp>
+#include <rmf_task_sequence/phases/SimplePhase.hpp>
 
 namespace rmf_task_sequence {
+namespace phases {
 
 //==============================================================================
 class SimplePhase::Description::Implementation
@@ -254,4 +255,5 @@ SimplePhase::Description::Description()
   // Do nothing
 }
 
+} // namespace phases
 } // namespace rmf_task_sequence

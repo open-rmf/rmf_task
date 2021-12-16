@@ -15,21 +15,21 @@
  *
 */
 
-#ifndef RMF_TASK_SEQUENCE__PHASES__DROPOFF_HPP
-#define RMF_TASK_SEQUENCE__PHASES__DROPOFF_HPP
+#ifndef RMF_TASK_SEQUENCE__EVENTS__PICKUP_HPP
+#define RMF_TASK_SEQUENCE__EVENTS__PICKUP_HPP
 
 #include <rmf_traffic/agv/Planner.hpp>
 
 #include <rmf_task/Payload.hpp>
-#include <rmf_task_sequence/Phase.hpp>
+#include <rmf_task_sequence/Event.hpp>
 
 namespace rmf_task_sequence {
-namespace phases {
+namespace events {
 
 //==============================================================================
-/// A DropOff phase encompasses going to a location and transferring a payload
-/// off of the robot.
-class DropOff
+/// A PickUp phase encompasses going to a location and transferring a payload
+/// into/onto the robot.
+class PickUp
 {
 public:
 
@@ -42,54 +42,54 @@ public:
 };
 
 //==============================================================================
-class DropOff::Description : public Phase::Description
+class PickUp::Description : public Event::Description
 {
 public:
 
-  /// Make a DropOff phase description
+  /// Make a PickUp phase description
   ///
-  /// \param[in] drop_off_location
-  ///   The location that the robot needs to get to for the drop-off
+  /// \param[in] pickup_location
+  ///   The location that the robot needs to get to for the pickup
   ///
-  /// \param[in] into_ingestor
-  ///   The ingestor that will take care of unloading the items. We will
-  ///   communicate with this ingestor to verify the success of unloading the
+  /// \param[in] from_dispenser
+  ///   The dispenser that will take care of loading the items. We will
+  ///   communicate with this dispenser to verify the success of loading the
   ///   items.
   ///
   /// \param[in] payload
-  ///   A description of what should be unloaded from the robot during drop-off
+  ///   A description of what should be loaded into the robot during the pick-up
   ///
-  /// \param[in] unloading_duration_estimate
-  ///   An estimate for how long it will likely take to unload the items.
+  /// \param[in] loading_duration_estimate
+  ///   An estimate for how long it will likely take to load the items.
   static DescriptionPtr make(
-    Location drop_off_location,
-    std::string into_ingestor,
+    Location pickup_location,
+    std::string from_dispenser,
     Payload payload,
-    rmf_traffic::Duration unloading_duration_estimate);
+    rmf_traffic::Duration loading_duration_estimate);
 
-  /// Get the drop-off location
-  const Location& drop_off_location() const;
+  /// Get the pickup location
+  const Location& pickup_location() const;
 
-  /// Set the drop-off location
-  Description& drop_off_location(Location new_location);
+  /// Change the pickup location
+  Description& pickup_location(Location new_location);
 
-  /// Get the ingestor to drop off into
-  const std::string& into_ingestor() const;
+  /// Get the dispenser to pick up from
+  const std::string& from_dispenser() const;
 
-  /// Set the ingestor to drop off into
-  Description& into_ingestor(std::string new_ingestor);
+  /// Change the dispenser to pick up from
+  Description& from_dispenser(std::string new_dispenser);
 
-  /// Get the Payload to drop off
+  /// Get the payload to pick up
   const Payload& payload() const;
 
-  /// Set the Payload to drop off
+  /// Change the payload to pick up
   Description& payload(Payload new_payload);
 
-  /// Get the unloading duration estimate
-  rmf_traffic::Duration unloading_duration_estimate() const;
+  /// Get the loading duration estimate
+  rmf_traffic::Duration loading_duration_estimate() const;
 
-  /// Set the unloading duration estimate
-  Description& unloading_duration_estimate(rmf_traffic::Duration new_duration);
+  /// Change the loading duration estimate
+  Description& loading_duration_estimate(rmf_traffic::Duration new_duration);
 
   // Documentation inherited
   Activity::ConstModelPtr make_model(
@@ -107,7 +107,7 @@ private:
   rmf_utils::unique_impl_ptr<Implementation> _pimpl;
 };
 
-} // namespace phases
+} // namespace events
 } // namespace rmf_task_sequence
 
-#endif // RMF_TASK_SEQUENCE__PHASES__DROPOFF_HPP
+#endif // RMF_TASK_SEQUENCE__EVENTS__PICKUP_HPP
