@@ -43,7 +43,7 @@ Task::ActivePtr Activator::activate(
   std::function<void(Phase::ConstSnapshotPtr)> update,
   std::function<void(Task::Active::Backup)> checkpoint,
   std::function<void(Phase::ConstCompletedPtr)> phase_finished,
-  std::function<void()> task_finished)
+  std::function<void()> task_finished) const
 {
   // TODO(MXG): Should we issue some kind of error/warning to distinguish
   // between a missing description versus a description that doesn't have a
@@ -78,7 +78,7 @@ Task::ActivePtr Activator::restore(
   std::function<void(Phase::ConstSnapshotPtr)> update,
   std::function<void(Task::Active::Backup)> checkpoint,
   std::function<void(Phase::ConstCompletedPtr)> phase_finished,
-  std::function<void()> task_finished)
+  std::function<void()> task_finished) const
 {
   if (!request.description())
     return nullptr;

@@ -122,7 +122,7 @@ public:
     std::function<void(Phase::ConstSnapshotPtr)> update,
     std::function<void(Task::Active::Backup)> checkpoint,
     std::function<void(Phase::ConstCompletedPtr)> phase_finished,
-    std::function<void()> task_finished);
+    std::function<void()> task_finished) const;
 
   /// Restore a Task that crashed or disconnected.
   ///
@@ -160,7 +160,7 @@ public:
     std::function<void(Phase::ConstSnapshotPtr)> update,
     std::function<void(Task::Active::Backup)> checkpoint,
     std::function<void(Phase::ConstCompletedPtr)> phase_finished,
-    std::function<void()> task_finished);
+    std::function<void()> task_finished) const;
 
   class Implementation;
 private:
