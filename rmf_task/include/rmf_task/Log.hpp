@@ -97,6 +97,10 @@ public:
   /// What was the tier of this entry.
   Tier tier() const;
 
+  /// Sequence number for this log entry. This increments once for each new
+  /// log entry, until overflowing and wrapping around to 0.
+  uint32_t seq() const;
+
   /// What was the timestamp of this entry.
   rmf_traffic::Time time() const;
 
@@ -202,6 +206,9 @@ public:
 
   /// Equality comparison operator
   bool operator==(const iterator& other) const;
+
+  /// Inequality comparison operator
+  bool operator!=(const iterator& other) const;
 
   class Implementation;
 private:

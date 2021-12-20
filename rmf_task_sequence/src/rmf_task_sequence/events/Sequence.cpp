@@ -111,7 +111,7 @@ Sequence::Standby::Standby(
     state_deps.push_back((*rit)->state());
 
   _state->update_dependencies(std::move(state_deps));
-  update_status(*state);
+  update_status(*_state);
 }
 
 //==============================================================================

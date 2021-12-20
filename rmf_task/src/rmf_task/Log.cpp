@@ -27,6 +27,7 @@ class Log::Implementation
 public:
   std::function<rmf_traffic::Time()> clock;
   std::shared_ptr<std::list<Log::Entry>> entries;
+  uint32_t seq = 0;
 
   Implementation(std::function<rmf_traffic::Time()> clock_)
   : clock(std::move(clock_)),
@@ -52,6 +53,7 @@ public:
 
   static Entry make(
     Tier tier,
+    uint32_t seq,
     rmf_traffic::Time time,
     std::string text)
   {
@@ -59,6 +61,7 @@ public:
     output._pimpl = rmf_utils::make_impl<Implementation>(
       Implementation{
         tier,
+        seq,
         time,
         std::move(text)
       });
@@ -67,6 +70,7 @@ public:
   }
 
   Tier tier;
+  uint32_t seq;
   rmf_traffic::Time time;
   std::string text;
 
@@ -140,25 +144,25 @@ public:
 class Log::Reader::Iterable::Implementation
 {
 public:
+  using base_iterator = std::list<Log::Entry>::const_iterator;
   std::shared_ptr<const std::list<Log::Entry>> shared;
   std::optional<iterator> begin;
 
   static Log::Reader::Iterable make(
     std::shared_ptr<const std::list<Log::Entry>> shared,
-    std::optional<std::list<Log::Entry>::const_iterator> begin,
-    std::optional<std::list<Log::Entry>::const_iterator> last);
+    std::optional<base_iterator> begin,
+    std::optional<base_iterator> last);
 };
 
 //==============================================================================
 class Log::Reader::Iterable::iterator::Implementation
 {
 public:
-  std::list<Log::Entry>::const_iterator it;
-  std::list<Log::Entry>::const_iterator last;
+  using base_iterator = std::list<Log::Entry>::const_iterator;
+  base_iterator it;
+  base_iterator last;
 
-  static iterator make(
-    std::list<Log::Entry>::const_iterator it,
-    std::list<Log::Entry>::const_iterator last)
+  static iterator make(base_iterator it, base_iterator last)
   {
     iterator output;
     output._pimpl = rmf_utils::make_impl<Implementation>(
@@ -176,16 +180,25 @@ public:
 //==============================================================================
 Log::Reader::Iterable Log::Reader::Iterable::Implementation::make(
   std::shared_ptr<const std::list<Log::Entry>> shared,
-  std::optional<std::list<Log::Entry>::const_iterator> begin,
-  std::optional<std::list<Log::Entry>::const_iterator> last)
+  std::optional<base_iterator> begin,
+  std::optional<base_iterator> last)
 {
   Iterable iterable;
   iterable._pimpl = rmf_utils::make_impl<Implementation>();
   iterable._pimpl->shared = std::move(shared);
   if (begin.has_value())
   {
-    iterable._pimpl->begin =
-      iterator::Implementation::make(*begin, last.value());
+    if (++base_iterator(last.value()) == *begin)
+    {
+      // If the beginning iterator is already the end() iterator, we should
+      // directly set it to that right now.
+      iterable._pimpl->begin = iterator::Implementation::end();
+    }
+    else
+    {
+      iterable._pimpl->begin =
+        iterator::Implementation::make(*begin, last.value());
+    }
   }
   else
   {
@@ -234,7 +247,7 @@ void Log::info(std::string text)
 {
   _pimpl->entries->emplace_back(
     Entry::Implementation::make(
-      Entry::Tier::Info, _pimpl->clock(), std::move(text)));
+      Entry::Tier::Info, _pimpl->seq++, _pimpl->clock(), std::move(text)));
 }
 
 //==============================================================================
@@ -242,7 +255,7 @@ void Log::warn(std::string text)
 {
   _pimpl->entries->emplace_back(
     Entry::Implementation::make(
-      Entry::Tier::Warning, _pimpl->clock(), std::move(text)));
+      Entry::Tier::Warning, _pimpl->seq++, _pimpl->clock(), std::move(text)));
 }
 
 //==============================================================================
@@ -250,7 +263,7 @@ void Log::error(std::string text)
 {
   _pimpl->entries->emplace_back(
     Entry::Implementation::make(
-      Entry::Tier::Error, _pimpl->clock(), std::move(text)));
+      Entry::Tier::Error, _pimpl->seq++, _pimpl->clock(), std::move(text)));
 }
 
 //==============================================================================
@@ -269,6 +282,12 @@ Log::View Log::view() const
 auto Log::Entry::tier() const -> Tier
 {
   return _pimpl->tier;
+}
+
+//==============================================================================
+uint32_t Log::Entry::seq() const
+{
+  return _pimpl->seq;
 }
 
 //==============================================================================
@@ -335,6 +354,9 @@ auto Log::Reader::Iterable::iterator::operator->() const -> const Entry*
 //==============================================================================
 auto Log::Reader::Iterable::iterator::operator++() -> iterator&
 {
+  if (!_pimpl.get())
+    return *this;
+
   if (_pimpl->it == _pimpl->last)
     _pimpl = nullptr;
   else
@@ -354,10 +376,16 @@ auto Log::Reader::Iterable::iterator::operator++(int) -> iterator
 //==============================================================================
 bool Log::Reader::Iterable::iterator::operator==(const iterator& other) const
 {
-  if (!_pimpl || !other._pimpl)
-    return _pimpl == other._pimpl;
+  if (!_pimpl.get() || !other._pimpl.get())
+    return _pimpl.get() == other._pimpl.get();
 
   return _pimpl->it == other._pimpl->it;
+}
+
+//==============================================================================
+bool Log::Reader::Iterable::iterator::operator!=(const iterator& other) const
+{
+  return !(*this == other);
 }
 
 //==============================================================================
