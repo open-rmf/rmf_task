@@ -56,9 +56,14 @@ public:
       std::size_t end_waypoint,
       const rmf_traffic::Trajectory& cleaning_path);
 
-    /// Documentation inherited
+    // Documentation inherited
     Task::ConstModelPtr make_model(
       rmf_traffic::Time earliest_start_time,
+      const Parameters& parameters) const final;
+
+    // Documentation inherited
+    Info generate_info(
+      const State& initial_state,
       const Parameters& parameters) const final;
 
     /// Get the start waypoint in this request

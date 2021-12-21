@@ -263,6 +263,19 @@ Task::ConstModelPtr Delivery::Description::make_model(
 }
 
 //==============================================================================
+auto Delivery::Description::generate_info(
+  const State&,
+  const Parameters& parameters) const -> Info
+{
+  const auto& graph = parameters.planner()->get_configuration().graph();
+  return Info{
+    "Delivery from " + standard_waypoint_name(graph, _pimpl->pickup_waypoint)
+    + " to " + standard_waypoint_name(graph, _pimpl->dropoff_waypoint),
+    "" // TODO(MXG): Add details about the payload
+  };
+}
+
+//==============================================================================
 std::size_t Delivery::Description::pickup_waypoint() const
 {
   return _pimpl->pickup_waypoint;

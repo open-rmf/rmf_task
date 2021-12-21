@@ -19,6 +19,7 @@
 #define RMF_TASK__HEADER_HPP
 
 #include <rmf_traffic/Time.hpp>
+#include <rmf_traffic/agv/Graph.hpp>
 
 #include <rmf_utils/impl_ptr.hpp>
 
@@ -59,6 +60,11 @@ public:
 private:
   rmf_utils::impl_ptr<Implementation> _pimpl;
 };
+
+//==============================================================================
+std::string standard_waypoint_name(
+  const rmf_traffic::agv::Graph& graph,
+  std::size_t waypoint);
 
 } // namespace rmf_task
 

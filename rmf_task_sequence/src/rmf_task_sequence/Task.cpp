@@ -165,6 +165,9 @@ public:
   }
 
   // Documentation inherited
+  Event::Status status_overview() const final;
+
+  // Documentation inherited
   const std::vector<Phase::ConstCompletedPtr>& completed_phases() const final;
 
   // Documentation inherited
@@ -349,6 +352,17 @@ Task::ConstModelPtr Task::Description::make_model(
 }
 
 //==============================================================================
+auto Task::Description::generate_info(
+  const rmf_task::State&,
+  const rmf_task::Parameters&) const -> Info
+{
+  return Info{
+    category(),
+    detail()
+  };
+}
+
+//==============================================================================
 const std::string& Task::Description::category() const
 {
   return _pimpl->category;
@@ -393,6 +407,33 @@ Header Task::Description::generate_header(
 Task::Description::Description()
 {
   // Do nothing
+}
+
+//==============================================================================
+rmf_task::Event::Status Task::Active::status_overview() const
+{
+  if (_active_phase)
+    return _active_phase->final_event()->status();
+
+  if (_completed_phases.empty() && _pending_phases.empty())
+  {
+    // This means the task had no phases..? So it's completed by default.
+    return Event::Status::Completed;
+  }
+
+  if (_pending_phases.empty())
+  {
+    // There are no pending phases, so the status of this task should be
+    // reflected by the status of the last phase.
+    return _completed_phases.back()->snapshot()->final_event()->status();
+  }
+
+  // There is no active phase, but there are pending phases remaining. This
+  // must mean this function is being called while the task phase is switching,
+  // which could technically cause a data race. We'll just go ahead and say that
+  // the status is Underway, but maybe we should consider making noise about
+  // this.
+  return Event::Status::Underway;
 }
 
 //==============================================================================

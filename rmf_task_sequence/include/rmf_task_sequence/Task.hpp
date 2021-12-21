@@ -161,6 +161,11 @@ public:
     rmf_traffic::Time earliest_start_time,
     const Parameters& parameters) const final;
 
+  // Documentation inherited
+  Info generate_info(
+    const State& initial_state,
+    const Parameters& parameters) const final;
+
   /// Get the category for this task
   const std::string& category() const;
 

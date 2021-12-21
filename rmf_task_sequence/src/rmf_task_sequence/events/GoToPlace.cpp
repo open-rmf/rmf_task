@@ -179,20 +179,6 @@ class GoToPlace::Description::Implementation
 public:
 
   rmf_traffic::agv::Plan::Goal destination;
-
-  static std::string waypoint_name(
-    const std::size_t index,
-    const Parameters& parameters)
-  {
-    const auto& graph = parameters.planner()->get_configuration().graph();
-    if (index < graph.num_waypoints())
-    {
-      if (const auto* name = graph.get_waypoint(index).name())
-        return *name;
-    }
-
-    return "#" + std::to_string(index);
-  }
 };
 
 //==============================================================================
@@ -243,7 +229,7 @@ Header GoToPlace::Description::generate_header(
       + "]");
   }
 
-  const auto start_name = Implementation::waypoint_name(start_wp, parameters);
+  const auto start_name = rmf_task::standard_waypoint_name(graph, start_wp);
 
   if (graph.num_waypoints() <= _pimpl->destination.waypoint())
   {
@@ -260,13 +246,12 @@ Header GoToPlace::Description::generate_header(
 
   if (!estimate.has_value())
   {
-    fail("Cannot find a path from ["
-      + start_name + "] to [" + goal_name_ + "]");
+    fail("Cannot find a path from " + start_name + " to " + goal_name_);
   }
 
   return Header(
-    "Go to [" + goal_name_ + "]",
-    "Moving the robot from [" + start_name + "] to [" + goal_name_ + "]",
+    "Go to " + goal_name_,
+    "Moving the robot from " + start_name + " to " + goal_name_,
     *estimate);
 }
 
@@ -287,8 +272,9 @@ auto GoToPlace::Description::destination(Goal new_goal) -> Description&
 std::string GoToPlace::Description::destination_name(
   const Parameters& parameters) const
 {
-  return Implementation::waypoint_name(
-    _pimpl->destination.waypoint(), parameters);
+  return rmf_task::standard_waypoint_name(
+    parameters.planner()->get_configuration().graph(),
+    _pimpl->destination.waypoint());
 }
 
 //==============================================================================

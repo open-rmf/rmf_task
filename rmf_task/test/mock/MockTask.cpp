@@ -20,6 +20,15 @@
 namespace test_rmf_task {
 
 //==============================================================================
+rmf_task::Event::Status MockTask::Active::status_overview() const
+{
+  if (_active_phase)
+    return _active_phase->final_event()->status();
+
+  return rmf_task::Event::Status::Completed;
+}
+
+//==============================================================================
 auto MockTask::Active::completed_phases() const
 -> const std::vector<Phase::ConstCompletedPtr>&
 {

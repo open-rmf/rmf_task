@@ -53,9 +53,14 @@ public:
     /// Generate the description for this request
     static Task::ConstDescriptionPtr make();
 
-    /// Documentation inherited
+    // Documentation inherited
     Task::ConstModelPtr make_model(
       rmf_traffic::Time earliest_start_time,
+      const Parameters& parameters) const final;
+
+    // Documentation inherited
+    Info generate_info(
+      const State& initial_state,
       const Parameters& parameters) const final;
 
     class Implementation;

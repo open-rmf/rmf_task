@@ -35,6 +35,8 @@ public:
   {
   public:
 
+    rmf_task::Event::Status status_overview() const override;
+
     const std::vector<Phase::ConstCompletedPtr>&
     completed_phases() const override;
 

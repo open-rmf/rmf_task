@@ -163,6 +163,24 @@ public:
     rmf_traffic::Time earliest_start_time,
     const Parameters& parameters) const = 0;
 
+  struct Info
+  {
+    std::string category;
+    std::string detail;
+  };
+
+  /// Generate a plain text info description for the task, given the predicted
+  /// initial state and the task planning parameters.
+  ///
+  /// \param[in] initial_state
+  ///   The predicted initial state for the task
+  ///
+  /// \param[in] parameters
+  ///   The task planning parameters
+  virtual Info generate_info(
+    const State& initial_state,
+    const Parameters& parameters) const = 0;
+
   // Virtual destructor
   virtual ~Description() = default;
 };
@@ -179,6 +197,9 @@ public:
   /// it can issue new Backups with higher sequence numbers. Only the Backup
   /// with the highest sequence number will be kept.
   using Backup = detail::Backup;
+
+  /// Get a quick overview status of how the task is going
+  virtual Event::Status status_overview() const = 0;
 
   /// Descriptions of the phases that have been completed
   virtual const std::vector<Phase::ConstCompletedPtr>&

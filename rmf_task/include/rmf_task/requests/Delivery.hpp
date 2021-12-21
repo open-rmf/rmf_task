@@ -62,9 +62,14 @@ public:
       std::string pickup_from_dispenser = "",
       std::string dropoff_to_ingestor = "");
 
-    /// Documentation inherited
+    // Documentation inherited
     Task::ConstModelPtr make_model(
       rmf_traffic::Time earliest_start_time,
+      const Parameters& parameters) const final;
+
+    // Documentation inherited
+    Info generate_info(
+      const State& initial_state,
       const Parameters& parameters) const final;
 
     /// Get the pickup waypoint in this request
