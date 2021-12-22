@@ -113,9 +113,16 @@ WaitFor::Model::Model(
 : _invariant_finish_state(std::move(invariant_initial_state)),
   _duration(duration)
 {
-  _invariant_battery_drain =
-    parameters.ambient_sink()->compute_change_in_charge(
-    rmf_traffic::time::to_seconds(_duration));
+  if (parameters.ambient_sink())
+  {
+    _invariant_battery_drain =
+      parameters.ambient_sink()->compute_change_in_charge(
+      rmf_traffic::time::to_seconds(_duration));
+  }
+  else
+  {
+    _invariant_battery_drain = 0.0;
+  }
 }
 
 //==============================================================================
