@@ -20,13 +20,13 @@
 
 #include <rmf_traffic/Time.hpp>
 
-#include <rmf_task_sequence/Phase.hpp>
+#include <rmf_task_sequence/Event.hpp>
 
 namespace rmf_task_sequence {
 namespace events {
 
 //==============================================================================
-/// A WaitFor phase encompasses having the robot sit in place and wait for a
+/// A WaitFor event encompasses having the robot sit in place and wait for a
 /// period of time to pass.
 ///
 /// The Model of this phase may be useful for calculating the Models of other
@@ -46,7 +46,7 @@ public:
 };
 
 //==============================================================================
-class WaitFor::Description : public Phase::Description
+class WaitFor::Description : public Event::Description
 {
 public:
 
