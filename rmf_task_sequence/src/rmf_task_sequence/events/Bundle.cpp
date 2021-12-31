@@ -294,7 +294,61 @@ Header Bundle::Description::generate_header(
 //==============================================================================
 void Bundle::add(const Event::InitializerPtr& initializer)
 {
-  add(*initializer, initializer);
+  initializer->add<Bundle::Description>(
+    [w = std::weak_ptr<Event::Initializer>(initializer)](
+      const AssignIDPtr& id,
+      const std::function<rmf_task::State()>& get_state,
+      const ConstParametersPtr& parameters,
+      const Bundle::Description& description,
+      std::function<void()> update)
+    {
+      const auto& initialize_from = w.lock();
+      if (!initialize_from)
+      {
+        throw std::runtime_error(
+          "[rmf_task_sequence::Bundle::add] Use-after-free error: Event "
+          "initializer has already destructed, but is still being used to "
+          "initialize an event.");
+      }
+
+      return initiate(
+        *initialize_from,
+        id,
+        get_state,
+        parameters,
+        description,
+        std::move(update));
+    },
+    [w = std::weak_ptr<Event::Initializer>(initializer)](
+      const AssignIDPtr& id,
+      const std::function<rmf_task::State()>& get_state,
+      const ConstParametersPtr& parameters,
+      const Bundle::Description& description,
+      const nlohmann::json& backup_state,
+      std::function<void()> update,
+      std::function<void()> checkpoint,
+      std::function<void()> finished)
+    {
+      const auto& initialize_from = w.lock();
+      if (!initialize_from)
+      {
+        throw std::runtime_error(
+          "[rmf_task_sequence::Bundle::add] Use-after-free error: Event "
+          "initializer has already destructed, but is still being used to "
+          "initialize an event.");
+      }
+
+      return restore(
+        *initialize_from,
+        id,
+        get_state,
+        parameters,
+        description,
+        backup_state,
+        std::move(update),
+        std::move(checkpoint),
+        std::move(finished));
+    });
 }
 
 //==============================================================================
