@@ -17,11 +17,11 @@
 
 #include <rmf_utils/catch.hpp>
 
-#include <rmf_task_sequence/detail/ContactCard.hpp>
+#include <rmf_task_sequence/events/ContactCard.hpp>
 
 SCENARIO("Test ContactCard")
 {
-  using ContactCard = rmf_task_sequence::detail::ContactCard;
+  using ContactCard = rmf_task_sequence::events::ContactCard;
   using PhoneNumber = ContactCard::PhoneNumber;
 
   auto contact = ContactCard{
@@ -31,8 +31,8 @@ SCENARIO("Test ContactCard")
     PhoneNumber{42, 11311}
   };
   CHECK(contact.name() == "foo");
-  CHECK(contact.address() == "bar");
-  CHECK(contact.email() == "baz");
+  CHECK(contact.address().value() == "bar");
+  CHECK(contact.email().value() == "baz");
   CHECK(contact.number().country_code == 42);
   CHECK(contact.number().number == 11311);
 
@@ -45,13 +45,13 @@ SCENARIO("Test ContactCard")
   WHEN("Setting address")
   {
     contact.address("BAR");
-    CHECK(contact.address() == "BAR");
+    CHECK(contact.address().value() == "BAR");
   }
 
   WHEN("Setting email")
   {
     contact.email("BAZ");
-    CHECK(contact.email() == "BAZ");
+    CHECK(contact.email().value() == "BAZ");
   }
 
   WHEN("Setting number")

@@ -23,23 +23,26 @@
 namespace test_rmf_task {
 
 //==============================================================================
-class MockEvent : public rmf_task::Event::Active
+class MockEvent : public rmf_task::Event::State
 {
 public:
 
   MockEvent(
+    uint64_t id_,
     std::string name_,
     std::string detail_,
     Status initial_status = Status::Standby);
 
   // Interface
+  uint64_t id() const final;
   Status status() const final;
   rmf_task::VersionedString::View name() const final;
   rmf_task::VersionedString::View detail() const final;
   rmf_task::Log::View log() const final;
-  std::vector<rmf_task::Event::ConstActivePtr> dependencies() const final;
+  std::vector<rmf_task::Event::ConstStatePtr> dependencies() const final;
 
   // Fields
+  uint64_t _id;
   Status _status;
   rmf_task::VersionedString _name;
   rmf_task::VersionedString _detail;

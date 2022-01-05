@@ -16,80 +16,12 @@
 */
 
 #include <rmf_task_sequence/events/SMS.hpp>
+#include <rmf_task_sequence/events/WaitFor.hpp>
+
 #include <rmf_task_sequence/Activity.hpp>
 
 namespace rmf_task_sequence {
 namespace events {
-
-//==============================================================================
-class SMS::Model : public Activity::Model
-{
-public:
-
-  Model(
-    rmf_task::State invariant_finish_state,
-    rmf_traffic::Duration invariant_duration,
-    const Parameters& parameters);
-
-  /// Documentation inherited
-  std::optional<State> estimate_finish(
-    State initial_state,
-    const Constraints& constraints,
-    const TravelEstimator& travel_estimator) const final;
-
-  /// Documentation inherited
-  rmf_traffic::Duration invariant_duration() const final;
-
-  /// Documentation inherited
-  State invariant_finish_state() const final;
-
-private:
-  rmf_task::State _invariant_finish_state;
-  double _invariant_battery_drain;
-  rmf_traffic::Duration _invariant_duration;
-};
-
-//==============================================================================
-SMS::Model::Model(
-  State invariant_finish_state,
-  rmf_traffic::Duration invariant_duration,
-  const Parameters& parameters)
-: _invariant_finish_state(std::move(invariant_finish_state)),
-  _invariant_duration(invariant_duration)
-{
-  _invariant_battery_drain =
-    parameters.ambient_sink()->compute_change_in_charge(
-    rmf_traffic::time::to_seconds(_invariant_duration));
-}
-
-//==============================================================================
-std::optional<State> SMS::Model::estimate_finish(
-  State state,
-  const Constraints& constraints,
-  const TravelEstimator&) const
-{
-  state.time(state.time().value() + _invariant_duration);
-
-  if (constraints.drain_battery())
-    state.battery_soc(state.battery_soc().value() - _invariant_battery_drain);
-
-  if (state.battery_soc().value() <= constraints.threshold_soc())
-    return std::nullopt;
-
-  return state;
-}
-
-//==============================================================================
-rmf_traffic::Duration SMS::Model::invariant_duration() const
-{
-  return _invariant_duration;
-}
-
-//==============================================================================
-State SMS::Model::invariant_finish_state() const
-{
-  return _invariant_finish_state;
-}
 
 //==============================================================================
 class SMS::Description::Implementation
@@ -99,7 +31,6 @@ public:
   std::string message;
   ContactCard contact;
   rmf_traffic::Duration sms_duration_estimate;
-
 };
 
 //==============================================================================
@@ -164,8 +95,9 @@ Activity::ConstModelPtr SMS::Description::make_model(
   State invariant_initial_state,
   const Parameters& parameters) const
 {
-  return std::make_shared<Model>(
-    invariant_initial_state, _pimpl->sms_duration_estimate, parameters);
+  const auto description =
+    WaitFor::Description::make(_pimpl->sms_duration_estimate);
+  return description->make_model(invariant_initial_state, parameters);
 }
 
 //==============================================================================
@@ -173,8 +105,8 @@ Header SMS::Description::generate_header(
   const State&, const Parameters&) const
 {
   const std::string& number = "+" +
-    std::to_string(_pimpl->contact.number().country_code) +
-    " " + std::to_string(_pimpl->contact.number().number);
+    std::to_string(_pimpl->contact.number().country_code()) +
+    " " + std::to_string(_pimpl->contact.number().number());
 
   return Header(
     "Sending SMS",

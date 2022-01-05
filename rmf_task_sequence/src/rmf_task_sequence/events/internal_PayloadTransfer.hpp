@@ -26,7 +26,7 @@
 #include <rmf_traffic/agv/Planner.hpp>
 
 namespace rmf_task_sequence {
-namespace phases {
+namespace events {
 
 //==============================================================================
 class PayloadTransfer
@@ -57,7 +57,7 @@ public:
     const Parameters& parameters) const;
 };
 
-} // namespace phases
+} // namespace events
 } // namespace rmf_task_sequence
 
 #endif // SRC__RMF_TASK_SEQUENCE__PHASES__INTERNAL_PAYLOADTRANSFER_HPP

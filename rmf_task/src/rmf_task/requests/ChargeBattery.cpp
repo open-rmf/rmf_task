@@ -191,6 +191,17 @@ Task::ConstModelPtr ChargeBattery::Description::make_model(
 }
 
 //==============================================================================
+auto ChargeBattery::Description::generate_info(
+  const State&,
+  const Parameters&) const -> Info
+{
+  return Info{
+    "Charge battery",
+    ""
+  };
+}
+
+//==============================================================================
 ConstRequestPtr ChargeBattery::make(
   rmf_traffic::Time earliest_start_time,
   ConstPriorityPtr priority,

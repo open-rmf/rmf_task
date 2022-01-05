@@ -33,8 +33,9 @@ public:
     bool use_tool_sink,
     const Parameters& parameters);
 
-  std::optional<rmf_task::State> estimate_finish(
+  std::optional<rmf_task::Estimate> estimate_finish(
     rmf_task::State initial_state,
+    rmf_traffic::Time earliest_arrival_time,
     const Constraints& constraints,
     const TravelEstimator& travel_estimator) const final;
 
@@ -72,8 +73,9 @@ PerformAction::Model::Model(
 }
 
 //==============================================================================
-std::optional<rmf_task::State> PerformAction::Model::estimate_finish(
+std::optional<rmf_task::Estimate> PerformAction::Model::estimate_finish(
   rmf_task::State initial_state,
+  rmf_traffic::Time earliest_arrival_time,
   const Constraints& constraints,
   const TravelEstimator& travel_estimator) const
 {
@@ -89,7 +91,7 @@ std::optional<rmf_task::State> PerformAction::Model::estimate_finish(
   if (initial_state.battery_soc().value() <= constraints.threshold_soc())
     return std::nullopt;
 
-  return initial_state;
+  return Estimate(initial_state, earliest_arrival_time);
 }
 
 //==============================================================================
@@ -109,7 +111,7 @@ class PerformAction::Description::Implementation
 {
 public:
 
-  std::string action_name;
+  nlohmann::json action;
   rmf_traffic::Duration action_duration_estimate;
   bool use_tool_sink;
   std::optional<Location> expected_finish_location;
@@ -117,7 +119,7 @@ public:
 
 //==============================================================================
 auto PerformAction::Description::make(
-  const std::string& action_name,
+  nlohmann::json action,
   rmf_traffic::Duration duration,
   bool use_tool_sink,
   std::optional<PerformAction::Location> location) -> DescriptionPtr
@@ -126,7 +128,7 @@ auto PerformAction::Description::make(
   description->_pimpl = rmf_utils::make_impl<Implementation>(
     Implementation
     {
-      std::move(action_name),
+      std::move(action),
       std::move(duration),
       std::move(use_tool_sink),
       std::move(location)
@@ -142,17 +144,17 @@ PerformAction::Description::Description()
 }
 
 //==============================================================================
-const std::string&
-PerformAction::Description::action_name() const
+const nlohmann::json&
+PerformAction::Description::action() const
 {
-  return _pimpl->action_name;
+  return _pimpl->action;
 }
 
 //==============================================================================
-auto PerformAction::Description::action_name(
-  const std::string& new_name) -> Description&
+auto PerformAction::Description::action(
+  const nlohmann::json& new_action) -> Description&
 {
-  _pimpl->action_name = new_name;
+  _pimpl->action = new_action;
   return *this;
 }
 
@@ -242,8 +244,9 @@ Header PerformAction::Description::generate_header(
   const auto start_name = utils::waypoint_name(start_wp, parameters);
 
   return Header(
-    "Perform " + _pimpl->action_name + " action",
-    "Performing " + _pimpl->action_name + " at waypoint [" + start_name + "]",
+    "Perform action",
+    "Performing action " +  _pimpl->action.dump() +
+    " at waypoint [" + start_name + "]",
     _pimpl->action_duration_estimate);
 
 }

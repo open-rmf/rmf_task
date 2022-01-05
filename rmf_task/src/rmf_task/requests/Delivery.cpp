@@ -208,13 +208,13 @@ class Delivery::Description::Implementation
 {
 public:
 
-  Implementation()
-  {}
-
   std::size_t pickup_waypoint;
   rmf_traffic::Duration pickup_wait;
   std::size_t dropoff_waypoint;
   rmf_traffic::Duration dropoff_wait;
+  rmf_task::Payload payload;
+  std::string pickup_from_dispenser;
+  std::string dropoff_to_ingestor;
 };
 
 //==============================================================================
@@ -222,20 +222,28 @@ Task::ConstDescriptionPtr Delivery::Description::make(
   std::size_t pickup_waypoint,
   rmf_traffic::Duration pickup_wait,
   std::size_t dropoff_waypoint,
-  rmf_traffic::Duration dropoff_wait)
+  rmf_traffic::Duration dropoff_wait,
+  Payload payload,
+  std::string pickup_from_dispenser,
+  std::string dropoff_to_ingestor)
 {
   std::shared_ptr<Description> delivery(new Description());
-  delivery->_pimpl->pickup_waypoint = pickup_waypoint;
-  delivery->_pimpl->pickup_wait = pickup_wait;
-  delivery->_pimpl->dropoff_waypoint = dropoff_waypoint;
-  delivery->_pimpl->dropoff_wait = dropoff_wait;
+  delivery->_pimpl = rmf_utils::make_impl<Implementation>(
+    Implementation{
+      pickup_waypoint,
+      pickup_wait,
+      dropoff_waypoint,
+      dropoff_wait,
+      std::move(payload),
+      std::move(pickup_from_dispenser),
+      std::move(dropoff_to_ingestor)
+    });
 
   return delivery;
 }
 
 //==============================================================================
 Delivery::Description::Description()
-: _pimpl(rmf_utils::make_impl<Implementation>(Implementation()))
 {
   // Do nothing
 }
@@ -255,9 +263,34 @@ Task::ConstModelPtr Delivery::Description::make_model(
 }
 
 //==============================================================================
+auto Delivery::Description::generate_info(
+  const State&,
+  const Parameters& parameters) const -> Info
+{
+  const auto& graph = parameters.planner()->get_configuration().graph();
+  return Info{
+    "Delivery from " + standard_waypoint_name(graph, _pimpl->pickup_waypoint)
+    + " to " + standard_waypoint_name(graph, _pimpl->dropoff_waypoint),
+    "" // TODO(MXG): Add details about the payload
+  };
+}
+
+//==============================================================================
 std::size_t Delivery::Description::pickup_waypoint() const
 {
   return _pimpl->pickup_waypoint;
+}
+
+//==============================================================================
+std::string Delivery::Description::pickup_from_dispenser() const
+{
+  return _pimpl->pickup_from_dispenser;
+}
+
+//==============================================================================
+std::string Delivery::Description::dropoff_to_ingestor() const
+{
+  return _pimpl->dropoff_to_ingestor;
 }
 
 //==============================================================================
@@ -279,21 +312,33 @@ std::size_t Delivery::Description::dropoff_waypoint() const
 }
 
 //==============================================================================
+const Payload& Delivery::Description::payload() const
+{
+  return _pimpl->payload;
+}
+
+//==============================================================================
 ConstRequestPtr Delivery::make(
   std::size_t pickup_waypoint,
   rmf_traffic::Duration pickup_wait,
   std::size_t dropoff_waypoint,
   rmf_traffic::Duration dropoff_wait,
+  Payload payload,
   const std::string& id,
   rmf_traffic::Time earliest_start_time,
   ConstPriorityPtr priority,
-  bool automatic)
+  bool automatic,
+  std::string pickup_from_dispenser,
+  std::string dropoff_to_ingestor)
 {
   const auto description = Description::make(
     pickup_waypoint,
     pickup_wait,
     dropoff_waypoint,
-    dropoff_wait);
+    dropoff_wait,
+    std::move(payload),
+    std::move(pickup_from_dispenser),
+    std::move(dropoff_to_ingestor));
 
   return std::make_shared<Request>(
     id, earliest_start_time, std::move(priority), description, automatic);

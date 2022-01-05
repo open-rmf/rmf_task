@@ -20,6 +20,7 @@ endif()
 
 include(GNUInstallDirs)
 
+find_package(rmf_api_msgs REQUIRED)
 find_package(rmf_task REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(nlohmann_json_schema_validator_vendor REQUIRED)
@@ -47,18 +48,17 @@ target_include_directories(rmf_task_sequence
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-    $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include> # for auto-generated headers
+    $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/rmf_api_generate_schema_headers/include> # for auto-generated schema headers
 )
 
 if(BUILD_TESTING AND ament_cmake_catch2_FOUND AND ament_cmake_uncrustify_FOUND)
   file(GLOB_RECURSE unit_test_srcs "test/*.cpp")
 
   ament_add_catch2(
-    test_rmf_task_sequence test/main.cpp ${unit_test_srcs}
+    test_rmf_task_sequence test/main.cpp ${test_srcs}
     TIMEOUT 300)
   target_link_libraries(test_rmf_task_sequence
       rmf_task_sequence
-      rmf_task::rmf_task
   )
 
   target_include_directories(test_rmf_task_sequence
@@ -78,7 +78,11 @@ if(BUILD_TESTING AND ament_cmake_catch2_FOUND AND ament_cmake_uncrustify_FOUND)
 endif()
 
 # Generate the schema headers
-add_subdirectory(schemas)
+rmf_api_generate_schema_headers(
+  PACKAGE rmf_task_sequence
+  SCHEMAS_DIR ${CMAKE_CURRENT_LIST_DIR}/schemas
+)
+
 
 # Create cmake config files
 include(CMakePackageConfigHelpers)
@@ -130,3 +134,4 @@ export(
   FILE ${CMAKE_CURRENT_BINARY_DIR}/rmf_task_sequence-targets.cmake
   NAMESPACE rmf_task_sequence::
 )
+

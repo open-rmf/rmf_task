@@ -29,7 +29,8 @@ void Phase::Activator::add_activator(Activate<Desc> activator)
   _add_activator(
     typeid(Desc),
     [activator](
-      std::function<State()> get_state,
+      const std::function<State()>& get_state,
+      const ConstParametersPtr& parameters,
       ConstTagPtr tag,
       const Phase::Description& description,
       std::optional<std::string> backup_state,
@@ -38,7 +39,8 @@ void Phase::Activator::add_activator(Activate<Desc> activator)
       std::function<void()> phase_finished)
     {
       return activator(
-        std::move(get_state),
+        get_state,
+        parameters,
         std::move(tag),
         static_cast<const Desc&>(description),
         std::move(backup_state),

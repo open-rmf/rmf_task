@@ -26,7 +26,7 @@ SCENARIO("Activate fresh task")
 
   using namespace std::chrono_literals;
   auto request = rmf_task::requests::Delivery::make(
-    0, 1min, 1, 1min, "request_0", rmf_traffic::Time());
+    0, 1min, 1, 1min, {{}}, "request_0", rmf_traffic::Time());
 
   rmf_task::Phase::ConstSnapshotPtr phase_snapshot;
   std::optional<rmf_task::Task::Active::Backup> backup;

@@ -22,13 +22,6 @@ namespace rmf_task_sequence {
 namespace events {
 
 //==============================================================================
-class Model
-{
-  // No definition of Model class. Description::make_mode() will return an
-  // Activity::SequenceModel
-};
-
-//==============================================================================
 class Repeat::Description::Implementation
 {
 public:

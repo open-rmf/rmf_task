@@ -19,7 +19,7 @@
 #define RMF_TASK_SEQUENCE__EVENTS__CALL_HPP
 
 #include <rmf_task_sequence/Event.hpp>
-#include <rmf_task_sequence/detail/ContactCard.hpp>
+#include <rmf_task_sequence/events/ContactCard.hpp>
 
 namespace rmf_task_sequence {
 namespace events {
@@ -29,13 +29,9 @@ namespace events {
 class Call
 {
 public:
-  using ContactCard = detail::ContactCard;
-
   class Description;
   using DescriptionPtr = std::shared_ptr<Description>;
   using ConstDescriptionPtr = std::shared_ptr<const Description>;
-
-  class Model;
 };
 
 //==============================================================================

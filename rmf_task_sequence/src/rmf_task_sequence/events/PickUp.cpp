@@ -17,10 +17,10 @@
 
 #include "internal_PayloadTransfer.hpp"
 
-#include <rmf_task_sequence/phases/PickUp.hpp>
+#include <rmf_task_sequence/events/PickUp.hpp>
 
 namespace rmf_task_sequence {
-namespace phases {
+namespace events {
 
 //==============================================================================
 class PickUp::Description::Implementation
@@ -126,5 +126,5 @@ PickUp::Description::Description()
   // Do nothing
 }
 
-} // namespace phases
+} // namespace events
 } // namespace rmf_task_sequence

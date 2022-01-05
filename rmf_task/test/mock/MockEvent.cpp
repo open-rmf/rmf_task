@@ -21,14 +21,22 @@ namespace test_rmf_task {
 
 //==============================================================================
 MockEvent::MockEvent(
+  uint64_t id_,
   std::string name_,
   std::string detail_,
   Status initial_status)
-: _status(initial_status),
+: _id(id_),
+  _status(initial_status),
   _name(std::move(name_)),
   _detail(std::move(detail_))
 {
   // Do nothing
+}
+
+//==============================================================================
+uint64_t MockEvent::id() const
+{
+  return _id;
 }
 
 //==============================================================================
@@ -56,9 +64,9 @@ rmf_task::Log::View MockEvent::log() const
 }
 
 //==============================================================================
-std::vector<rmf_task::Event::ConstActivePtr> MockEvent::dependencies() const
+std::vector<rmf_task::Event::ConstStatePtr> MockEvent::dependencies() const
 {
-  return std::vector<rmf_task::Event::ConstActivePtr>(
+  return std::vector<rmf_task::Event::ConstStatePtr>(
     _dependencies.begin(), _dependencies.end());
 }
 

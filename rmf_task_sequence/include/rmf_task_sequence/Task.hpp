@@ -40,6 +40,7 @@ public:
 
   // Declaration
   class Description;
+  using DescriptionPtr = std::shared_ptr<Description>;
   using ConstDescriptionPtr = std::shared_ptr<const Description>;
 
   class Model;
@@ -62,6 +63,52 @@ public:
   /// \param[in] clock
   ///   A callback that gives the current time when called.
   static rmf_task::Activator::Activate<Description> make_activator(
+    Phase::ConstActivatorPtr phase_activator,
+    std::function<rmf_traffic::Time()> clock);
+
+  /// Add this task type to an Activator. This is an alternative to using
+  /// make_activator(~).
+  ///
+  /// \param[in] activator
+  ///   The task activator to add this task type to.
+  ///
+  /// \param[in] phase_activator
+  ///   A phase activator. It is recommended to fully initialize this phase
+  ///   activator (add all supported phases) before passing it to this function.
+  ///   The task activator will keep a reference to this phase activator, so
+  ///   modifying it while a task is activating a phase could cause data races
+  ///   and therefore undefined behavior.
+  ///
+  /// \param[in] clock
+  ///   A callback that gives the current time when called.
+  static void add(
+    rmf_task::Activator& activator,
+    Phase::ConstActivatorPtr phase_activator,
+    std::function<rmf_traffic::Time()> clock);
+
+  /// Give an initializer the ability to build a sequence task for some other
+  /// task description.
+  ///
+  /// This is useful when the described task is best implemented as a sequence
+  /// of phases.
+  ///
+  /// \param[in] unfold_description
+  ///   This will be used to unfold the other description into a task sequence
+  ///   Description.
+  ///
+  /// \param[in] activator
+  ///   This activator will be given the ability to unfold and activate the
+  ///   OtherDesc type.
+  ///
+  /// \param[in] phase_activator
+  ///   This phase activator will be used to activate the task
+  ///
+  /// \param[in] clock
+  ///   A callback that gives the current time when called
+  template<typename OtherDesc>
+  static void unfold(
+    std::function<Description(const OtherDesc&)> unfold_description,
+    rmf_task::Activator& activator,
     Phase::ConstActivatorPtr phase_activator,
     std::function<rmf_traffic::Time()> clock);
 
@@ -95,7 +142,7 @@ public:
   ///
   /// \param[in] detail
   ///   Any detailed information that will go into the Task::Tag
-  ConstDescriptionPtr build(
+  std::shared_ptr<Description> build(
     std::string category,
     std::string detail);
 
@@ -114,30 +161,35 @@ public:
     rmf_traffic::Time earliest_start_time,
     const Parameters& parameters) const final;
 
+  // Documentation inherited
+  Info generate_info(
+    const State& initial_state,
+    const Parameters& parameters) const final;
+
+  /// Get the category for this task
+  const std::string& category() const;
+
+  /// Change the category for this task
+  Description& category(std::string new_category);
+
+  /// Get the details for this task
+  const std::string& detail() const;
+
+  /// Change the details for this task
+  Description& detail(std::string new_detail);
+
+  Header generate_header(
+    const State& initial_state,
+    const Parameters& parameters) const;
+
   class Implementation;
 private:
+  Description();
   rmf_utils::impl_ptr<Implementation> _pimpl;
 };
 
-//==============================================================================
-class Task::Model : public rmf_task::Task::Model
-{
-public:
-
-  // Documentation inherited
-  std::optional<rmf_task::Estimate> estimate_finish(
-    const State& initial_state,
-    const Constraints& task_planning_constraints,
-    const TravelEstimator& travel_estimator) const final;
-
-  // Documentation inherited
-  rmf_traffic::Duration invariant_duration() const final;
-
-  class Implementation;
-private:
-  rmf_utils::unique_impl_ptr<Implementation> _pimpl;
-};
-
 } // namespace rmf_task_sequence
+
+#include <rmf_task_sequence/detail/impl_Task.hpp>
 
 #endif // RMF_TASK_SEQUENCE__TASK_HPP

@@ -32,8 +32,6 @@ public:
   class Description;
   using DescriptionPtr = std::shared_ptr<Description>;
   using ConstDescriptionPtr = std::shared_ptr<const Description>;
-
-  class Model;
 };
 
 //==============================================================================

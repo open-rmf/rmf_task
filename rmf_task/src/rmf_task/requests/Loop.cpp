@@ -254,6 +254,19 @@ Task::ConstModelPtr Loop::Description::make_model(
 }
 
 //==============================================================================
+auto Loop::Description::generate_info(
+  const rmf_task::State&,
+  const Parameters& parameters) const -> Info
+{
+  const auto& graph = parameters.planner()->get_configuration().graph();
+  return Info{
+    "Loop between " + standard_waypoint_name(graph, _pimpl->start_waypoint)
+    + " and " + standard_waypoint_name(graph, _pimpl->finish_waypoint),
+    std::to_string(_pimpl->num_loops) + " times"
+  };
+}
+
+//==============================================================================
 std::size_t Loop::Description::start_waypoint() const
 {
   return _pimpl->start_waypoint;

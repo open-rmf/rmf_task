@@ -18,7 +18,7 @@
 #include "internal_PayloadTransfer.hpp"
 
 namespace rmf_task_sequence {
-namespace phases {
+namespace events {
 
 //==============================================================================
 PayloadTransfer::PayloadTransfer(
@@ -60,5 +60,5 @@ Header PayloadTransfer::generate_header(
     model->invariant_duration());
 }
 
-} // namespace phases
+} // namespace events
 } // namespace rmf_task_sequence

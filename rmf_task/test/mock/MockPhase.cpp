@@ -27,7 +27,7 @@ MockPhase::Active::Active(
   std::function<void()> phase_finished_)
 : _tag(std::move(tag_)),
   _event(std::make_shared<MockEvent>(
-      "Mock condition", "This is a mocked up condition")),
+      0, "Mock Event", "This is a mocked up event")),
   _start_time(start_time_),
   _update(std::move(update_)),
   _phase_finished(std::move(phase_finished_))
@@ -42,15 +42,15 @@ rmf_task::Phase::ConstTagPtr MockPhase::Active::tag() const
 }
 
 //==============================================================================
-rmf_task::Event::ConstActivePtr MockPhase::Active::final_event() const
+rmf_task::Event::ConstStatePtr MockPhase::Active::final_event() const
 {
   return _event;
 }
 
 //==============================================================================
-rmf_traffic::Time MockPhase::Active::estimate_finish_time() const
+rmf_traffic::Duration MockPhase::Active::estimate_remaining_time() const
 {
-  return _start_time + _tag->header().original_duration_estimate();
+  return _tag->header().original_duration_estimate();
 }
 
 //==============================================================================

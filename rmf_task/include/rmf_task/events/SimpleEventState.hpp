@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef RMF_TASK__EVENTS__SIMPLEEVENT_HPP
-#define RMF_TASK__EVENTS__SIMPLEEVENT_HPP
+#ifndef RMF_TASK__EVENTS__SIMPLEEVENTSTATE_HPP
+#define RMF_TASK__EVENTS__SIMPLEEVENTSTATE_HPP
 
 #include <rmf_task/Event.hpp>
 
@@ -32,33 +32,38 @@ namespace events {
 /// satisfy the Phase interface's finish_event() function. Your Phase
 /// implementation can create an instance of this class and then manage its
 /// fields directly.
-class SimpleEvent : public Event::Active
+class SimpleEventState : public Event::State
 {
 public:
 
-  static std::shared_ptr<SimpleEvent> make(
+  static std::shared_ptr<SimpleEventState> make(
+    uint64_t id,
     std::string name,
     std::string detail,
     Status initial_status,
-    std::vector<ConstActivePtr> dependencies = {});
+    std::vector<ConstStatePtr> dependencies = {},
+    std::function<rmf_traffic::Time()> clock = nullptr);
+
+  // Documentation inherited
+  uint64_t id() const final;
 
   // Documentation inherited
   Status status() const final;
 
   /// Update the status of this event
-  SimpleEvent& update_status(Status new_status);
+  SimpleEventState& update_status(Status new_status);
 
   // Documentation inherited
   VersionedString::View name() const final;
 
   /// Update the name of this event
-  SimpleEvent& update_name(std::string new_name);
+  SimpleEventState& update_name(std::string new_name);
 
   // Documentation inherited
   VersionedString::View detail() const final;
 
   /// Update the detail of this event
-  SimpleEvent& update_detail(std::string new_detail);
+  SimpleEventState& update_detail(std::string new_detail);
 
   // Documentation inherited
   Log::View log() const final;
@@ -67,19 +72,24 @@ public:
   Log& update_log();
 
   // Documentation inherited
-  std::vector<ConstActivePtr> dependencies() const final;
+  std::vector<ConstStatePtr> dependencies() const final;
 
   /// Update the dependencies
-  SimpleEvent& update_dependencies(
-    std::vector<ConstActivePtr> new_dependencies);
+  SimpleEventState& update_dependencies(
+    std::vector<ConstStatePtr> new_dependencies);
+
+  /// Add one dependency to the state
+  SimpleEventState& add_dependency(ConstStatePtr new_dependency);
 
   class Implementation;
 private:
-  SimpleEvent();
+  SimpleEventState();
   rmf_utils::unique_impl_ptr<Implementation> _pimpl;
 };
+
+using SimpleEventStatePtr = std::shared_ptr<SimpleEventState>;
 
 } // namespace events
 } // namespace rmf_task
 
-#endif // RMF_TASK__EVENTS__SIMPLEEVENT_HPP
+#endif // RMF_TASK__EVENTS__SIMPLEEVENTSTATE_HPP

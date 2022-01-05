@@ -102,8 +102,8 @@ class Phase::Snapshot::Implementation
 {
 public:
   ConstTagPtr tag;
-  Event::ConstActivePtr finish_event;
-  rmf_traffic::Time estimated_finish_time;
+  Event::ConstStatePtr finish_event;
+  rmf_traffic::Duration estimated_remaining_time;
 };
 
 //==============================================================================
@@ -114,7 +114,7 @@ Phase::ConstSnapshotPtr Phase::Snapshot::make(const Active& active)
     Implementation{
       active.tag(),
       Event::Snapshot::make(*active.final_event()),
-      active.estimate_finish_time()
+      active.estimate_remaining_time()
     });
 
   return std::make_shared<Snapshot>(std::move(output));
@@ -127,15 +127,15 @@ Phase::ConstTagPtr Phase::Snapshot::tag() const
 }
 
 //==============================================================================
-Event::ConstActivePtr Phase::Snapshot::final_event() const
+Event::ConstStatePtr Phase::Snapshot::final_event() const
 {
   return _pimpl->finish_event;
 }
 
 //==============================================================================
-rmf_traffic::Time Phase::Snapshot::estimate_finish_time() const
+rmf_traffic::Duration Phase::Snapshot::estimate_remaining_time() const
 {
-  return _pimpl->estimated_finish_time;
+  return _pimpl->estimated_remaining_time;
 }
 
 //==============================================================================

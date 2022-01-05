@@ -17,10 +17,10 @@
 
 #include "internal_PayloadTransfer.hpp"
 
-#include <rmf_task_sequence/phases/DropOff.hpp>
+#include <rmf_task_sequence/events/DropOff.hpp>
 
 namespace rmf_task_sequence {
-namespace phases {
+namespace events {
 
 //==============================================================================
 class DropOff::Description::Implementation
@@ -128,5 +128,5 @@ DropOff::Description::Description()
   // Do nothing
 }
 
-} // namespace phases
+} // namespace events
 } // namespace rmf_task_sequence

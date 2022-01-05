@@ -1,11 +1,11 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://open-rmf.org/rmf_task_sequence/backup_PhaseSequenceTask/0.1",
-  "title": "Phase Sequence Task",
-  "description": "A task which is defined by a sequence of specified phases",
+  "title": "Phase Sequence Task Backup",
+  "description": "A backup state for a task which is defined by a fixed sequence of phases",
   "properties": {
     "schema_version": {
-      "description": "The version of the PhaseSequenceTask schema being used",
+      "description": "The version of the Phase Sequence Task Backup schema being used",
       "const": "0.1"
     },
     "current_phase": {

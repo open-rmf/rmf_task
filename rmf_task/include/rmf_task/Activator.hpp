@@ -34,13 +34,13 @@ public:
   /// Signature for activating a task
   ///
   /// \tparam Description
-  ///   A class that implements the Request::Description interface
+  ///   A class that implements the Task::Description interface
   ///
   /// \param[in] get_state
   ///   A callback for retrieving the current state of the robot
   ///
   /// \param[in] parameters
-  ///   A reference to the parameters for the roboth
+  ///   A reference to the parameters for the robot
   ///
   /// \param[in] booking
   ///   An immutable reference to the booking information for the task
@@ -69,7 +69,7 @@ public:
   using Activate =
     std::function<
     Task::ActivePtr(
-      std::function<State()> get_state,
+      const std::function<State()>& get_state,
       const ConstParametersPtr& parameters,
       const Task::ConstBookingPtr& booking,
       const Description& description,
@@ -80,7 +80,7 @@ public:
       std::function<void()> task_finished)
     >;
 
-  /// Add a callback to convert from a Request into an active Task.
+  /// Add a callback to convert from a Description into an active Task.
   ///
   /// \tparam Description
   ///   A class that implements the Request::Description interface
@@ -90,7 +90,7 @@ public:
   template<typename Description>
   void add_activator(Activate<Description> activator);
 
-  /// Activate a Task object based on a Request::Description.
+  /// Activate a Task object based on a Request.
   ///
   /// \param[in] get_state
   ///   A callback for retrieving the current state of the robot
@@ -116,13 +116,13 @@ public:
   ///
   /// \return an active, running instance of the requested task.
   Task::ActivePtr activate(
-    std::function<State()> get_state,
+    const std::function<State()>& get_state,
     const ConstParametersPtr& parameters,
     const Request& request,
     std::function<void(Phase::ConstSnapshotPtr)> update,
     std::function<void(Task::Active::Backup)> checkpoint,
     std::function<void(Phase::ConstCompletedPtr)> phase_finished,
-    std::function<void()> task_finished);
+    std::function<void()> task_finished) const;
 
   /// Restore a Task that crashed or disconnected.
   ///
@@ -153,14 +153,14 @@ public:
   ///
   /// \return an active, running instance of the requested task.
   Task::ActivePtr restore(
-    std::function<State()> get_state,
+    const std::function<State()>& get_state,
     const ConstParametersPtr& parameters,
     const Request& request,
     std::string backup_state,
     std::function<void(Phase::ConstSnapshotPtr)> update,
     std::function<void(Task::Active::Backup)> checkpoint,
     std::function<void(Phase::ConstCompletedPtr)> phase_finished,
-    std::function<void()> task_finished);
+    std::function<void()> task_finished) const;
 
   class Implementation;
 private:
@@ -173,6 +173,8 @@ private:
   rmf_utils::impl_ptr<Implementation> _pimpl;
 };
 
+using ActivatorPtr = std::shared_ptr<Activator>;
+using ConstActivatorPtr = std::shared_ptr<const Activator>;
 
 } // namespace rmf_task
 

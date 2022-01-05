@@ -20,6 +20,8 @@
 
 #include <rmf_utils/impl_ptr.hpp>
 
+#include <functional>
+
 namespace rmf_task {
 namespace detail {
 
@@ -27,6 +29,10 @@ namespace detail {
 class Resume
 {
 public:
+
+  /// Make a Resume object. The callback will be triggered when the user
+  /// triggers the Resume.
+  static Resume make(std::function<void()> callback);
 
   /// Call this object to tell the Task to resume.
   void operator()() const;

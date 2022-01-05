@@ -20,6 +20,15 @@
 namespace test_rmf_task {
 
 //==============================================================================
+rmf_task::Event::Status MockTask::Active::status_overview() const
+{
+  if (_active_phase)
+    return _active_phase->final_event()->status();
+
+  return rmf_task::Event::Status::Completed;
+}
+
+//==============================================================================
 auto MockTask::Active::completed_phases() const
 -> const std::vector<Phase::ConstCompletedPtr>&
 {
@@ -46,10 +55,9 @@ auto MockTask::Active::tag() const -> const ConstTagPtr&
 }
 
 //==============================================================================
-rmf_traffic::Time MockTask::Active::estimate_finish_time() const
+rmf_traffic::Duration MockTask::Active::estimate_remaining_time() const
 {
-  return std::chrono::steady_clock::now()
-    + _tag->header().original_duration_estimate();
+  return _tag->header().original_duration_estimate();
 }
 
 //==============================================================================

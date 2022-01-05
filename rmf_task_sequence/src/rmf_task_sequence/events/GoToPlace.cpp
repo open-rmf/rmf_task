@@ -54,8 +54,9 @@ public:
     Goal goal);
 
   // Documentation inherited
-  std::optional<State> estimate_finish(
+  std::optional<Estimate> estimate_finish(
     State initial_state,
+    rmf_traffic::Time earliest_arrival_time,
     const Constraints& constraints,
     const TravelEstimator& estimator) const final;
 
@@ -113,8 +114,9 @@ Activity::ConstModelPtr GoToPlace::Model::make(
 }
 
 //==============================================================================
-std::optional<State> GoToPlace::Model::estimate_finish(
+std::optional<Estimate> GoToPlace::Model::estimate_finish(
   State initial_state,
+  rmf_traffic::Time earliest_arrival_time,
   const Constraints& constraints,
   const TravelEstimator& travel_estimator) const
 {
@@ -128,7 +130,13 @@ std::optional<State> GoToPlace::Model::estimate_finish(
   if (!travel.has_value())
     return std::nullopt;
 
-  finish.time(finish.time().value() + travel->duration());
+  const auto arrival_time =
+    std::max(
+      initial_state.time().value() + travel->duration(),
+      earliest_arrival_time);
+
+  const auto wait_until_time = arrival_time - travel->duration();
+  finish.time(wait_until_time + travel->duration());
   auto battery_soc = finish.battery_soc().value();
 
   if (constraints.drain_battery())
@@ -140,7 +148,7 @@ std::optional<State> GoToPlace::Model::estimate_finish(
   if (battery_soc <= battery_threshold)
     return std::nullopt;
 
-  return finish;
+  return Estimate(finish, wait_until_time);
 }
 
 //==============================================================================
@@ -219,7 +227,7 @@ Header GoToPlace::Description::generate_header(
       + "]");
   }
 
-  const auto start_name = utils::waypoint_name(start_wp, parameters);
+  const auto start_name = rmf_task::standard_waypoint_name(graph, start_wp);
 
   if (graph.num_waypoints() <= _pimpl->destination.waypoint())
   {
@@ -241,8 +249,8 @@ Header GoToPlace::Description::generate_header(
   }
 
   return Header(
-    "Go to [" + goal_name_ + "]",
-    "Moving the robot from [" + start_name + "] to [" + goal_name_ + "]",
+    "Go to " + goal_name_,
+    "Moving the robot from " + start_name + " to " + goal_name_,
     *estimate);
 }
 
@@ -263,8 +271,9 @@ auto GoToPlace::Description::destination(Goal new_goal) -> Description&
 std::string GoToPlace::Description::destination_name(
   const Parameters& parameters) const
 {
-  return utils::waypoint_name(
-    _pimpl->destination.waypoint(), parameters);
+  return rmf_task::standard_waypoint_name(
+    parameters.planner()->get_configuration().graph(),
+    _pimpl->destination.waypoint());
 }
 
 //==============================================================================

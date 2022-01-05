@@ -22,6 +22,8 @@
 
 #include <rmf_task_sequence/Event.hpp>
 
+#include <nlohmann/json.hpp>
+
 namespace rmf_task_sequence {
 namespace events {
 
@@ -45,8 +47,8 @@ public:
 
   /// Make a PerformAction description.
   ///
-  /// \param[in] action_name
-  ///   A name for this action
+  /// \param[in] action
+  ///   A json description of the action to perform
   ///
   /// \param[in] action_duration_estimate
   ///   An estimate for how long it will take for the action to complete
@@ -60,16 +62,16 @@ public:
   ///   performing the action. Use nullopt to indicate that after performing
   ///   the action, the robot will be at its initial location.
   static DescriptionPtr make(
-    const std::string& action_name,
+    nlohmann::json action,
     rmf_traffic::Duration action_duration_estimate,
     bool use_tool_sink,
     std::optional<Location> expected_finish_location = std::nullopt);
 
-  /// Get the action name
-  const std::string& action_name() const;
+  /// Get the action
+  const nlohmann::json& action() const;
 
-  /// Set the action name
-  Description& action_name(const std::string& new_name);
+  /// Set the action
+  Description& action(const nlohmann::json& new_action);
 
   /// Get the action duration estimate
   const rmf_traffic::Duration& action_duration_estimate() const;

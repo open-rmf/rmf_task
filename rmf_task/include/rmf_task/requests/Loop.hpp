@@ -57,9 +57,14 @@ public:
       std::size_t finish_waypoint,
       std::size_t num_loops);
 
-    /// Documentation inherited
+    // Documentation inherited
     Task::ConstModelPtr make_model(
       rmf_traffic::Time earliest_start_time,
+      const Parameters& parameters) const final;
+
+    // Documentation inherited
+    Info generate_info(
+      const State& initial_state,
       const Parameters& parameters) const final;
 
     /// Get the start waypoint of the loop in this request

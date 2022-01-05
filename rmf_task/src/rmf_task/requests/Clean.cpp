@@ -247,6 +247,19 @@ Task::ConstModelPtr Clean::Description::make_model(
 }
 
 //==============================================================================
+auto Clean::Description::generate_info(
+  const State&,
+  const Parameters& parameters) const -> Info
+{
+  const auto& graph = parameters.planner()->get_configuration().graph();
+
+  return Info{
+    "Clean " + standard_waypoint_name(graph, _pimpl->start_waypoint),
+    "",
+  };
+}
+
+//==============================================================================
 std::size_t Clean::Description::start_waypoint() const
 {
   return _pimpl->start_waypoint;

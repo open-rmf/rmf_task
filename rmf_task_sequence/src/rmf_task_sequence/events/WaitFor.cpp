@@ -30,8 +30,9 @@ public:
     rmf_traffic::Duration duration,
     const rmf_task::Parameters& parameters);
 
-  std::optional<State> estimate_finish(
+  std::optional<Estimate> estimate_finish(
     rmf_task::State initial_state,
+    rmf_traffic::Time earliest_arrival_time,
     const Constraints& constraints,
     const TravelEstimator& travel_estimator) const final;
 
@@ -58,11 +59,14 @@ public:
 auto WaitFor::Description::make(rmf_traffic::Duration wait_duration)
 -> DescriptionPtr
 {
-  auto output = std::shared_ptr<Description>(new Description);
-  output->_pimpl =
-    rmf_utils::make_impl<Implementation>(Implementation{wait_duration});
+  return std::make_shared<Description>(wait_duration);
+}
 
-  return output;
+//==============================================================================
+WaitFor::Description::Description(rmf_traffic::Duration duration_)
+: _pimpl(rmf_utils::make_impl<Implementation>(Implementation{duration_}))
+{
+  // Do nothing
 }
 
 //==============================================================================
@@ -102,12 +106,6 @@ Header WaitFor::Description::generate_header(
 }
 
 //==============================================================================
-WaitFor::Description::Description()
-{
-  // Do nothing
-}
-
-//==============================================================================
 WaitFor::Model::Model(
   State invariant_initial_state,
   rmf_traffic::Duration duration,
@@ -115,14 +113,22 @@ WaitFor::Model::Model(
 : _invariant_finish_state(std::move(invariant_initial_state)),
   _duration(duration)
 {
-  _invariant_battery_drain =
-    parameters.ambient_sink()->compute_change_in_charge(
-    rmf_traffic::time::to_seconds(_duration));
+  if (parameters.ambient_sink())
+  {
+    _invariant_battery_drain =
+      parameters.ambient_sink()->compute_change_in_charge(
+      rmf_traffic::time::to_seconds(_duration));
+  }
+  else
+  {
+    _invariant_battery_drain = 0.0;
+  }
 }
 
 //==============================================================================
-std::optional<State> WaitFor::Model::estimate_finish(
+std::optional<Estimate> WaitFor::Model::estimate_finish(
   State state,
+  rmf_traffic::Time earliest_arrival_time,
   const Constraints& constraints,
   const TravelEstimator&) const
 {
@@ -134,7 +140,7 @@ std::optional<State> WaitFor::Model::estimate_finish(
   if (state.battery_soc().value() <= _invariant_battery_drain)
     return std::nullopt;
 
-  return state;
+  return Estimate(state, earliest_arrival_time);
 }
 
 //==============================================================================

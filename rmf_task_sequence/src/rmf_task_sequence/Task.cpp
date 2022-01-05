@@ -55,6 +55,8 @@ class Task::Description::Implementation
 {
 public:
 
+  std::string category;
+  std::string detail;
   std::vector<ConstStagePtr> stages;
 
   static std::list<ConstStagePtr> get_stages(const Description& desc)
@@ -64,6 +66,57 @@ public:
       desc._pimpl->stages.end());
   }
 
+  static DescriptionPtr make(
+    std::string category,
+    std::string detail,
+    std::vector<ConstStagePtr> stages)
+  {
+    Description desc;
+    desc._pimpl = rmf_utils::make_impl<Implementation>(
+      Implementation{
+        std::move(category),
+        std::move(detail),
+        std::move(stages)
+      });
+
+    return std::make_shared<Description>(std::move(desc));
+  }
+};
+
+//==============================================================================
+class Task::Model : public rmf_task::Task::Model
+{
+public:
+
+  Model(
+    Activity::ConstModelPtr activity_model,
+    rmf_traffic::Time earliest_start_time)
+  : _activity_model(std::move(activity_model)),
+    _earliest_start_time(earliest_start_time)
+  {
+    // Do nothing
+  }
+
+  std::optional<rmf_task::Estimate> estimate_finish(
+    const State& initial_state,
+    const Constraints& task_planning_constraints,
+    const TravelEstimator& travel_estimator) const final
+  {
+    return _activity_model->estimate_finish(
+      initial_state,
+      _earliest_start_time,
+      task_planning_constraints,
+      travel_estimator);
+  }
+
+  rmf_traffic::Duration invariant_duration() const final
+  {
+    return _activity_model->invariant_duration();
+  }
+
+private:
+  Activity::ConstModelPtr _activity_model;
+  rmf_traffic::Time _earliest_start_time;
 };
 
 //==============================================================================
@@ -112,6 +165,9 @@ public:
   }
 
   // Documentation inherited
+  Event::Status status_overview() const final;
+
+  // Documentation inherited
   const std::vector<Phase::ConstCompletedPtr>& completed_phases() const final;
 
   // Documentation inherited
@@ -124,7 +180,7 @@ public:
   const ConstTagPtr& tag() const final;
 
   // Documentation inherited
-  rmf_traffic::Time estimate_finish_time() const final;
+  rmf_traffic::Duration estimate_remaining_time() const final;
 
   // Documentation inherited
   Backup backup() const final;
@@ -143,9 +199,6 @@ public:
 
   // Documentation inherited
   void rewind(uint64_t phase_id) final;
-
-  /// Get a weak reference to this object
-  // std::weak_ptr<Active> weak_from_this() const;
 
   static const nlohmann::json_schema::json_validator backup_schema_validator;
 
@@ -190,36 +243,32 @@ private:
     _clock(std::move(clock)),
     _get_state(std::move(get_state)),
     _parameters(parameters),
-    _booking(std::move(booking)),
+    _tag(std::make_shared<Tag>(
+      booking,
+      description.generate_header(_get_state(), *parameters))),
     _update(std::move(update)),
     _checkpoint(std::move(checkpoint)),
     _phase_finished(std::move(phase_finished)),
     _task_finished(std::move(task_finished)),
+    _task_is_interrupted(nullptr),
     _pending_stages(Description::Implementation::get_stages(description)),
     _cancel_sequence_initial_id(_pending_stages.size()+1)
   {
-    // const auto model = description.make_model(
-    //   std::chrono::steady_clock::now(),
-    //   *_parameters);
-    // TODO: fix
-    const auto header = Header(
-      "",
-      "",
-      rmf_traffic::Duration{0});
-
-    _tag = std::make_shared<Tag>(_booking, header);
+    // Do nothing
   }
 
   Phase::ConstActivatorPtr _phase_activator;
   std::function<rmf_traffic::Time()> _clock;
   std::function<State()> _get_state;
   ConstParametersPtr _parameters;
-  ConstBookingPtr _booking;
   ConstTagPtr _tag;
   std::function<void(Phase::ConstSnapshotPtr)> _update;
   std::function<void(Backup)> _checkpoint;
   std::function<void(Phase::ConstCompletedPtr)> _phase_finished;
   std::function<void()> _task_finished;
+
+  std::function<void()> _task_is_interrupted;
+  std::optional<Resume> _resume_phase;
 
   std::list<ConstStagePtr> _pending_stages;
   std::vector<Phase::Pending> _pending_phases;
@@ -248,6 +297,13 @@ Task::Active::backup_schema_validator =
   schemas::backup_PhaseSequenceTask_v0_1);
 
 //==============================================================================
+Task::Builder::Builder()
+: _pimpl(rmf_utils::make_impl<Implementation>())
+{
+  // Do nothing
+}
+
+//==============================================================================
 auto Task::Builder::add_phase(
   Phase::ConstDescriptionPtr description,
   std::vector<Phase::ConstDescriptionPtr> cancellation_sequence) -> Builder&
@@ -264,6 +320,120 @@ auto Task::Builder::add_phase(
       }));
 
   return *this;
+}
+
+//==============================================================================
+auto Task::Builder::build(
+  std::string category,
+  std::string detail) -> std::shared_ptr<Description>
+{
+  return Description::Implementation::make(
+    std::move(category),
+    std::move(detail),
+    _pimpl->stages);
+}
+
+//==============================================================================
+Task::ConstModelPtr Task::Description::make_model(
+  rmf_traffic::Time earliest_start_time,
+  const Parameters& parameters) const
+{
+  std::vector<Activity::ConstDescriptionPtr> descriptions;
+  descriptions.reserve(_pimpl->stages.size());
+  for (const auto& desc : _pimpl->stages)
+    descriptions.push_back(desc->description);
+
+  return std::make_shared<Model>(
+    Activity::SequenceModel::make(
+      std::move(descriptions),
+      State(),
+      parameters),
+    earliest_start_time);
+}
+
+//==============================================================================
+auto Task::Description::generate_info(
+  const rmf_task::State&,
+  const rmf_task::Parameters&) const -> Info
+{
+  return Info{
+    category(),
+    detail()
+  };
+}
+
+//==============================================================================
+const std::string& Task::Description::category() const
+{
+  return _pimpl->category;
+}
+
+//==============================================================================
+Task::Description& Task::Description::category(std::string new_category)
+{
+  _pimpl->category = std::move(new_category);
+  return *this;
+}
+
+//==============================================================================
+const std::string& Task::Description::detail() const
+{
+  return _pimpl->detail;
+}
+
+//==============================================================================
+Task::Description& Task::Description::detail(std::string new_category)
+{
+  _pimpl->detail = std::move(new_category);
+  return *this;
+}
+
+//==============================================================================
+Header Task::Description::generate_header(
+  const State& initial_state,
+  const Parameters& parameters) const
+{
+  const auto model = make_model(
+    initial_state.time().value(),
+    parameters);
+
+  return Header(
+    _pimpl->category,
+    _pimpl->detail,
+    model->invariant_duration());
+}
+
+//==============================================================================
+Task::Description::Description()
+{
+  // Do nothing
+}
+
+//==============================================================================
+rmf_task::Event::Status Task::Active::status_overview() const
+{
+  if (_active_phase)
+    return _active_phase->final_event()->status();
+
+  if (_completed_phases.empty() && _pending_phases.empty())
+  {
+    // This means the task had no phases..? So it's completed by default.
+    return Event::Status::Completed;
+  }
+
+  if (_pending_phases.empty())
+  {
+    // There are no pending phases, so the status of this task should be
+    // reflected by the status of the last phase.
+    return _completed_phases.back()->snapshot()->final_event()->status();
+  }
+
+  // There is no active phase, but there are pending phases remaining. This
+  // must mean this function is being called while the task phase is switching,
+  // which could technically cause a data race. We'll just go ahead and say that
+  // the status is Underway, but maybe we should consider making noise about
+  // this.
+  return Event::Status::Underway;
 }
 
 //==============================================================================
@@ -292,11 +462,13 @@ const Task::ConstTagPtr& Task::Active::tag() const
 }
 
 //==============================================================================
-rmf_traffic::Time Task::Active::estimate_finish_time() const
+rmf_traffic::Duration Task::Active::estimate_remaining_time() const
 {
-  // TODO fix
-  const auto now = _clock();
-  return now;
+  auto remaining_time = _active_phase->estimate_remaining_time();
+  for (const auto& p : _pending_phases)
+    remaining_time += p.tag()->header().original_duration_estimate();
+
+  return remaining_time;
 }
 
 //==============================================================================
@@ -308,44 +480,127 @@ auto Task::Active::backup() const -> Backup
 }
 
 //==============================================================================
-Task::Active::Resume Task::Active::interrupt(
-  std::function<void()> task_is_interrupted)
+auto Task::Active::interrupt(std::function<void()> task_is_interrupted)
+-> Resume
 {
-  return rmf_task::Task::Active::make_resumer(task_is_interrupted);
+  _task_is_interrupted = std::move(task_is_interrupted);
+  _resume_phase = _active_phase->interrupt(_task_is_interrupted);
+
+  return Resume::make(
+    [self = weak_from_this()]()
+    {
+      const auto me = self.lock();
+      if (!me)
+        return;
+
+      me->_task_is_interrupted = nullptr;
+      if (me->_resume_phase.has_value())
+        (*me->_resume_phase)();
+      else
+        me->_begin_next_stage();
+    });
 }
 
 //==============================================================================
 void Task::Active::cancel()
 {
-  // TODO
+  if (_cancelled_on_phase.has_value())
+  {
+    // If this already has a value, then the task is already running through
+    // its cancellation sequence.
+    return;
+  }
+
+  _cancelled_on_phase = _active_phase->tag()->id();
+
+  _pending_phases.clear();
+  _pending_phases.reserve(_active_stage->cancellation_sequence.size());
+  auto next_id = _cancel_sequence_initial_id;
+  auto state = _get_state();
+  for (const auto& desc : _active_stage->cancellation_sequence)
+  {
+    _pending_phases.emplace_back(
+      std::make_shared<Phase::Tag>(
+        ++next_id,
+        desc->generate_header(state, *_parameters))
+      );
+
+    state = desc->make_model(state, *_parameters)->invariant_finish_state();
+  }
+
+  _active_phase->cancel();
 }
 
 //==============================================================================
 void Task::Active::kill()
 {
-  // TODO
+  _killed = true;
+  _active_phase->kill();
 }
 
 //==============================================================================
 void Task::Active::skip(uint64_t phase_id, bool value)
 {
-  // TODO
+  if (value && _active_phase->tag()->id() == phase_id)
+  {
+    // If we are being told to skip the active phase then we will simply tell
+    // it to cancel and then move on to the remaining phases.
+    _active_phase->cancel();
+    return;
+  }
+
+  for (auto& p : _pending_phases)
+  {
+    if (phase_id == p.tag()->id())
+    {
+      p.will_be_skipped(value);
+      return;
+    }
+  }
 }
 
 //==============================================================================
 void Task::Active::rewind(uint64_t phase_id)
 {
-  // TODO
+  assert(_completed_phases.size() == _completed_stages.size());
+  std::size_t completed_index=0;
+  auto stage_it = _completed_stages.begin();
+  while (stage_it != _completed_stages.end())
+  {
+    if ((*stage_it)->id == phase_id)
+      break;
+
+    ++completed_index;
+  }
+
+  if (stage_it == _completed_stages.end())
+  {
+    // TODO(MXG): Indicate to the user that they asked to rewind to a phase
+    // that hasn't been reached yet.
+    return;
+  }
+
+  _pending_stages.insert(
+    _pending_stages.begin(),
+    stage_it,
+    _completed_stages.begin());
+
+  // The currently active stage should also be put back into pending
+  _pending_stages.push_back(_active_stage);
+  _generate_pending_phases();
+
+  // If we are supposed to rewind to an earlier stage, then we should cancel
+  // the currently active one.
+  _active_phase->cancel();
 }
 
 //==============================================================================
 void Task::Active::_load_backup(std::string backup_state_str)
 {
   const auto restore_phase = rmf_task::phases::RestoreBackup::Active::make(
-    backup_state_str, std::chrono::steady_clock::now());
+    backup_state_str, rmf_traffic::Duration(0));
 
-  // TODO(MXG): Allow users to specify a custom clock for the log
-  const auto start_time = std::chrono::steady_clock::now();
+  const auto start_time = _clock();
 
   const auto failed_to_restore = [&]() -> void
     {
@@ -354,7 +609,7 @@ void Task::Active::_load_backup(std::string backup_state_str)
         std::make_shared<rmf_task::Phase::Completed>(
           rmf_task::Phase::Snapshot::make(*restore_phase),
           start_time,
-          std::chrono::steady_clock::now()));
+          _clock()));
 
       _finish_task();
     };
@@ -466,6 +721,9 @@ void Task::Active::_generate_pending_phases()
         s->description->generate_header(state, *_parameters)
       )
     );
+
+    state = s->description->make_model(
+      state, *_parameters)->invariant_finish_state();
   }
 }
 
@@ -490,42 +748,80 @@ void Task::Active::_finish_phase()
 //==============================================================================
 void Task::Active::_begin_next_stage(std::optional<nlohmann::json> restore)
 {
-  if (_pending_stages.empty())
+  if (_task_is_interrupted)
+  {
+    // If we currently expect the task to be interrupted but we reach this
+    // function, then the previous phase finished despite the fact that it
+    // should have been interrupted (maybe it's a phase that cannot be
+    // interrupted). So we will now signal that the task is interrupted and
+    // refuse to move on to the next phase.
+    _task_is_interrupted();
+    return;
+  }
+
+  if (_resume_phase.has_value())
+  {
+    // If we were expecting to resume a phase but we wound up here instead, then
+    // the phase that we tried to interrupt finished instead of being
+    // interrupted. We will clear this field since it is no longer relevant.
+    _resume_phase = std::nullopt;
+  }
+
+  if (_killed)
     return _finish_task();
 
-  assert(!_pending_phases.empty());
-  _active_stage = _pending_stages.front();
-  assert(_active_stage->id == _pending_phases.front().tag()->id());
+  while (true)
+  {
+    if (_pending_stages.empty())
+      return _finish_task();
 
-  _pending_stages.pop_front();
-  auto tag = _pending_phases.front().tag();
-  _pending_phases.erase(_pending_phases.begin());
+    _active_stage = _pending_stages.front();
+    assert(_active_stage->id == _pending_phases.front().tag()->id());
+    const auto skip_phase = _pending_phases.front().will_be_skipped();
 
-  // Reset our memory of phase backup sequence number
-  _last_phase_backup_sequence_number = std::nullopt;
+    _pending_stages.pop_front();
+    auto tag = _pending_phases.front().tag();
+    _pending_phases.erase(_pending_phases.begin());
 
-  _current_phase_start_time = _clock();
-  _active_phase = _phase_activator->activate(
-    _get_state,
-    std::move(tag),
-    *_active_stage->description,
-    std::move(restore),
-    [me = weak_from_this()](Phase::ConstSnapshotPtr snapshot)
+    // Reset our memory of phase backup sequence number
+    _last_phase_backup_sequence_number = std::nullopt;
+
+    if (skip_phase)
     {
-      if (const auto self = me.lock())
-        self->_update(snapshot);
-    },
-    [me = weak_from_this(), id = _active_phase->tag()->id()](
-      Phase::Active::Backup backup)
-    {
-      if (const auto self = me.lock())
-        self->_issue_backup(id, std::move(backup));
-    },
-    [me = weak_from_this()]()
-    {
-      if (const auto self = me.lock())
-        self->_finish_phase();
-    });
+      // If we're supposed to skip this phase, then continue looping until we
+      // reach a phase that we're not supposed to skip.
+      continue;
+    }
+
+    const auto phase_id = tag->id();
+    _current_phase_start_time = _clock();
+    _active_phase = _phase_activator->activate(
+      _get_state,
+      _parameters,
+      std::move(tag),
+      *_active_stage->description,
+      std::move(restore),
+      [me = weak_from_this()](Phase::ConstSnapshotPtr snapshot)
+      {
+        if (const auto self = me.lock())
+          self->_update(snapshot);
+      },
+      [me = weak_from_this(), id = phase_id](
+        Phase::Active::Backup backup)
+      {
+        if (const auto self = me.lock())
+          self->_issue_backup(id, std::move(backup));
+      },
+      [me = weak_from_this()]()
+      {
+        if (const auto self = me.lock())
+          self->_finish_phase();
+      });
+
+    _update(Phase::Snapshot::make(*_active_phase));
+    _issue_backup(phase_id, _active_phase->backup());
+    return;
+  }
 }
 
 //==============================================================================
@@ -619,7 +915,7 @@ auto Task::make_activator(
     phase_activator = std::move(phase_activator),
     clock = std::move(clock)
   ](
-    std::function<State()> get_state,
+    const std::function<State()>& get_state,
     const ConstParametersPtr& parameters,
     const ConstBookingPtr& booking,
     const Description& description,
@@ -642,6 +938,16 @@ auto Task::make_activator(
         std::move(phase_finished),
         std::move(task_finished));
     };
+}
+
+//==============================================================================
+void Task::add(
+  rmf_task::Activator& activator,
+  Phase::ConstActivatorPtr phase_activator,
+  std::function<rmf_traffic::Time()> clock)
+{
+  activator.add_activator<Task::Description>(
+    make_activator(std::move(phase_activator), std::move(clock)));
 }
 
 } // namespace rmf_task_sequence

@@ -20,10 +20,11 @@
 
 #include <rmf_utils/impl_ptr.hpp>
 
-#include <chrono>
 #include <functional>
 #include <memory>
 #include <string>
+
+#include <rmf_traffic/Time.hpp>
 
 namespace rmf_task {
 
@@ -44,7 +45,7 @@ public:
   /// \param[in] clock
   ///   Specify a clock for this log to use. If nullptr is given, then
   ///   std::chrono::system_clock::now() will be used.
-  Log(std::function<std::chrono::system_clock::time_point()> clock = nullptr);
+  Log(std::function<rmf_traffic::Time()> clock = nullptr);
 
   // TODO(MXG): Should we have a debug log option?
 
@@ -96,8 +97,12 @@ public:
   /// What was the tier of this entry.
   Tier tier() const;
 
+  /// Sequence number for this log entry. This increments once for each new
+  /// log entry, until overflowing and wrapping around to 0.
+  uint32_t seq() const;
+
   /// What was the timestamp of this entry.
-  std::chrono::system_clock::time_point time() const;
+  rmf_traffic::Time time() const;
 
   /// What was the text of this entry.
   const std::string& text() const;
@@ -201,6 +206,9 @@ public:
 
   /// Equality comparison operator
   bool operator==(const iterator& other) const;
+
+  /// Inequality comparison operator
+  bool operator!=(const iterator& other) const;
 
   class Implementation;
 private:
