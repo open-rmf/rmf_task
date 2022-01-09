@@ -205,7 +205,7 @@ public:
 };
 
 //==============================================================================
-Task::ConstDescriptionPtr Clean::Description::make(
+std::shared_ptr<Clean::Description> Clean::Description::make(
   std::size_t start_waypoint,
   std::size_t end_waypoint,
   const rmf_traffic::Trajectory& cleaning_path)
