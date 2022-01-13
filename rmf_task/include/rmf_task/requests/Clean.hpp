@@ -51,7 +51,7 @@ public:
   public:
 
     /// Generate the description for this request
-    static Task::ConstDescriptionPtr make(
+    static std::shared_ptr<Description> make(
       std::size_t start_waypoint,
       std::size_t end_waypoint,
       const rmf_traffic::Trajectory& cleaning_path);
