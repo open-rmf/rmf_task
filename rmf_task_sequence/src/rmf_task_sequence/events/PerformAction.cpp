@@ -110,8 +110,8 @@ State PerformAction::Model::invariant_finish_state() const
 class PerformAction::Description::Implementation
 {
 public:
-
-  nlohmann::json action;
+  std::string category;
+  nlohmann::json description;
   rmf_traffic::Duration action_duration_estimate;
   bool use_tool_sink;
   std::optional<Location> expected_finish_location;
@@ -119,6 +119,7 @@ public:
 
 //==============================================================================
 auto PerformAction::Description::make(
+  const std::string& category,
   nlohmann::json action,
   rmf_traffic::Duration duration,
   bool use_tool_sink,
@@ -128,6 +129,7 @@ auto PerformAction::Description::make(
   description->_pimpl = rmf_utils::make_impl<Implementation>(
     Implementation
     {
+      std::move(category),
       std::move(action),
       std::move(duration),
       std::move(use_tool_sink),
@@ -144,17 +146,32 @@ PerformAction::Description::Description()
 }
 
 //==============================================================================
-const nlohmann::json&
-PerformAction::Description::action() const
+const std::string&
+PerformAction::Description::category() const
 {
-  return _pimpl->action;
+  return _pimpl->category;
 }
 
 //==============================================================================
-auto PerformAction::Description::action(
-  const nlohmann::json& new_action) -> Description&
+auto PerformAction::Description::category(
+  const std::string& new_category) -> Description&
 {
-  _pimpl->action = new_action;
+  _pimpl->category = new_category;
+  return *this;
+}
+
+//==============================================================================
+const nlohmann::json&
+PerformAction::Description::description() const
+{
+  return _pimpl->description;
+}
+
+//==============================================================================
+auto PerformAction::Description::description(
+  const nlohmann::json& new_description) -> Description&
+{
+  _pimpl->description = new_description;
   return *this;
 }
 
@@ -245,7 +262,7 @@ Header PerformAction::Description::generate_header(
 
   return Header(
     "Perform action",
-    "Performing action " +  _pimpl->action.dump() +
+    "Performing action " +  _pimpl->category +
     " at waypoint [" + start_name + "]",
     _pimpl->action_duration_estimate);
 

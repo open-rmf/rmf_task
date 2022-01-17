@@ -47,7 +47,10 @@ public:
 
   /// Make a PerformAction description.
   ///
-  /// \param[in] action
+  /// \param[in] category
+  ///   A category for this action
+  ///
+  /// \param[in] description
   ///   A json description of the action to perform
   ///
   /// \param[in] action_duration_estimate
@@ -62,16 +65,23 @@ public:
   ///   performing the action. Use nullopt to indicate that after performing
   ///   the action, the robot will be at its initial location.
   static DescriptionPtr make(
-    nlohmann::json action,
+    const std::string& category,
+    nlohmann::json description,
     rmf_traffic::Duration action_duration_estimate,
     bool use_tool_sink,
     std::optional<Location> expected_finish_location = std::nullopt);
 
-  /// Get the action
-  const nlohmann::json& action() const;
+  /// Get the category
+  const std::string& category() const;
 
-  /// Set the action
-  Description& action(const nlohmann::json& new_action);
+  /// Set the category
+  Description& category(const std::string& new_category);
+
+  /// Get the description
+  const nlohmann::json& description() const;
+
+  /// Set the description
+  Description& description(const nlohmann::json& new_description);
 
   /// Get the action duration estimate
   const rmf_traffic::Duration& action_duration_estimate() const;

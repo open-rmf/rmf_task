@@ -27,11 +27,13 @@ SCENARIO("Test PerformAction")
 {
   using PerformAction = rmf_task_sequence::events::PerformAction;
   const auto duration = 10s;
-  const std::string action_name = "test_action";
+  const std::string category = "test_action";
+  const nlohmann::json desc;
   const rmf_traffic::agv::Planner::Goal finish_location{1};
 
   auto description = PerformAction::Description::make(
-    action_name,
+    category,
+    desc
     duration,
     false,
     finish_location);
@@ -48,7 +50,8 @@ SCENARIO("Test PerformAction")
 
   WHEN("Testing getters")
   {
-    CHECK(description->action_name() == action_name);
+    CHECK(description->category() == category);
+    CHECK(description->description() == desc)
     CHECK(description->action_duration_estimate() == duration);
     CHECK(description->use_tool_sink() == false);
     REQUIRE(description->expected_finish_location().has_value());
@@ -57,8 +60,11 @@ SCENARIO("Test PerformAction")
 
   WHEN("Testing setters")
   {
-    description->action_name("new_name");
-    CHECK(description->action_name() == "new_name");
+    description->category("new_category");
+    CHECK(description->category() == "new_category");
+    nlohmann::json new_desc = {{"key", "value"}};
+    description->description(new_desc);
+    CHECK(description->description() == new_desc);
     description->action_duration_estimate(20s);
     CHECK(description->action_duration_estimate() == 20s);
     description->use_tool_sink(true);
