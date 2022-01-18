@@ -157,9 +157,13 @@ public:
       battery_drain += dSOC_motion + dSOC_device;
     }
 
-    const auto duration =
-      plan->get_itinerary().back().trajectory().back().time()
-      - itinerary_start_time;
+    auto duration = rmf_traffic::Duration(0);
+    if (!plan->get_itinerary().empty())
+    {
+      duration =
+        plan->get_itinerary().back().trajectory().back().time()
+        - itinerary_start_time;
+    }
 
     return Result::Implementation::make(duration, battery_drain);
   }
