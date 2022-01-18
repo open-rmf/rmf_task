@@ -29,7 +29,7 @@ namespace events {
 /// A WaitFor event encompasses having the robot sit in place and wait for a
 /// period of time to pass.
 ///
-/// The Model of this phase may be useful for calculating the Models of other
+/// The Model of this event may be useful for calculating the Models of other
 /// phases that include a period of time where the robot is waiting for a
 /// process to finish. E.g. the PickUp and DropOff Models use WaitFor::Model to
 /// calculate how much the robot's battery drains while waiting for the payload

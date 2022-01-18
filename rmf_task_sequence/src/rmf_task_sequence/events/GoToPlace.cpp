@@ -17,6 +17,8 @@
 
 #include <rmf_task_sequence/events/GoToPlace.hpp>
 
+#include "utils.hpp"
+
 namespace rmf_task_sequence {
 namespace events {
 
@@ -209,22 +211,18 @@ Header GoToPlace::Description::generate_header(
   const State& initial_state,
   const Parameters& parameters) const
 {
-  const auto fail = [](const std::string& msg)
-    {
-      throw std::runtime_error(
-              "[GoToPlace::Description::generate_header] " + msg);
-    };
+  const std::string& fail_header = "[GoToPlace::Description::generate_header]";
 
   const auto start_wp_opt = initial_state.waypoint();
   if (!start_wp_opt)
-    fail("Initial state is missing a waypoint");
+    utils::fail(fail_header, "Initial state is missing a waypoint");
 
   const auto start_wp = *start_wp_opt;
 
   const auto& graph = parameters.planner()->get_configuration().graph();
   if (graph.num_waypoints() <= start_wp)
   {
-    fail("Initial waypoint [" + std::to_string(start_wp)
+    utils::fail(fail_header, "Initial waypoint [" + std::to_string(start_wp)
       + "] is outside the graph [" + std::to_string(graph.num_waypoints())
       + "]");
   }
@@ -233,7 +231,7 @@ Header GoToPlace::Description::generate_header(
 
   if (graph.num_waypoints() <= _pimpl->destination.waypoint())
   {
-    fail("Destination waypoint ["
+    utils::fail(fail_header, "Destination waypoint ["
       + std::to_string(_pimpl->destination.waypoint())
       + "] is outside the graph [" + std::to_string(graph.num_waypoints())
       + "]");
@@ -246,7 +244,8 @@ Header GoToPlace::Description::generate_header(
 
   if (!estimate.has_value())
   {
-    fail("Cannot find a path from " + start_name + " to " + goal_name_);
+    utils::fail(fail_header, "Cannot find a path from ["
+      + start_name + "] to [" + goal_name_ + "]");
   }
 
   return Header(
