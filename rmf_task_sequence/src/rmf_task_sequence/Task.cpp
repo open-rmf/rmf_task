@@ -464,7 +464,9 @@ const Task::ConstTagPtr& Task::Active::tag() const
 //==============================================================================
 rmf_traffic::Duration Task::Active::estimate_remaining_time() const
 {
-  auto remaining_time = _active_phase->estimate_remaining_time();
+  auto remaining_time =
+    _active_phase ? _active_phase->estimate_remaining_time() :
+    rmf_traffic::Duration(0);
   for (const auto& p : _pending_phases)
     remaining_time += p.tag()->header().original_duration_estimate();
 
