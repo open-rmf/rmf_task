@@ -26,15 +26,14 @@ namespace rmf_task_sequence {
 namespace events {
 namespace utils {
 
+//==============================================================================
 std::string waypoint_name(
   const std::size_t index,
   const rmf_task::Parameters& parameters);
 
-const auto fail = [](const std::string& header, const std::string& msg)
-  {
-    throw std::runtime_error(
-            header + " " + msg);
-  };
+//==============================================================================
+void fail(const std::string& header, const std::string& msg);
+
 
 } // namespace utils
 } // namespace events

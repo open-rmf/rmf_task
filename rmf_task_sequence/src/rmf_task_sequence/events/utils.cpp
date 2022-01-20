@@ -17,23 +17,28 @@
 
 #include "utils.hpp"
 
+#include <rmf_task/Header.hpp>
+
 namespace rmf_task_sequence {
 namespace events {
 namespace utils {
 
+//==============================================================================
 std::string waypoint_name(
   const std::size_t index,
   const rmf_task::Parameters& parameters)
 {
-  const auto& graph = parameters.planner()->get_configuration().graph();
-  if (index < graph.num_waypoints())
-  {
-    if (const auto* name = graph.get_waypoint(index).name())
-      return *name;
-  }
-
-  return "#" + std::to_string(index);
+  return rmf_task::standard_waypoint_name(
+    parameters.planner()->get_configuration().graph(),
+    index);
 }
+
+//==============================================================================
+void fail(const std::string& header, const std::string& msg)
+{
+  throw std::runtime_error(
+          header + " " + msg);
+};
 
 } // namespace utils
 } // namespace events

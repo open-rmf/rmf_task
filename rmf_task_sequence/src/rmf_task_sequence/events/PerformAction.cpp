@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Open Source Robotics Foundation
+ * Copyright (C) 2022 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -200,7 +200,7 @@ bool PerformAction::Description::use_tool_sink() const
 auto PerformAction::Description::use_tool_sink(
   bool use_tool) -> Description&
 {
-  _pimpl->use_tool_sink = std::move(use_tool);
+  _pimpl->use_tool_sink = use_tool;
   return *this;
 }
 
