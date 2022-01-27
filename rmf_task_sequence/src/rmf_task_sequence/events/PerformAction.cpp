@@ -56,13 +56,16 @@ PerformAction::Model::Model(
   rmf_traffic::Duration invariant_duration,
   bool use_tool_sink,
   const Parameters& parameters)
-: _invariant_finish_state(std::move(invariant_finish_state)),
+: _invariant_finish_state(invariant_finish_state),
   _invariant_duration(invariant_duration),
   _use_tool_sink(use_tool_sink)
 {
-  _invariant_battery_drain =
-    parameters.ambient_sink()->compute_change_in_charge(
-    rmf_traffic::time::to_seconds(_invariant_duration));
+  if (parameters.ambient_sink() != nullptr)
+  {
+    _invariant_battery_drain =
+      parameters.ambient_sink()->compute_change_in_charge(
+      rmf_traffic::time::to_seconds(_invariant_duration));
+  }
 
   if (_use_tool_sink && parameters.tool_sink() != nullptr)
   {
