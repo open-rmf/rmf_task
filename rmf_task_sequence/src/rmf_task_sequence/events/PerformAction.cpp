@@ -80,7 +80,8 @@ std::optional<rmf_task::Estimate> PerformAction::Model::estimate_finish(
   const TravelEstimator& travel_estimator) const
 {
   initial_state.time(initial_state.time().value() + _invariant_duration);
-  initial_state.waypoint(_invariant_finish_state.waypoint().value());
+  if (_invariant_finish_state.waypoint().has_value())
+    initial_state.waypoint(_invariant_finish_state.waypoint().value());
   if (_invariant_finish_state.orientation().has_value())
     initial_state.orientation(_invariant_finish_state.orientation().value());
 
