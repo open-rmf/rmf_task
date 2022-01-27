@@ -56,13 +56,16 @@ PerformAction::Model::Model(
   rmf_traffic::Duration invariant_duration,
   bool use_tool_sink,
   const Parameters& parameters)
-: _invariant_finish_state(std::move(invariant_finish_state)),
+: _invariant_finish_state(invariant_finish_state),
   _invariant_duration(invariant_duration),
   _use_tool_sink(use_tool_sink)
 {
-  _invariant_battery_drain =
-    parameters.ambient_sink()->compute_change_in_charge(
-    rmf_traffic::time::to_seconds(_invariant_duration));
+  if (parameters.ambient_sink() != nullptr)
+  {
+    _invariant_battery_drain =
+      parameters.ambient_sink()->compute_change_in_charge(
+      rmf_traffic::time::to_seconds(_invariant_duration));
+  }
 
   if (_use_tool_sink && parameters.tool_sink() != nullptr)
   {
@@ -80,7 +83,8 @@ std::optional<rmf_task::Estimate> PerformAction::Model::estimate_finish(
   const TravelEstimator& travel_estimator) const
 {
   initial_state.time(initial_state.time().value() + _invariant_duration);
-  initial_state.waypoint(_invariant_finish_state.waypoint().value());
+  if (_invariant_finish_state.waypoint().has_value())
+    initial_state.waypoint(_invariant_finish_state.waypoint().value());
   if (_invariant_finish_state.orientation().has_value())
     initial_state.orientation(_invariant_finish_state.orientation().value());
 

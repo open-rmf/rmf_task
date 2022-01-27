@@ -40,6 +40,11 @@ Activity::ConstModelPtr Activity::SequenceModel::make(
   for (const auto& desc : descriptions)
   {
     auto next_model = desc->make_model(invariant_finish_state, parameters);
+    if (!next_model)
+    {
+      // TODO: Should we throw an error here?
+      return nullptr;
+    }
     invariant_finish_state = next_model->invariant_finish_state();
     invariant_duration += next_model->invariant_duration();
 
