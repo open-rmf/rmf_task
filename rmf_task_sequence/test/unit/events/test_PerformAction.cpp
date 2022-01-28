@@ -33,7 +33,7 @@ SCENARIO("Test PerformAction")
 
   auto description = PerformAction::Description::make(
     category,
-    desc
+    desc,
     duration,
     false,
     finish_location);
@@ -51,7 +51,7 @@ SCENARIO("Test PerformAction")
   WHEN("Testing getters")
   {
     CHECK(description->category() == category);
-    CHECK(description->description() == desc)
+    CHECK(description->description() == desc);
     CHECK(description->action_duration_estimate() == duration);
     CHECK(description->use_tool_sink() == false);
     REQUIRE(description->expected_finish_location().has_value());
@@ -89,6 +89,7 @@ SCENARIO("Test PerformAction")
     CHECK_MODEL(
       *model,
       initial_state,
+      now,
       *constraints,
       travel_estimator,
       expected_finish_state);

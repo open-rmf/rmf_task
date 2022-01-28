@@ -18,7 +18,7 @@
 #ifndef TEST__UNIT__UTILS_HPP
 #define TEST__UNIT__UTILS_HPP
 
-#include <rmf_task_sequence/detail/ContactCard.hpp>
+// #include <rmf_task_sequence/detail/ContactCard.hpp>
 #include <rmf_task_sequence/Activity.hpp>
 
 #include <rmf_task/Parameters.hpp>
@@ -42,19 +42,19 @@
 namespace {
 using namespace std::chrono_literals;
 //==============================================================================
-void CHECK_CONTACT(
-  const rmf_task_sequence::detail::ContactCard& contact,
-  const std::string& name,
-  const std::string& address,
-  const std::string& email,
-  const rmf_task_sequence::detail::ContactCard::PhoneNumber& number)
-{
-  CHECK(contact.name() == name);
-  CHECK(contact.address() == address);
-  CHECK(contact.email() == email);
-  CHECK(contact.number().country_code == number.country_code);
-  CHECK(contact.number().number == number.number);
-}
+// void CHECK_CONTACT(
+//   const rmf_task_sequence::detail::ContactCard& contact,
+//   const std::string& name,
+//   const std::string& address,
+//   const std::string& email,
+//   const rmf_task_sequence::detail::ContactCard::PhoneNumber& number)
+// {
+//   CHECK(contact.name() == name);
+//   CHECK(contact.address() == address);
+//   CHECK(contact.email() == email);
+//   CHECK(contact.number().country_code == number.country_code);
+//   CHECK(contact.number().number == number.number);
+// }
 
 //==============================================================================
 std::shared_ptr<rmf_task::Constraints> make_test_constraints(
@@ -193,6 +193,7 @@ void CHECK_STATE(
 void CHECK_MODEL(
   const rmf_task_sequence::Activity::Model& model,
   const rmf_task::State& initial_state,
+  const rmf_traffic::Time earliest_arrival_time,
   const rmf_task::Constraints& constraints,
   const rmf_task::TravelEstimator& travel_estimator,
   const rmf_task::State& expected_finish_state)
@@ -200,12 +201,13 @@ void CHECK_MODEL(
 
   const auto estimated_finish = model.estimate_finish(
     initial_state,
+    earliest_arrival_time,
     constraints,
     travel_estimator);
 
   REQUIRE(estimated_finish.has_value());
 
-  CHECK_STATE(estimated_finish.value(), expected_finish_state);
+  CHECK_STATE(estimated_finish.value().finish_state(), expected_finish_state);
 }
 
 //==============================================================================
