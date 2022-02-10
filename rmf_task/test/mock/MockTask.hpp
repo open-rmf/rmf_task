@@ -42,6 +42,8 @@ public:
 
     Phase::ConstActivePtr active_phase() const override;
 
+    std::optional<rmf_traffic::Time> active_phase_start_time() const override;
+
     const std::vector<Phase::Pending>& pending_phases() const override;
 
     const ConstTagPtr& tag() const override;

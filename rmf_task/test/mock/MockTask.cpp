@@ -42,6 +42,13 @@ auto MockTask::Active::active_phase() const -> Phase::ConstActivePtr
 }
 
 //==============================================================================
+std::optional<rmf_traffic::Time>
+MockTask::Active::active_phase_start_time() const
+{
+  return std::nullopt;
+}
+
+//==============================================================================
 auto MockTask::Active::pending_phases() const
 -> const std::vector<Phase::Pending>&
 {

@@ -25,9 +25,9 @@
 
 #include <nlohmann/json-schema.hpp>
 
-#include <cstring>
-
 #include <rmf_utils/Modular.hpp>
+
+#include <iostream>
 
 namespace rmf_task_sequence {
 
@@ -172,6 +172,9 @@ public:
 
   // Documentation inherited
   Phase::ConstActivePtr active_phase() const final;
+
+  // Documentation inherited
+  std::optional<rmf_traffic::Time> active_phase_start_time() const final;
 
   // Documentation inherited
   const std::vector<Phase::Pending>& pending_phases() const final;
@@ -447,6 +450,12 @@ Task::Active::completed_phases() const
 Phase::ConstActivePtr Task::Active::active_phase() const
 {
   return _active_phase;
+}
+
+//==============================================================================
+std::optional<rmf_traffic::Time> Task::Active::active_phase_start_time() const
+{
+  return _current_phase_start_time;
 }
 
 //==============================================================================

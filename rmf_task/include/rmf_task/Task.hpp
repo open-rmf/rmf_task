@@ -208,6 +208,9 @@ public:
   /// Interface for the phase that is currently active
   virtual Phase::ConstActivePtr active_phase() const = 0;
 
+  /// Time that the current active phase started
+  virtual std::optional<rmf_traffic::Time> active_phase_start_time() const = 0;
+
   /// Descriptions of the phases that are expected in the future
   virtual const std::vector<Phase::Pending>& pending_phases() const = 0;
 
