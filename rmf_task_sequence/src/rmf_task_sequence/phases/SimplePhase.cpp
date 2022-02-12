@@ -40,9 +40,9 @@ public:
       return Header(*category, *detail, duration);
 
     auto event_header = final_event->generate_header(initial_state, parameters);
-    const std::string& c = category.has_value()?
+    const std::string& c = category.has_value() ?
       *category : event_header.category();
-    const std::string& d = detail.has_value()?
+    const std::string& d = detail.has_value() ?
       *detail : event_header.detail();
 
     return Header(c, d, duration);
@@ -52,7 +52,7 @@ public:
 //==============================================================================
 class SimplePhase::Active
   : public Phase::Active,
-    public std::enable_shared_from_this<Active>
+  public std::enable_shared_from_this<Active>
 {
 public:
 
@@ -110,12 +110,12 @@ void SimplePhase::add(
       std::function<void(rmf_task::Phase::ConstSnapshotPtr)> phase_update,
       std::function<void(Active::Backup)> phase_checkpoint,
       std::function<void()> finished) -> ActivePtr
-  {
-    const auto phase = std::make_shared<Active>();
-    assert(tag != nullptr);
-    phase->_tag = tag;
+    {
+      const auto phase = std::make_shared<Active>();
+      assert(tag != nullptr);
+      phase->_tag = tag;
 
-    std::function<void()> event_update =
+      std::function<void()> event_update =
       [
         weak = phase->weak_from_this(),
         phase_update = std::move(phase_update)
@@ -128,7 +128,7 @@ void SimplePhase::add(
         }
       };
 
-    std::function<void()> event_checkpoint =
+      std::function<void()> event_checkpoint =
       [
         weak = phase->weak_from_this(),
         phase_checkpoint = std::move(phase_checkpoint)
@@ -141,35 +141,35 @@ void SimplePhase::add(
         }
       };
 
-    const auto assign_id = Event::AssignID::make();
+      const auto assign_id = Event::AssignID::make();
 
-    if (backup_state.has_value())
-    {
-      phase->_final_event = event_initializer->restore(
+      if (backup_state.has_value())
+      {
+        phase->_final_event = event_initializer->restore(
+          assign_id,
+          get_state,
+          parameters,
+          *desc.final_event(),
+          *backup_state,
+          std::move(event_update),
+          std::move(event_checkpoint),
+          std::move(finished));
+
+        return phase;
+      }
+
+      const auto init_event = event_initializer->initialize(
         assign_id,
         get_state,
         parameters,
         *desc.final_event(),
-        *backup_state,
-        std::move(event_update),
-        std::move(event_checkpoint),
-        std::move(finished));
+        std::move(event_update));
+
+      phase->_final_event = init_event->begin(
+        std::move(event_checkpoint), std::move(finished));
 
       return phase;
-    }
-
-    const auto init_event = event_initializer->initialize(
-      assign_id,
-      get_state,
-      parameters,
-      *desc.final_event(),
-      std::move(event_update));
-
-    phase->_final_event =
-      init_event->begin(std::move(event_checkpoint), std::move(finished));
-
-    return phase;
-  });
+    });
 }
 
 //==============================================================================

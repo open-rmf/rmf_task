@@ -38,7 +38,7 @@ void fail(const std::string& header, const std::string& msg)
 {
   throw std::runtime_error(
           header + " " + msg);
-};
+}
 
 } // namespace utils
 } // namespace events

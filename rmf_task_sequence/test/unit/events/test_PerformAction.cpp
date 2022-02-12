@@ -84,7 +84,7 @@ SCENARIO("Test PerformAction")
     rmf_task::State expected_finish_state = initial_state;
     REQUIRE(initial_state.time().has_value());
     expected_finish_state.time(initial_state.time().value() + duration)
-      .waypoint(1);
+    .waypoint(1);
 
     CHECK_MODEL(
       *model,

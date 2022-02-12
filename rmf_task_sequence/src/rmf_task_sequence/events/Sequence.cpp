@@ -107,7 +107,9 @@ Sequence::Standby::Standby(
 {
   std::vector<rmf_task::Event::ConstStatePtr> state_deps;
   state_deps.reserve(_reverse_dependencies.size());
-  for (auto rit = _reverse_dependencies.rbegin(); rit != _reverse_dependencies.rend(); ++rit)
+  const auto rbegin = _reverse_dependencies.rbegin();
+  const auto rend = _reverse_dependencies.rend();
+  for (auto rit = rbegin; rit != rend; ++rit)
     state_deps.push_back((*rit)->state());
 
   _state->update_dependencies(std::move(state_deps));
@@ -146,8 +148,8 @@ rmf_task::events::SimpleEventStatePtr Sequence::Standby::make_state(
 void Sequence::Standby::update_status(rmf_task::events::SimpleEventState& state)
 {
   if (state.status() == Event::Status::Canceled
-      || state.status() == Event::Status::Killed
-      || state.status() == Event::Status::Skipped)
+    || state.status() == Event::Status::Killed
+    || state.status() == Event::Status::Skipped)
     return;
 
   Event::Status status = Event::Status::Completed;
@@ -232,7 +234,8 @@ Event::ActivePtr Sequence::Active::restore(
     event_finished);
   state->add_dependency(active->state());
 
-  for (std::size_t i = current_event_index+1; i < element_descriptions.size(); ++i)
+  const std::size_t num_elements = element_descriptions.size();
+  for (std::size_t i = current_event_index + 1; i < num_elements; ++i)
   {
     const auto& desc = element_descriptions[i];
     auto element = initializer.initialize(

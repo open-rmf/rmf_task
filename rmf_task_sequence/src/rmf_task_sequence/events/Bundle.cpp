@@ -69,10 +69,12 @@ Event::StandbyPtr Bundle::initiate(
       std::move(parent_update));
   }
 
+  // *INDENT-OFF*
   throw std::runtime_error(
     "[rmf_task_sequence::events::Bundle::initiate] "
     "Bundle type not yet implemented: "
     + std::to_string(description.type()));
+  // *INDENT-ON*
 }
 
 //==============================================================================
@@ -101,8 +103,10 @@ Event::ActivePtr Bundle::restore(
       finished);
   }
 
+  // *INDENT-OFF*
   throw std::runtime_error(
     "Bundle type not yet implemented: " + std::to_string(description.type()));
+  // *INDENT-ON*
 }
 
 //==============================================================================
@@ -124,7 +128,7 @@ public:
     {
       case Type::Sequence:
         return "Sequence";
-      // TODO(MXG): Bring back this code when we want to support other types
+        // TODO(MXG): Bring back this code when we want to support other types
 //      case Type::ParallelAll:
 //        return "All of";
 //      case Type::ParallelAny:
@@ -207,12 +211,12 @@ Bundle::Description::Description(
   std::optional<std::string> category,
   std::optional<std::string> detail)
 : _pimpl(rmf_utils::make_impl<Implementation>(
-   Implementation{
-     std::move(dependencies),
-     type,
-     std::move(category),
-     std::move(detail)
-   }))
+      Implementation{
+        std::move(dependencies),
+        type,
+        std::move(category),
+        std::move(detail)
+      }))
 {
   // Do nothing
 }
@@ -412,9 +416,11 @@ Event::StandbyPtr Bundle::standby(
     return sequence;
   }
 
+  // *INDENT-OFF*
   throw std::runtime_error(
     "[rmf_task_sequence::events::Bundle::activate] "
     "Bundle type not yet implemented: " + std::to_string(type));
+  // *INDENT-ON*
 }
 
 } // namespace events

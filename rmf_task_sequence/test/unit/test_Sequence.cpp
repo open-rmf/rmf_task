@@ -86,7 +86,7 @@ void check_statuses(
   const std::vector<rmf_task::Event::Status>& statuses)
 {
   REQUIRE(states.size() == statuses.size());
-  for (std::size_t i=0; i < states.size(); ++i)
+  for (std::size_t i = 0; i < states.size(); ++i)
     CHECK(states[i]->status() == statuses[i]);
 }
 
@@ -130,7 +130,7 @@ SCENARIO("Test Event Sequences")
   rmf_task_sequence::Task::add(
     task_activator,
     phase_activator,
-    [](){return std::chrono::steady_clock::now();});
+    []() { return std::chrono::steady_clock::now(); });
 
   rmf_task_sequence::Task::Builder builder;
   builder.add_phase(
@@ -152,10 +152,10 @@ SCENARIO("Test Event Sequences")
 
   auto motion_sink =
     std::make_shared<rmf_battery::agv::SimpleMotionPowerSink>(
-      *battery_system_optional, *mechanical_system_optional);
+    *battery_system_optional, *mechanical_system_optional);
   auto device_sink =
     std::make_shared<rmf_battery::agv::SimpleDevicePowerSink>(
-      *battery_system_optional, *power_system_optional);
+    *battery_system_optional, *power_system_optional);
 
   const auto params = std::make_shared<rmf_task::Parameters>(
     nullptr,
@@ -169,7 +169,7 @@ SCENARIO("Test Event Sequences")
   std::size_t task_finished_counter = 0;
 
   auto task = task_activator.activate(
-    [](){ return rmf_task::State().time(std::chrono::steady_clock::now()); },
+    []() { return rmf_task::State().time(std::chrono::steady_clock::now()); },
     params,
     rmf_task::Request(
       "mock_request_01",
@@ -177,27 +177,28 @@ SCENARIO("Test Event Sequences")
       nullptr,
       builder.build("Mock Task", "Mocking a task")),
     [&last_snapshot](rmf_task::Phase::ConstSnapshotPtr snapshot)
-      {
-        last_snapshot = std::move(snapshot);
-      },
+    {
+      last_snapshot = std::move(snapshot);
+    },
     [&last_backup](rmf_task::Task::Active::Backup backup)
-      {
-        last_backup = std::move(backup);
-      },
+    {
+      last_backup = std::move(backup);
+    },
     [&last_finished_phase](rmf_task::Phase::ConstCompletedPtr finished_phase)
-      {
-        last_finished_phase = std::move(finished_phase);
-      },
+    {
+      last_finished_phase = std::move(finished_phase);
+    },
     [&task_finished_counter]()
-      {
-        ++task_finished_counter;
-      }
+    {
+      ++task_finished_counter;
+    }
   );
 
   WHEN("Run through whole task")
   {
     check_active({ctrl_1_0});
-    check_inactive({ctrl_1_1, ctrl_1_2, ctrl_1_3, ctrl_2_0, ctrl_3_0, ctrl_3_1});
+    check_inactive(
+      {ctrl_1_1, ctrl_1_2, ctrl_1_3, ctrl_2_0, ctrl_3_0, ctrl_3_1});
     REQUIRE(last_snapshot);
     CHECK(last_snapshot->tag()->id() == 1);
     CHECK(last_snapshot->final_event()->dependencies().size() == 4);

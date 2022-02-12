@@ -36,7 +36,7 @@ MockActivity::Description::make_model(
 {
   return rmf_task_sequence::events::WaitFor::Description::make(
     rmf_traffic::Duration(0))->make_model(
-      std::move(invariant_initial_state), parameters);
+    std::move(invariant_initial_state), parameters);
 }
 
 //==============================================================================

@@ -47,18 +47,18 @@ void Task::unfold(
       std::function<void(rmf_task::Task::Active::Backup)> checkpoint,
       std::function<void(rmf_task::Phase::ConstCompletedPtr)> phase_finished,
       std::function<void()> task_finished)
-  {
-    return sequence_activator(
-      get_state,
-      parameters,
-      booking,
-      unfold(other_desc),
-      std::move(backup_state),
-      std::move(update),
-      std::move(checkpoint),
-      std::move(phase_finished),
-      std::move(task_finished));
-  });
+    {
+      return sequence_activator(
+        get_state,
+        parameters,
+        booking,
+        unfold(other_desc),
+        std::move(backup_state),
+        std::move(update),
+        std::move(checkpoint),
+        std::move(phase_finished),
+        std::move(task_finished));
+    });
 }
 
 } // namespace rmf_task_sequence

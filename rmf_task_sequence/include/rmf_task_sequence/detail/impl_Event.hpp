@@ -36,14 +36,14 @@ void Event::Initializer::add(
       const ConstParametersPtr& parameters,
       const Event::Description& description,
       std::function<void()> update)
-      {
-        return initializer(
-          id,
-          get_state,
-          parameters,
-          static_cast<const Desc&>(description),
-          std::move(update));
-      },
+    {
+      return initializer(
+        id,
+        get_state,
+        parameters,
+        static_cast<const Desc&>(description),
+        std::move(update));
+    },
     [restorer](
       const AssignIDPtr& id,
       const std::function<rmf_task::State()>& get_state,
@@ -53,17 +53,17 @@ void Event::Initializer::add(
       std::function<void()> update,
       std::function<void()> checkpoint,
       std::function<void()> finished)
-      {
-        return restorer(
-          id,
-          get_state,
-          parameters,
-          static_cast<const Desc&>(description),
-          backup,
-          std::move(update),
-          std::move(checkpoint),
-          std::move(finished));
-      });
+    {
+      return restorer(
+        id,
+        get_state,
+        parameters,
+        static_cast<const Desc&>(description),
+        backup,
+        std::move(update),
+        std::move(checkpoint),
+        std::move(finished));
+    });
 }
 
 } // namespace rmf_task_sequence

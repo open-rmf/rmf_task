@@ -148,14 +148,14 @@ public:
   /// \return an Event in a Standby state
   template<typename Description>
   using Initialize =
-  std::function<
-  StandbyPtr(
-    const AssignIDPtr& id,
-    const std::function<rmf_task::State()>& get_state,
-    const ConstParametersPtr& parameters,
-    const Description& description,
-    std::function<void()> update)
-  >;
+    std::function<
+    StandbyPtr(
+      const AssignIDPtr& id,
+      const std::function<rmf_task::State()>& get_state,
+      const ConstParametersPtr& parameters,
+      const Description& description,
+      std::function<void()> update)
+    >;
 
   /// Signature for restoring an Event
   ///
@@ -195,17 +195,17 @@ public:
   /// \return a restored Event in an Active state
   template<typename Description>
   using Restore =
-  std::function<
-  ActivePtr(
-    const AssignIDPtr& id,
-    const std::function<rmf_task::State()>& get_state,
-    const ConstParametersPtr& parameters,
-    const Description& description,
-    const nlohmann::json& backup_state,
-    std::function<void()> update,
-    std::function<void()> checkpoint,
-    std::function<void()> finished)
-  >;
+    std::function<
+    ActivePtr(
+      const AssignIDPtr& id,
+      const std::function<rmf_task::State()>& get_state,
+      const ConstParametersPtr& parameters,
+      const Description& description,
+      const nlohmann::json& backup_state,
+      std::function<void()> update,
+      std::function<void()> checkpoint,
+      std::function<void()> finished)
+    >;
 
   /// Add a callback to convert from a Description to an event in standby mode
   template<typename Desc>

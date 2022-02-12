@@ -247,8 +247,8 @@ private:
     _get_state(std::move(get_state)),
     _parameters(parameters),
     _tag(std::make_shared<Tag>(
-      booking,
-      description.generate_header(_get_state(), *parameters))),
+        booking,
+        description.generate_header(_get_state(), *parameters))),
     _update(std::move(update)),
     _checkpoint(std::move(checkpoint)),
     _phase_finished(std::move(phase_finished)),
@@ -534,7 +534,7 @@ void Task::Active::cancel()
       std::make_shared<Phase::Tag>(
         ++next_id,
         desc->generate_header(state, *_parameters))
-      );
+    );
 
     state = desc->make_model(state, *_parameters)->invariant_finish_state();
   }
@@ -574,7 +574,7 @@ void Task::Active::skip(uint64_t phase_id, bool value)
 void Task::Active::rewind(uint64_t phase_id)
 {
   assert(_completed_phases.size() == _completed_stages.size());
-  std::size_t completed_index=0;
+  std::size_t completed_index = 0;
   auto stage_it = _completed_stages.begin();
   while (stage_it != _completed_stages.end())
   {

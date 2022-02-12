@@ -107,7 +107,7 @@ private:
 //==============================================================================
 class Sequence::Active
   : public Event::Active,
-    public std::enable_shared_from_this<Sequence::Active>
+  public std::enable_shared_from_this<Sequence::Active>
 {
 public:
 

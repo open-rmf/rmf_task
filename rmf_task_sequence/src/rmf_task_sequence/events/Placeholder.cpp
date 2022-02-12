@@ -68,10 +68,10 @@ Placeholder::Description::Description(
   std::string category,
   std::string detail)
 : _pimpl(rmf_utils::make_impl<Implementation>(
-   Implementation{
-     std::move(category),
-     std::move(detail)
-   }))
+      Implementation{
+        std::move(category),
+        std::move(detail)
+      }))
 {
   // Do nothing
 }

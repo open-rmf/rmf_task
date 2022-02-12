@@ -68,10 +68,12 @@ std::string standard_waypoint_name(
 {
   if (waypoint >= graph.num_waypoints())
   {
+    // *INDENT-OFF*
     throw std::runtime_error(
       "[rmf_task::standard_waypoint_name] Waypoint index ["
       + std::to_string(waypoint) + "] is too high for the number of waypoints ["
       + std::to_string(graph.num_waypoints()) + "] in the graph");
+    // *INDENT-ON*
   }
 
   return graph.get_waypoint(waypoint).name_or_index(

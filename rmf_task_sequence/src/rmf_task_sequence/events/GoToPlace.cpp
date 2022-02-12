@@ -132,8 +132,8 @@ std::optional<Estimate> GoToPlace::Model::estimate_finish(
 
   const auto arrival_time =
     std::max(
-      initial_state.time().value() + travel->duration(),
-      earliest_arrival_time);
+    initial_state.time().value() + travel->duration(),
+    earliest_arrival_time);
 
   const auto wait_until_time = arrival_time - travel->duration();
   finish.time(wait_until_time + travel->duration());
