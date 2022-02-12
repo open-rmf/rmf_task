@@ -128,5 +128,3 @@ export(
   FILE ${CMAKE_CURRENT_BINARY_DIR}/rmf_task-targets.cmake
   NAMESPACE rmf_task::
 )
-
-export(PACKAGE rmf_task)
