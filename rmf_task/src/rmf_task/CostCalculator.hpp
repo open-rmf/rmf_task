@@ -18,7 +18,7 @@
 #ifndef SRC__RMF_TASK__COSTCALCULATOR_HPP
 #define SRC__RMF_TASK__COSTCALCULATOR_HPP
 
-#include "agv/internal_task_planning.hpp"
+#include "internal_task_planning.hpp"
 
 #include <rmf_traffic/Time.hpp>
 
@@ -27,7 +27,6 @@ namespace rmf_task {
 class CostCalculator
 {
 public:
-  using Node = agv::Node;
 
   /// Compute the total cost of a node while factoring in the prioritization scheme
   virtual double compute_cost(
@@ -37,7 +36,7 @@ public:
 
   /// Compute the cost of assignments
   virtual double compute_cost(
-    rmf_task::agv::TaskPlanner::Assignments assignments) const = 0;
+    rmf_task::TaskPlanner::Assignments assignments) const = 0;
 
   virtual ~CostCalculator() = default;
 };

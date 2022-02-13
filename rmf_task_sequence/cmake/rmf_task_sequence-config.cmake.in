@@ -1,0 +1,15 @@
+@PACKAGE_INIT@
+
+get_filename_component(rmf_task_sequence_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+
+include(CMakeFindDependencyMacro)
+
+find_dependency(rmf_task)
+find_dependency(nlohmann_json)
+find_dependency(nlohmann_json_schema_validator_vendor)
+
+if(NOT TARGET rmf_task_sequence::rmf_task_sequence)
+    include("${rmf_task_sequence_CMAKE_DIR}/rmf_task_sequence-targets.cmake")
+endif()
+
+check_required_components(rmf_task_sequence)

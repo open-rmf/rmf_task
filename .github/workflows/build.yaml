@@ -1,5 +1,5 @@
 name: build
-on: 
+on:
   push:
   pull_request:
   schedule:
@@ -22,7 +22,7 @@ jobs:
           package-name: |
             rmf_task
           vcs-repo-file-url: |
-            https://raw.githubusercontent.com/open-rmf/rmf/main/rmf.repos
+            https://raw.githubusercontent.com/open-rmf/rmf/redesign_v2/rmf.repos
           colcon-defaults: |
             {
               "build": {

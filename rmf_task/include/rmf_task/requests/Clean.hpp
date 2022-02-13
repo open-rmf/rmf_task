@@ -29,7 +29,7 @@
 #include <rmf_battery/MotionPowerSink.hpp>
 #include <rmf_battery/DevicePowerSink.hpp>
 
-#include <rmf_task/agv/State.hpp>
+#include <rmf_task/State.hpp>
 #include <rmf_task/Request.hpp>
 #include <rmf_task/Estimate.hpp>
 
@@ -46,20 +46,25 @@ public:
   // Forward declare the model for this request
   class Model;
 
-  class Description : public Request::Description
+  class Description : public Task::Description
   {
   public:
 
     /// Generate the description for this request
-    static DescriptionPtr make(
+    static std::shared_ptr<Description> make(
       std::size_t start_waypoint,
       std::size_t end_waypoint,
       const rmf_traffic::Trajectory& cleaning_path);
 
-    /// Documentation inherited
-    std::shared_ptr<Request::Model> make_model(
+    // Documentation inherited
+    Task::ConstModelPtr make_model(
       rmf_traffic::Time earliest_start_time,
-      const agv::Parameters& parameters) const final;
+      const Parameters& parameters) const final;
+
+    // Documentation inherited
+    Info generate_info(
+      const State& initial_state,
+      const Parameters& parameters) const final;
 
     /// Get the start waypoint in this request
     std::size_t start_waypoint() const;

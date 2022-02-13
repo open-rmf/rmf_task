@@ -15,10 +15,10 @@
  *
 */
 
-#include <rmf_task/agv/TaskPlanner.hpp>
-#include <rmf_task/agv/State.hpp>
-#include <rmf_task/agv/Constraints.hpp>
-#include <rmf_task/agv/Parameters.hpp>
+#include <rmf_task/TaskPlanner.hpp>
+#include <rmf_task/State.hpp>
+#include <rmf_task/Constraints.hpp>
+#include <rmf_task/Parameters.hpp>
 #include <rmf_task/requests/Delivery.hpp>
 #include <rmf_task/requests/ChargeBattery.hpp>
 #include <rmf_task/requests/Loop.hpp>
@@ -46,7 +46,7 @@
 
 #include <iostream>
 
-using TaskPlanner = rmf_task::agv::TaskPlanner;
+using TaskPlanner = rmf_task::TaskPlanner;
 
 //==============================================================================
 inline void CHECK_TIMES(const TaskPlanner::Assignments& assignments,
@@ -57,10 +57,14 @@ inline void CHECK_TIMES(const TaskPlanner::Assignments& assignments,
     for (std::size_t i = 0; i < agent.size(); ++i)
     {
       CHECK(agent[i].deployment_time() >= now);
-      CHECK(agent[i].state().finish_time() >= agent[i].deployment_time());
+      CHECK(agent[i].finish_state().time().value()
+        >= agent[i].deployment_time());
+
       if (i == 0)
         continue;
-      CHECK(agent[i].deployment_time() >= agent[i-1].state().finish_time());
+
+      CHECK(agent[i].deployment_time()
+        >= agent[i-1].finish_state().time().value());
     }
   }
 }
@@ -78,7 +82,7 @@ inline bool check_implicit_charging_task_start(
       continue;
     }
 
-    const auto& s = agent[0].state();
+    const auto& s = agent[0].finish_state();
     auto is_charge_request =
       std::dynamic_pointer_cast<
       const rmf_task::requests::ChargeBattery::Description>(
@@ -110,17 +114,19 @@ inline void display_solution(
     std::cout << "--Agent: " << i << std::endl;
     for (const auto& a : assignments[i])
     {
-      const auto& s = a.state();
+      const auto& s = a.finish_state();
       const double request_seconds =
-        a.request()->earliest_start_time().time_since_epoch().count();
+        a.request()->booking()->earliest_start_time()
+        .time_since_epoch().count();
+
       const double start_seconds =
         a.deployment_time().time_since_epoch().count();
-      const rmf_traffic::Time finish_time = s.finish_time();
+      const rmf_traffic::Time finish_time = s.time().value();
       const double finish_seconds = finish_time.time_since_epoch().count();
       std::cout << std::fixed
-                << "    <" << a.request()->id() << ": " << request_seconds
-                << ", " << start_seconds
-                << ", "<< finish_seconds << ", " << 100* s.battery_soc()
+                << "    <" << a.request()->booking()->id() << ": "
+                << request_seconds << ", " << start_seconds
+                << ", "<< finish_seconds << ", " << 100*s.battery_soc().value()
                 << "%>" << std::endl;
     }
   }
@@ -201,8 +207,8 @@ SCENARIO("Grid World")
   const auto cost_calculator =
     rmf_task::BinaryPriorityScheme::make_cost_calculator();
 
-  const rmf_task::agv::Constraints constraints{0.2, 1.0, drain_battery};
-  const rmf_task::agv::Parameters parameters{
+  const rmf_task::Constraints constraints{0.2, 1.0, drain_battery};
+  const rmf_task::Parameters parameters{
     planner,
     battery_system,
     motion_sink,
@@ -235,10 +241,10 @@ SCENARIO("Grid World")
     rmf_traffic::agv::Plan::Start first_location{now, 13, default_orientation};
     rmf_traffic::agv::Plan::Start second_location{now, 2, default_orientation};
 
-    std::vector<rmf_task::agv::State> initial_states =
+    std::vector<rmf_task::State> initial_states =
     {
-      rmf_task::agv::State{first_location, 13, 1.0},
-      rmf_task::agv::State{second_location, 2, 1.0}
+      rmf_task::State().load_basic(first_location, 13, 1.0),
+      rmf_task::State().load_basic(second_location, 2, 1.0)
     };
 
     std::vector<rmf_task::ConstRequestPtr> requests =
@@ -248,6 +254,7 @@ SCENARIO("Grid World")
         delivery_wait,
         3,
         delivery_wait,
+        {{}},
         "1",
         now + rmf_traffic::time::from_seconds(0)),
 
@@ -256,6 +263,7 @@ SCENARIO("Grid World")
         delivery_wait,
         2,
         delivery_wait,
+        {{}},
         "2",
         now + rmf_traffic::time::from_seconds(0)),
 
@@ -264,6 +272,7 @@ SCENARIO("Grid World")
         delivery_wait,
         9,
         delivery_wait,
+        {{}},
         "3",
         now + rmf_traffic::time::from_seconds(0))
     };
@@ -318,10 +327,10 @@ SCENARIO("Grid World")
     rmf_traffic::agv::Plan::Start first_location{now, 13, default_orientation};
     rmf_traffic::agv::Plan::Start second_location{now, 2, default_orientation};
 
-    std::vector<rmf_task::agv::State> initial_states =
+    std::vector<rmf_task::State> initial_states =
     {
-      rmf_task::agv::State{first_location, 13, 1.0},
-      rmf_task::agv::State{second_location, 2, 1.0}
+      rmf_task::State().load_basic(first_location, 13, 1.0),
+      rmf_task::State().load_basic(second_location, 2, 1.0)
     };
 
     std::vector<rmf_task::ConstRequestPtr> requests =
@@ -331,6 +340,7 @@ SCENARIO("Grid World")
         delivery_wait,
         3,
         delivery_wait,
+        {{}},
         "1",
         now + rmf_traffic::time::from_seconds(0)),
 
@@ -339,6 +349,7 @@ SCENARIO("Grid World")
         delivery_wait,
         2,
         delivery_wait,
+        {{}},
         "2",
         now + rmf_traffic::time::from_seconds(0)),
 
@@ -347,6 +358,7 @@ SCENARIO("Grid World")
         delivery_wait,
         9,
         delivery_wait,
+        {{}},
         "3",
         now + rmf_traffic::time::from_seconds(0)),
 
@@ -355,6 +367,7 @@ SCENARIO("Grid World")
         delivery_wait,
         11,
         delivery_wait,
+        {{}},
         "4",
         now + rmf_traffic::time::from_seconds(50000)),
 
@@ -363,6 +376,7 @@ SCENARIO("Grid World")
         delivery_wait,
         0,
         delivery_wait,
+        {{}},
         "5",
         now + rmf_traffic::time::from_seconds(50000)),
 
@@ -371,6 +385,7 @@ SCENARIO("Grid World")
         delivery_wait,
         8,
         delivery_wait,
+        {{}},
         "6",
         now + rmf_traffic::time::from_seconds(60000)),
 
@@ -379,6 +394,7 @@ SCENARIO("Grid World")
         delivery_wait,
         14,
         delivery_wait,
+        {{}},
         "7",
         now + rmf_traffic::time::from_seconds(60000)),
 
@@ -387,6 +403,7 @@ SCENARIO("Grid World")
         delivery_wait,
         11,
         delivery_wait,
+        {{}},
         "8",
         now + rmf_traffic::time::from_seconds(60000)),
 
@@ -395,6 +412,7 @@ SCENARIO("Grid World")
         delivery_wait,
         0,
         delivery_wait,
+        {{}},
         "9",
         now + rmf_traffic::time::from_seconds(60000)),
 
@@ -403,6 +421,7 @@ SCENARIO("Grid World")
         delivery_wait,
         3,
         delivery_wait,
+        {{}},
         "10",
         now + rmf_traffic::time::from_seconds(60000)),
 
@@ -411,6 +430,7 @@ SCENARIO("Grid World")
         delivery_wait,
         12,
         delivery_wait,
+        {{}},
         "11",
         now + rmf_traffic::time::from_seconds(60000))
     };
@@ -465,10 +485,10 @@ SCENARIO("Grid World")
     rmf_traffic::agv::Plan::Start first_location{now, 13, default_orientation};
     rmf_traffic::agv::Plan::Start second_location{now, 2, default_orientation};
 
-    std::vector<rmf_task::agv::State> initial_states =
+    std::vector<rmf_task::State> initial_states =
     {
-      rmf_task::agv::State{first_location, 13, initial_soc},
-      rmf_task::agv::State{second_location, 2, initial_soc}
+      rmf_task::State().load_basic(first_location, 13, initial_soc),
+      rmf_task::State().load_basic(second_location, 2, initial_soc)
     };
 
     std::vector<rmf_task::ConstRequestPtr> requests =
@@ -478,6 +498,7 @@ SCENARIO("Grid World")
         delivery_wait,
         3,
         delivery_wait,
+        {{}},
         "1",
         now + rmf_traffic::time::from_seconds(0)),
 
@@ -486,6 +507,7 @@ SCENARIO("Grid World")
         delivery_wait,
         2,
         delivery_wait,
+        {{}},
         "2",
         now + rmf_traffic::time::from_seconds(0)),
 
@@ -494,6 +516,7 @@ SCENARIO("Grid World")
         delivery_wait,
         4,
         delivery_wait,
+        {{}},
         "3",
         now + rmf_traffic::time::from_seconds(0)),
 
@@ -502,6 +525,7 @@ SCENARIO("Grid World")
         delivery_wait,
         11,
         delivery_wait,
+        {{}},
         "4",
         now + rmf_traffic::time::from_seconds(50000))
     };
@@ -565,10 +589,10 @@ SCENARIO("Grid World")
     rmf_traffic::agv::Plan::Start first_location{now, 13, default_orientation};
     rmf_traffic::agv::Plan::Start second_location{now, 2, default_orientation};
 
-    std::vector<rmf_task::agv::State> initial_states =
+    std::vector<rmf_task::State> initial_states =
     {
-      rmf_task::agv::State{first_location, 9, 1.0},
-      rmf_task::agv::State{second_location, 2, 1.0}
+      rmf_task::State().load_basic(first_location, 9, 1.0),
+      rmf_task::State().load_basic(second_location, 2, 1.0)
     };
 
     std::vector<rmf_task::ConstRequestPtr> requests =
@@ -578,6 +602,7 @@ SCENARIO("Grid World")
         delivery_wait,
         3,
         delivery_wait,
+        {{}},
         "1",
         now + rmf_traffic::time::from_seconds(0)),
 
@@ -586,6 +611,7 @@ SCENARIO("Grid World")
         delivery_wait,
         7,
         delivery_wait,
+        {{}},
         "2",
         now + rmf_traffic::time::from_seconds(0)),
 
@@ -594,6 +620,7 @@ SCENARIO("Grid World")
         delivery_wait,
         12,
         delivery_wait,
+        {{}},
         "3",
         now + rmf_traffic::time::from_seconds(0)),
 
@@ -602,6 +629,7 @@ SCENARIO("Grid World")
         delivery_wait,
         11,
         delivery_wait,
+        {{}},
         "4",
         now + rmf_traffic::time::from_seconds(50000)),
 
@@ -610,6 +638,7 @@ SCENARIO("Grid World")
         delivery_wait,
         6,
         delivery_wait,
+        {{}},
         "5",
         now + rmf_traffic::time::from_seconds(50000)),
 
@@ -618,6 +647,7 @@ SCENARIO("Grid World")
         delivery_wait,
         9,
         delivery_wait,
+        {{}},
         "6",
         now + rmf_traffic::time::from_seconds(70000)),
 
@@ -626,6 +656,7 @@ SCENARIO("Grid World")
         delivery_wait,
         4,
         delivery_wait,
+        {{}},
         "7",
         now + rmf_traffic::time::from_seconds(70000)),
 
@@ -634,6 +665,7 @@ SCENARIO("Grid World")
         delivery_wait,
         11,
         delivery_wait,
+        {{}},
         "8",
         now + rmf_traffic::time::from_seconds(70000)),
 
@@ -642,6 +674,7 @@ SCENARIO("Grid World")
         delivery_wait,
         1,
         delivery_wait,
+        {{}},
         "9",
         now + rmf_traffic::time::from_seconds(70000)),
 
@@ -650,6 +683,7 @@ SCENARIO("Grid World")
         delivery_wait,
         5,
         delivery_wait,
+        {{}},
         "10",
         now + rmf_traffic::time::from_seconds(70000)),
 
@@ -658,6 +692,7 @@ SCENARIO("Grid World")
         delivery_wait,
         10,
         delivery_wait,
+        {{}},
         "11",
         now + rmf_traffic::time::from_seconds(70000))
     };
@@ -710,9 +745,9 @@ SCENARIO("Grid World")
 
     rmf_traffic::agv::Plan::Start first_location{now, 13, default_orientation};
 
-    std::vector<rmf_task::agv::State> initial_states =
+    std::vector<rmf_task::State> initial_states =
     {
-      rmf_task::agv::State{first_location, 13, 1.0},
+      rmf_task::State().load_basic(first_location, 13, 1.0)
     };
 
     std::vector<rmf_task::ConstRequestPtr> requests =
@@ -756,9 +791,9 @@ SCENARIO("Grid World")
 
     rmf_traffic::agv::Plan::Start first_location{now, 9, default_orientation};
 
-    std::vector<rmf_task::agv::State> initial_states =
+    std::vector<rmf_task::State> initial_states =
     {
-      rmf_task::agv::State{first_location, 13, 0.0},
+      rmf_task::State().load_basic(first_location, 13, 0.0)
     };
 
     std::vector<rmf_task::ConstRequestPtr> requests =
@@ -803,9 +838,9 @@ SCENARIO("Grid World")
 
     rmf_traffic::agv::Plan::Start first_location{now, 13, default_orientation};
 
-    std::vector<rmf_task::agv::State> initial_states =
+    std::vector<rmf_task::State> initial_states =
     {
-      rmf_task::agv::State{first_location, 13, 1.0},
+      rmf_task::State().load_basic(first_location, 13, 1.0)
     };
 
     std::vector<rmf_task::ConstRequestPtr> requests =
@@ -815,6 +850,7 @@ SCENARIO("Grid World")
         delivery_wait,
         3,
         delivery_wait,
+        {{}},
         "1",
         now + rmf_traffic::time::from_seconds(0)),
 
@@ -823,6 +859,7 @@ SCENARIO("Grid World")
         delivery_wait,
         2,
         delivery_wait,
+        {{}},
         "2",
         now + rmf_traffic::time::from_seconds(0)),
 
@@ -831,6 +868,7 @@ SCENARIO("Grid World")
         delivery_wait,
         9,
         delivery_wait,
+        {{}},
         "3",
         now + rmf_traffic::time::from_seconds(0))
     };
@@ -856,7 +894,7 @@ SCENARIO("Grid World")
     }
 
     // We expect request with task_id:3 to be at the back of the assignment queue
-    CHECK(optimal_assignments.front().back().request()->id() == "3");
+    CHECK(optimal_assignments.front().back().request()->booking()->id() == "3");
 
     THEN("When replanning with high priority for request with task_id:3")
     {
@@ -865,6 +903,7 @@ SCENARIO("Grid World")
         delivery_wait,
         9,
         delivery_wait,
+        {{}},
         "3",
         now + rmf_traffic::time::from_seconds(0),
         rmf_task::BinaryPriorityScheme::make_high_priority());
@@ -892,7 +931,8 @@ SCENARIO("Grid World")
     }
 
     // We expect request with task_id:3 to be at the front of the assignment queue
-    CHECK(new_optimal_assignments.front().front().request()->id() == "3");
+    CHECK(new_optimal_assignments.front().front().request()->booking()->id() ==
+      "3");
   }
 
   WHEN("Planning for one robot, three high priority tasks")
@@ -902,9 +942,9 @@ SCENARIO("Grid World")
 
     rmf_traffic::agv::Plan::Start first_location{now, 13, default_orientation};
 
-    std::vector<rmf_task::agv::State> initial_states =
+    std::vector<rmf_task::State> initial_states =
     {
-      rmf_task::agv::State{first_location, 13, 1.0},
+      rmf_task::State().load_basic(first_location, 13, 1.0)
     };
 
     std::vector<rmf_task::ConstRequestPtr> requests =
@@ -914,6 +954,7 @@ SCENARIO("Grid World")
         delivery_wait,
         3,
         delivery_wait,
+        {{}},
         "1",
         now + rmf_traffic::time::from_seconds(0),
         rmf_task::BinaryPriorityScheme::make_high_priority()),
@@ -923,6 +964,7 @@ SCENARIO("Grid World")
         delivery_wait,
         2,
         delivery_wait,
+        {{}},
         "2",
         now + rmf_traffic::time::from_seconds(0),
         rmf_task::BinaryPriorityScheme::make_high_priority()),
@@ -932,6 +974,7 @@ SCENARIO("Grid World")
         delivery_wait,
         9,
         delivery_wait,
+        {{}},
         "3",
         now + rmf_traffic::time::from_seconds(0),
         rmf_task::BinaryPriorityScheme::make_high_priority())
@@ -958,7 +1001,7 @@ SCENARIO("Grid World")
     }
 
     // We expect request with task_id:3 to be at the back of the assignment queue
-    CHECK(optimal_assignments.front().back().request()->id() == "3");
+    CHECK(optimal_assignments.front().back().request()->booking()->id() == "3");
   }
 
   WHEN("Planning for 1 robot, two high priority and two low priority tasks")
@@ -968,9 +1011,9 @@ SCENARIO("Grid World")
 
     rmf_traffic::agv::Plan::Start first_location{now, 13, default_orientation};
 
-    std::vector<rmf_task::agv::State> initial_states =
+    std::vector<rmf_task::State> initial_states =
     {
-      rmf_task::agv::State{first_location, 13, 1.0},
+      rmf_task::State().load_basic(first_location, 13, 1.0)
     };
 
     std::vector<rmf_task::ConstRequestPtr> requests =
@@ -980,6 +1023,7 @@ SCENARIO("Grid World")
         delivery_wait,
         3,
         delivery_wait,
+        {{}},
         "1",
         now + rmf_traffic::time::from_seconds(0),
         rmf_task::BinaryPriorityScheme::make_high_priority()),
@@ -989,6 +1033,7 @@ SCENARIO("Grid World")
         delivery_wait,
         2,
         delivery_wait,
+        {{}},
         "2",
         now + rmf_traffic::time::from_seconds(0)),
 
@@ -997,6 +1042,7 @@ SCENARIO("Grid World")
         delivery_wait,
         9,
         delivery_wait,
+        {{}},
         "3",
         now + rmf_traffic::time::from_seconds(0)),
 
@@ -1005,6 +1051,7 @@ SCENARIO("Grid World")
         delivery_wait,
         7,
         delivery_wait,
+        {{}},
         "4",
         now + rmf_traffic::time::from_seconds(0),
         rmf_task::BinaryPriorityScheme::make_high_priority())
@@ -1035,7 +1082,7 @@ SCENARIO("Grid World")
     const auto& assignments = optimal_assignments.front();
     std::unordered_map<std::string, std::size_t> index_map = {};
     for (std::size_t i = 0; i < assignments.size(); ++i)
-      index_map.insert({assignments[i].request()->id(), i});
+      index_map.insert({assignments[i].request()->booking()->id(), i});
     CHECK(index_map["1"] < index_map["2"]);
     CHECK(index_map["1"] < index_map["3"]);
     CHECK(index_map["4"] < index_map["2"]);
@@ -1050,9 +1097,9 @@ SCENARIO("Grid World")
 
     rmf_traffic::agv::Plan::Start first_location{now, 13, default_orientation};
 
-    std::vector<rmf_task::agv::State> initial_states =
+    std::vector<rmf_task::State> initial_states =
     {
-      rmf_task::agv::State{first_location, 13, 1.0},
+      rmf_task::State().load_basic(first_location, 13, 1.0)
     };
 
     std::vector<rmf_task::ConstRequestPtr> requests =
@@ -1062,6 +1109,7 @@ SCENARIO("Grid World")
         delivery_wait,
         3,
         delivery_wait,
+        {{}},
         "1",
         now + rmf_traffic::time::from_seconds(0),
         rmf_task::BinaryPriorityScheme::make_high_priority()),
@@ -1071,6 +1119,7 @@ SCENARIO("Grid World")
         delivery_wait,
         2,
         delivery_wait,
+        {{}},
         "2",
         now + rmf_traffic::time::from_seconds(0)),
 
@@ -1079,6 +1128,7 @@ SCENARIO("Grid World")
         delivery_wait,
         9,
         delivery_wait,
+        {{}},
         "3",
         now + rmf_traffic::time::from_seconds(100000)),
 
@@ -1087,6 +1137,7 @@ SCENARIO("Grid World")
         delivery_wait,
         6,
         delivery_wait,
+        {{}},
         "4",
         now + rmf_traffic::time::from_seconds(100000),
         rmf_task::BinaryPriorityScheme::make_high_priority())
@@ -1117,7 +1168,7 @@ SCENARIO("Grid World")
     const auto& assignments = optimal_assignments.front();
     std::unordered_map<std::string, std::size_t> index_map = {};
     for (std::size_t i = 0; i < assignments.size(); ++i)
-      index_map.insert({assignments[i].request()->id(), i});
+      index_map.insert({assignments[i].request()->booking()->id(), i});
     CHECK(index_map["1"] < index_map["2"]);
     CHECK(index_map["1"] < index_map["3"]);
     CHECK(index_map["1"] < index_map["4"]);
@@ -1133,10 +1184,10 @@ SCENARIO("Grid World")
     rmf_traffic::agv::Plan::Start first_location{now, 13, default_orientation};
     rmf_traffic::agv::Plan::Start second_location{now, 1, default_orientation};
 
-    std::vector<rmf_task::agv::State> initial_states =
+    std::vector<rmf_task::State> initial_states =
     {
-      rmf_task::agv::State{first_location, 13, 1.0},
-      rmf_task::agv::State{second_location, 1, 1.0}
+      rmf_task::State().load_basic(first_location, 13, 1.0),
+      rmf_task::State().load_basic(second_location, 1, 1.0)
     };
 
     std::vector<rmf_task::ConstRequestPtr> requests =
@@ -1146,6 +1197,7 @@ SCENARIO("Grid World")
         delivery_wait,
         3,
         delivery_wait,
+        {{}},
         "1",
         now + rmf_traffic::time::from_seconds(0)),
 
@@ -1154,6 +1206,7 @@ SCENARIO("Grid World")
         delivery_wait,
         2,
         delivery_wait,
+        {{}},
         "2",
         now + rmf_traffic::time::from_seconds(0)),
 
@@ -1162,6 +1215,7 @@ SCENARIO("Grid World")
         delivery_wait,
         9,
         delivery_wait,
+        {{}},
         "3",
         now + rmf_traffic::time::from_seconds(0)),
 
@@ -1170,6 +1224,7 @@ SCENARIO("Grid World")
         delivery_wait,
         6,
         delivery_wait,
+        {{}},
         "4",
         now + rmf_traffic::time::from_seconds(0))
     };
@@ -1198,8 +1253,8 @@ SCENARIO("Grid World")
     REQUIRE(optimal_assignments.size() == 2);
     const auto& agent_0_assignments = optimal_assignments[0];
     const auto& agent_1_assignments = optimal_assignments[1];
-    CHECK(agent_0_assignments.front().request()->id() == "2");
-    CHECK(agent_1_assignments.front().request()->id() == "1");
+    CHECK(agent_0_assignments.front().request()->booking()->id() == "2");
+    CHECK(agent_1_assignments.front().request()->booking()->id() == "1");
 
     THEN("When task 3 & 4 are assigned high priority")
     {
@@ -1210,6 +1265,7 @@ SCENARIO("Grid World")
           delivery_wait,
           3,
           delivery_wait,
+          {{}},
           "1",
           now + rmf_traffic::time::from_seconds(0)),
 
@@ -1218,6 +1274,7 @@ SCENARIO("Grid World")
           delivery_wait,
           2,
           delivery_wait,
+          {{}},
           "2",
           now + rmf_traffic::time::from_seconds(0)),
 
@@ -1226,6 +1283,7 @@ SCENARIO("Grid World")
           delivery_wait,
           9,
           delivery_wait,
+          {{}},
           "3",
           now + rmf_traffic::time::from_seconds(0),
           rmf_task::BinaryPriorityScheme::make_high_priority()),
@@ -1235,6 +1293,7 @@ SCENARIO("Grid World")
           delivery_wait,
           6,
           delivery_wait,
+          {{}},
           "4",
           now + rmf_traffic::time::from_seconds(0),
           rmf_task::BinaryPriorityScheme::make_high_priority())
@@ -1263,8 +1322,8 @@ SCENARIO("Grid World")
       REQUIRE(optimal_assignments.size() == 2);
       const auto& agent_0_assignments = optimal_assignments[0];
       const auto& agent_1_assignments = optimal_assignments[1];
-      CHECK(agent_0_assignments.front().request()->id() == "4");
-      CHECK(agent_1_assignments.front().request()->id() == "3");
+      CHECK(agent_0_assignments.front().request()->booking()->id() == "4");
+      CHECK(agent_1_assignments.front().request()->booking()->id() == "3");
     }
   }
 
@@ -1277,11 +1336,11 @@ SCENARIO("Grid World")
     rmf_traffic::agv::Plan::Start second_location{now, 1, default_orientation};
     rmf_traffic::agv::Plan::Start third_location{now, 5, default_orientation};
 
-    std::vector<rmf_task::agv::State> initial_states =
+    std::vector<rmf_task::State> initial_states =
     {
-      rmf_task::agv::State{first_location, 13, 1.0},
-      rmf_task::agv::State{second_location, 1, 1.0},
-      rmf_task::agv::State{third_location, 5, 1.0}
+      rmf_task::State().load_basic(first_location, 13, 1.0),
+      rmf_task::State().load_basic(second_location, 1, 1.0),
+      rmf_task::State().load_basic(third_location, 5, 1.0)
     };
 
     std::vector<rmf_task::ConstRequestPtr> requests =
@@ -1291,6 +1350,7 @@ SCENARIO("Grid World")
         delivery_wait,
         3,
         delivery_wait,
+        {{}},
         "1",
         now + rmf_traffic::time::from_seconds(0)),
 
@@ -1299,6 +1359,7 @@ SCENARIO("Grid World")
         delivery_wait,
         2,
         delivery_wait,
+        {{}},
         "2",
         now + rmf_traffic::time::from_seconds(0)),
 
@@ -1307,6 +1368,7 @@ SCENARIO("Grid World")
         delivery_wait,
         9,
         delivery_wait,
+        {{}},
         "3",
         now + rmf_traffic::time::from_seconds(0)),
 
@@ -1315,6 +1377,7 @@ SCENARIO("Grid World")
         delivery_wait,
         6,
         delivery_wait,
+        {{}},
         "4",
         now + rmf_traffic::time::from_seconds(0))
     };
@@ -1344,7 +1407,7 @@ SCENARIO("Grid World")
     for (const auto& agent : optimal_assignments)
     {
       if (!agent.empty())
-        first_assignments.push_back(agent.front().request()->id());
+        first_assignments.push_back(agent.front().request()->booking()->id());
     }
     std::size_t id_count = 0;
     for (const auto& id : first_assignments)
@@ -1363,6 +1426,7 @@ SCENARIO("Grid World")
           delivery_wait,
           3,
           delivery_wait,
+          {{}},
           "1",
           now + rmf_traffic::time::from_seconds(0),
           rmf_task::BinaryPriorityScheme::make_high_priority()),
@@ -1372,6 +1436,7 @@ SCENARIO("Grid World")
           delivery_wait,
           2,
           delivery_wait,
+          {{}},
           "2",
           now + rmf_traffic::time::from_seconds(0),
           rmf_task::BinaryPriorityScheme::make_high_priority()),
@@ -1381,6 +1446,7 @@ SCENARIO("Grid World")
           delivery_wait,
           9,
           delivery_wait,
+          {{}},
           "3",
           now + rmf_traffic::time::from_seconds(0),
           rmf_task::BinaryPriorityScheme::make_high_priority()),
@@ -1390,6 +1456,7 @@ SCENARIO("Grid World")
           delivery_wait,
           6,
           delivery_wait,
+          {{}},
           "4",
           now + rmf_traffic::time::from_seconds(0))
       };
@@ -1418,7 +1485,7 @@ SCENARIO("Grid World")
       for (const auto& agent : optimal_assignments)
       {
         if (!agent.empty())
-          first_assignments.push_back(agent.front().request()->id());
+          first_assignments.push_back(agent.front().request()->booking()->id());
       }
       std::size_t id_count = 0;
       for (const auto& id : first_assignments)
@@ -1436,9 +1503,9 @@ SCENARIO("Grid World")
     const double default_orientation = 0.0;
     const double initial_soc = 0.3;
     const double recharge_soc = 0.9;
-    rmf_task::agv::Constraints new_constraints{0.2, recharge_soc,
+    rmf_task::Constraints new_constraints{0.2, recharge_soc,
       drain_battery};
-    rmf_task::agv::TaskPlanner::Configuration new_task_config{
+    rmf_task::TaskPlanner::Configuration new_task_config{
       parameters,
       new_constraints,
       cost_calculator};
@@ -1446,10 +1513,10 @@ SCENARIO("Grid World")
     rmf_traffic::agv::Plan::Start first_location{now, 13, default_orientation};
     rmf_traffic::agv::Plan::Start second_location{now, 2, default_orientation};
 
-    std::vector<rmf_task::agv::State> initial_states =
+    std::vector<rmf_task::State> initial_states =
     {
-      rmf_task::agv::State{first_location, 13, initial_soc},
-      rmf_task::agv::State{second_location, 2, initial_soc}
+      rmf_task::State().load_basic(first_location, 13, initial_soc),
+      rmf_task::State().load_basic(second_location, 2, initial_soc)
     };
 
     std::vector<rmf_task::ConstRequestPtr> requests =
@@ -1459,6 +1526,7 @@ SCENARIO("Grid World")
         delivery_wait,
         3,
         delivery_wait,
+        {{}},
         "1",
         now + rmf_traffic::time::from_seconds(0)),
 
@@ -1467,6 +1535,7 @@ SCENARIO("Grid World")
         delivery_wait,
         2,
         delivery_wait,
+        {{}},
         "2",
         now + rmf_traffic::time::from_seconds(0)),
 
@@ -1475,6 +1544,7 @@ SCENARIO("Grid World")
         delivery_wait,
         4,
         delivery_wait,
+        {{}},
         "3",
         now + rmf_traffic::time::from_seconds(0)),
 
@@ -1483,6 +1553,7 @@ SCENARIO("Grid World")
         delivery_wait,
         11,
         delivery_wait,
+        {{}},
         "4",
         now + rmf_traffic::time::from_seconds(50000))
     };
@@ -1535,7 +1606,7 @@ SCENARIO("Grid World")
             const rmf_task::requests::ChargeBattery::Description>(
             assignment.request()->description()))
         {
-          CHECK(assignment.state().battery_soc() == recharge_soc);
+          CHECK(assignment.finish_state().battery_soc() == recharge_soc);
         }
       }
     }
@@ -1549,9 +1620,9 @@ SCENARIO("Grid World")
 
     rmf_traffic::agv::Plan::Start first_location{now, 13, default_orientation};
 
-    std::vector<rmf_task::agv::State> initial_states =
+    std::vector<rmf_task::State> initial_states =
     {
-      rmf_task::agv::State{first_location, 13, 1.0},
+      rmf_task::State().load_basic(first_location, 13, 1.0)
     };
 
     const auto start_time =
@@ -1606,18 +1677,18 @@ SCENARIO("Grid World")
     const double default_orientation = 0.0;
     const double initial_soc = 0.3;
     const double recharge_soc = 1.0;
-    rmf_task::agv::Constraints new_constraints{0.2, recharge_soc,
+    rmf_task::Constraints new_constraints{0.2, recharge_soc,
       drain_battery};
-    rmf_task::agv::TaskPlanner::Configuration new_task_config{
+    rmf_task::TaskPlanner::Configuration new_task_config{
       parameters,
       new_constraints,
       cost_calculator};
 
     rmf_traffic::agv::Plan::Start first_location{now, 13, default_orientation};
 
-    std::vector<rmf_task::agv::State> initial_states =
+    std::vector<rmf_task::State> initial_states =
     {
-      rmf_task::agv::State{first_location, 13, initial_soc},
+      rmf_task::State().load_basic(first_location, 13, initial_soc)
     };
 
     std::vector<rmf_task::ConstRequestPtr> requests =
@@ -1627,6 +1698,7 @@ SCENARIO("Grid World")
         delivery_wait,
         3,
         delivery_wait,
+        {{}},
         "1",
         now + rmf_traffic::time::from_seconds(0)),
 
@@ -1635,6 +1707,7 @@ SCENARIO("Grid World")
         delivery_wait,
         2,
         delivery_wait,
+        {{}},
         "2",
         now + rmf_traffic::time::from_seconds(0)),
 
@@ -1643,6 +1716,7 @@ SCENARIO("Grid World")
         delivery_wait,
         4,
         delivery_wait,
+        {{}},
         "3",
         now + rmf_traffic::time::from_seconds(0)),
 
@@ -1651,6 +1725,7 @@ SCENARIO("Grid World")
         delivery_wait,
         11,
         delivery_wait,
+        {{}},
         "4",
         now + rmf_traffic::time::from_seconds(50000))
     };
@@ -1690,10 +1765,10 @@ SCENARIO("Grid World")
     rmf_traffic::agv::Plan::Start first_location{now, 13, default_orientation};
     rmf_traffic::agv::Plan::Start second_location{now, 1, default_orientation};
 
-    std::vector<rmf_task::agv::State> initial_states =
+    std::vector<rmf_task::State> initial_states =
     {
-      rmf_task::agv::State{first_location, 13, 1.0},
-      rmf_task::agv::State{second_location, 1, 1.0},
+      rmf_task::State().load_basic(first_location, 13, 1.0),
+      rmf_task::State().load_basic(second_location, 1, 1.0)
     };
 
     std::vector<rmf_task::ConstRequestPtr> requests =
@@ -1800,10 +1875,10 @@ SCENARIO("Grid World")
     rmf_traffic::agv::Plan::Start first_location{now, 13, default_orientation};
     rmf_traffic::agv::Plan::Start second_location{now, 1, default_orientation};
 
-    std::vector<rmf_task::agv::State> initial_states =
+    std::vector<rmf_task::State> initial_states =
     {
-      rmf_task::agv::State{first_location, 13, 1.0},
-      rmf_task::agv::State{second_location, 1, 1.0},
+      rmf_task::State().load_basic(first_location, 13, 1.0),
+      rmf_task::State().load_basic(second_location, 1, 1.0)
     };
 
     std::vector<rmf_task::ConstRequestPtr> requests =
@@ -1855,9 +1930,9 @@ SCENARIO("Grid World")
       for (const auto& agent : optimal_assignments)
       {
         const auto last_assignment = agent.back();
-        CHECK_FALSE(last_assignment.request()->automatic());
-        const auto& state = last_assignment.state();
-        CHECK_FALSE(state.location().waypoint() == state.charging_waypoint());
+        CHECK_FALSE(last_assignment.request()->booking()->automatic());
+        const auto& state = last_assignment.finish_state();
+        CHECK_FALSE(state.waypoint() == state.dedicated_charging_waypoint());
       }
     }
 
@@ -1891,9 +1966,9 @@ SCENARIO("Grid World")
       for (const auto& agent : optimal_assignments)
       {
         const auto last_assignment = agent.back();
-        CHECK(last_assignment.request()->automatic());
-        const auto& state = last_assignment.state();
-        CHECK(state.location().waypoint() == state.charging_waypoint());
+        CHECK(last_assignment.request()->booking()->automatic());
+        const auto& state = last_assignment.finish_state();
+        CHECK(state.waypoint() == state.dedicated_charging_waypoint());
       }
     }
   }

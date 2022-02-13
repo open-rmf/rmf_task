@@ -33,8 +33,9 @@ auto BinaryPriorityCostCalculator::compute_g_assignment(
     return 0.0; // Ignore charging tasks in cost
   }
 
-  return rmf_traffic::time::to_seconds(assignment.state().finish_time()
-      - assignment.request()->earliest_start_time());
+  return rmf_traffic::time::to_seconds(
+    assignment.finish_state().time().value()
+    - assignment.request()->booking()->earliest_start_time());
 }
 
 //==============================================================================
@@ -108,7 +109,8 @@ auto BinaryPriorityCostCalculator::compute_h(
         value = rmf_traffic::time::to_seconds(time_now.time_since_epoch());
       else
         value = rmf_traffic::time::to_seconds(
-          assignments.back().assignment.state().finish_time().time_since_epoch());
+          assignments.back().assignment.finish_state()
+          .time().value().time_since_epoch());
     }
   }
 
@@ -138,7 +140,7 @@ bool BinaryPriorityCostCalculator::valid_assignment_priority(
     const auto& assignments = node.assigned_tasks[i];
     for (const auto& a : assignments)
     {
-      if (a.assignment.request()->priority() != nullptr)
+      if (a.assignment.request()->booking()->priority() != nullptr)
         priority_count[i] += 1;
     }
   }
@@ -173,7 +175,7 @@ bool BinaryPriorityCostCalculator::valid_assignment_priority(
         return true;
     }
 
-    auto prev_priority = it->assignment.request()->priority();
+    auto prev_priority = it->assignment.request()->booking()->priority();
     ++it;
     for (; it != agent.end(); ++it)
     {
@@ -181,7 +183,7 @@ bool BinaryPriorityCostCalculator::valid_assignment_priority(
           const rmf_task::requests::ChargeBattery::Description>(
           it->assignment.request()->description()))
         continue;
-      auto curr_priority = it->assignment.request()->priority();
+      auto curr_priority = it->assignment.request()->booking()->priority();
       if ((prev_priority == nullptr) && (curr_priority != nullptr))
         return false;
 
@@ -220,7 +222,7 @@ double BinaryPriorityCostCalculator::compute_cost(
 
 //==============================================================================
 double BinaryPriorityCostCalculator::compute_cost(
-  rmf_task::agv::TaskPlanner::Assignments assignments) const
+  rmf_task::TaskPlanner::Assignments assignments) const
 {
   return compute_g(assignments);
 }

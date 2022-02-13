@@ -28,9 +28,10 @@
 #include <rmf_battery/MotionPowerSink.hpp>
 #include <rmf_battery/DevicePowerSink.hpp>
 
-#include <rmf_task/agv/State.hpp>
+#include <rmf_task/State.hpp>
 #include <rmf_task/Request.hpp>
 #include <rmf_task/Estimate.hpp>
+#include <rmf_task/Payload.hpp>
 
 namespace rmf_task {
 namespace requests {
@@ -45,26 +46,37 @@ public:
   // Forward declare the Model for this request
   class Model;
 
-  class Description : public Request::Description
+  class Description : public Task::Description
   {
   public:
 
     using Start = rmf_traffic::agv::Planner::Start;
 
     /// Generate the description for this request
-    static DescriptionPtr make(
+    static Task::ConstDescriptionPtr make(
       std::size_t pickup_waypoint,
       rmf_traffic::Duration pickup_duration,
       std::size_t dropoff_waypoint,
-      rmf_traffic::Duration dropoff_duration);
+      rmf_traffic::Duration dropoff_duration,
+      Payload payload,
+      std::string pickup_from_dispenser = "",
+      std::string dropoff_to_ingestor = "");
 
-    /// Documentation inherited
-    std::shared_ptr<Request::Model> make_model(
+    // Documentation inherited
+    Task::ConstModelPtr make_model(
       rmf_traffic::Time earliest_start_time,
-      const agv::Parameters& parameters) const final;
+      const Parameters& parameters) const final;
+
+    // Documentation inherited
+    Info generate_info(
+      const State& initial_state,
+      const Parameters& parameters) const final;
 
     /// Get the pickup waypoint in this request
     std::size_t pickup_waypoint() const;
+
+    /// Get the name of the dispenser that we're picking up from
+    std::string pickup_from_dispenser() const;
 
     /// Get the duration over which delivery items are loaded
     rmf_traffic::Duration pickup_wait() const;
@@ -72,8 +84,14 @@ public:
     /// Get the dropoff waypoint in this request
     std::size_t dropoff_waypoint() const;
 
+    /// Get the name of the ingestor that we're dropping off to
+    std::string dropoff_to_ingestor() const;
+
     /// Get the duration over which delivery items are unloaded
     rmf_traffic::Duration dropoff_wait() const;
+
+    /// Get the payload that is being delivered
+    const Payload& payload() const;
 
     class Implementation;
   private:
@@ -113,10 +131,13 @@ public:
     rmf_traffic::Duration pickup_wait,
     std::size_t dropoff_waypoint,
     rmf_traffic::Duration dropoff_wait,
+    Payload payload,
     const std::string& id,
     rmf_traffic::Time earliest_start_time,
     ConstPriorityPtr priority = nullptr,
-    bool automatic = false);
+    bool automatic = false,
+    std::string pickup_from_dispenser = "",
+    std::string dropoff_to_ingestor = "");
 };
 
 } // namespace requests
