@@ -47,31 +47,31 @@ std::string generate_uuid(const std::size_t length = 3)
 
 //==============================================================================
 // Definition for forward declared class
-class ChargeBattery::Model : public Request::Model
+class ChargeBattery::Model : public Task::Model
 {
 public:
 
   std::optional<Estimate> estimate_finish(
-    const agv::State& initial_state,
-    const agv::Constraints& task_planning_constraints,
-    EstimateCache& estimate_cache) const final;
+    const State& initial_state,
+    const Constraints& task_planning_constraints,
+    const TravelEstimator& travel_estimator) const final;
 
   rmf_traffic::Duration invariant_duration() const final;
 
   Model(
     const rmf_traffic::Time earliest_start_time,
-    agv::Parameters parameters);
+    Parameters parameters);
 
 private:
   rmf_traffic::Time _earliest_start_time;
-  agv::Parameters _parameters;
+  Parameters _parameters;
   rmf_traffic::Duration _invariant_duration;
 };
 
 //==============================================================================
 ChargeBattery::Model::Model(
   const rmf_traffic::Time earliest_start_time,
-  agv::Parameters parameters)
+  Parameters parameters)
 : _earliest_start_time(earliest_start_time),
   _parameters(parameters)
 {
@@ -80,84 +80,51 @@ ChargeBattery::Model::Model(
 
 //==============================================================================
 std::optional<rmf_task::Estimate>
-ChargeBattery::Model::estimate_finish(
-  const agv::State& initial_state,
-  const agv::Constraints& task_planning_constraints,
-  EstimateCache& estimate_cache) const
+ChargeBattery::Model::estimate_finish(const State& initial_state,
+  const Constraints& task_planning_constraints,
+  const TravelEstimator& travel_estimator) const
 {
   // Important to return nullopt if a charging task is not needed. In the task
   // planner, if a charging task is added, the node's latest time may be set to
   // the finishing time of the charging task, and consequently fall below the
-  // segmentation threshold, causing `solve` to return. This may cause an infinite
-  // loop as a new identical charging task is added in each call to `solve` before
-  // returning.
+  // segmentation threshold, causing `solve` to return. This may cause an
+  // infinite loop as a new identical charging task is added in each call to
+  // `solve` before returning.
   const auto recharge_soc = task_planning_constraints.recharge_soc();
   if (initial_state.battery_soc() >= recharge_soc - 1e-3
-    && initial_state.waypoint() == initial_state.charging_waypoint())
+    && initial_state.waypoint().value()
+    == initial_state.dedicated_charging_waypoint().value())
+  {
     return std::nullopt;
+  }
 
   // Compute time taken to reach charging waypoint from current location
   rmf_traffic::agv::Plan::Start final_plan_start{
-    initial_state.finish_time(),
-    initial_state.charging_waypoint(),
-    initial_state.location().orientation()};
-  agv::State state{
+    initial_state.time().value(),
+    initial_state.dedicated_charging_waypoint().value(),
+    initial_state.orientation().value()};
+
+  auto state = State().load_basic(
     std::move(final_plan_start),
-    initial_state.charging_waypoint(),
-    initial_state.battery_soc()};
+    initial_state.dedicated_charging_waypoint().value(),
+    initial_state.battery_soc().value());
 
-  const auto start_time = initial_state.finish_time();
-
-  double battery_soc = initial_state.battery_soc();
-  double dSOC_motion = 0.0;
-  double dSOC_device = 0.0;
-  double variant_battery_drain = 0.0;
+  double battery_soc = initial_state.battery_soc().value();
   rmf_traffic::Duration variant_duration(0);
-  const bool drain_battery = task_planning_constraints.drain_battery();
-  const auto& planner = *_parameters.planner();
-  const auto& motion_sink = *_parameters.motion_sink();
-  const auto& ambient_sink = *_parameters.ambient_sink();
 
-  if (initial_state.waypoint() != initial_state.charging_waypoint())
+  if (initial_state.waypoint() != initial_state.dedicated_charging_waypoint())
   {
-    const auto endpoints = std::make_pair(initial_state.waypoint(),
-        initial_state.charging_waypoint());
-    const auto& cache_result = estimate_cache.get(endpoints);
-    // Use memoized values if possible
-    if (cache_result)
-    {
-      variant_duration = cache_result->duration;
-      battery_soc = battery_soc - cache_result->dsoc;
-    }
-    else
-    {
-      // Compute plan to charging waypoint along with battery drain
-      rmf_traffic::agv::Planner::Goal goal{endpoints.second};
-      const auto result = planner.plan(
-        initial_state.location(), goal);
-      auto itinerary_start_time = start_time;
-      for (const auto& itinerary : result->get_itinerary())
-      {
-        const auto& trajectory = itinerary.trajectory();
-        const auto& finish_time = *trajectory.finish_time();
-        const rmf_traffic::Duration itinerary_duration =
-          finish_time - itinerary_start_time;
+    const auto travel = travel_estimator.estimate(
+      initial_state.extract_plan_start().value(),
+      rmf_traffic::agv::Plan::Goal(
+        initial_state.dedicated_charging_waypoint().value()));
 
-        if (drain_battery)
-        {
-          dSOC_motion = motion_sink.compute_change_in_charge(
-            trajectory);
-          dSOC_device = ambient_sink.compute_change_in_charge(
-            rmf_traffic::time::to_seconds(itinerary_duration));
-          variant_battery_drain += dSOC_motion + dSOC_device;
-          battery_soc = battery_soc - dSOC_motion - dSOC_device;
-        }
-        itinerary_start_time = finish_time;
-        variant_duration += itinerary_duration;
-      }
-      estimate_cache.set(endpoints, variant_duration,
-        variant_battery_drain);
-    }
+    if (!travel.has_value())
+      return std::nullopt;
+
+    variant_duration = travel->duration();
+    if (task_planning_constraints.drain_battery())
+      battery_soc = battery_soc - travel->change_in_charge();
 
     // If a robot cannot reach its charging dock given its initial battery soc
     if (battery_soc <= task_planning_constraints.threshold_soc())
@@ -176,8 +143,8 @@ ChargeBattery::Model::estimate_finish(
     (3600 * delta_soc * _parameters.battery_system().capacity()) /
     _parameters.battery_system().charging_current();
 
-  const rmf_traffic::Time wait_until = initial_state.finish_time();
-  state.finish_time(
+  const rmf_traffic::Time wait_until = initial_state.time().value();
+  state.time(
     wait_until + variant_duration +
     rmf_traffic::time::from_seconds(time_to_charge));
 
@@ -199,7 +166,7 @@ class ChargeBattery::Description::Implementation
 };
 
 //==============================================================================
-rmf_task::DescriptionPtr ChargeBattery::Description::make()
+Task::ConstDescriptionPtr ChargeBattery::Description::make()
 {
   std::shared_ptr<Description> description(
     new Description());
@@ -214,13 +181,24 @@ ChargeBattery::Description::Description()
 }
 
 //==============================================================================
-std::shared_ptr<Request::Model> ChargeBattery::Description::make_model(
+Task::ConstModelPtr ChargeBattery::Description::make_model(
   rmf_traffic::Time earliest_start_time,
-  const agv::Parameters& parameters) const
+  const Parameters& parameters) const
 {
   return std::make_shared<ChargeBattery::Model>(
     earliest_start_time,
     parameters);
+}
+
+//==============================================================================
+auto ChargeBattery::Description::generate_info(
+  const State&,
+  const Parameters&) const -> Info
+{
+  return Info{
+    "Charge battery",
+    ""
+  };
 }
 
 //==============================================================================

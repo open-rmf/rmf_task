@@ -18,7 +18,7 @@
 #include <chrono>
 #include <memory>
 
-#include <rmf_task/agv/State.hpp>
+#include <rmf_task/State.hpp>
 
 #include <rmf_traffic/Time.hpp>
 #include <rmf_traffic/agv/Planner.hpp>
@@ -32,45 +32,43 @@ SCENARIO("Robot States")
     0,
     0.0};
 
-  std::unique_ptr<rmf_task::agv::State> basic_state;
-
   WHEN("Empty battery")
   {
-    CHECK_NOTHROW(basic_state.reset(new rmf_task::agv::State{
+    CHECK_NOTHROW(rmf_task::State().load_basic(
         basic_start,
         0,
-        0.0}));
+        0.0));
   }
 
   WHEN("Full battery")
   {
-    CHECK_NOTHROW(basic_state.reset(new rmf_task::agv::State{
+    CHECK_NOTHROW(rmf_task::State().load_basic(
         basic_start,
         0,
-        1.0}));
+        1.0));
   }
 
   WHEN("Half battery")
   {
-    CHECK_NOTHROW(basic_state.reset(new rmf_task::agv::State{
+    CHECK_NOTHROW(rmf_task::State().load_basic(
         basic_start,
         0,
-        0.5}));
+        0.5));
   }
 
   WHEN("Battery soc more than 1.0")
   {
-    CHECK_THROWS(basic_state.reset(new rmf_task::agv::State{
+    CHECK_THROWS(rmf_task::State().load_basic(
         basic_start,
         0,
-        1.0 + 1e-4}));
+        1.0 + 1e-4));
   }
 
   WHEN("Battery soc less than 0.0")
   {
-    CHECK_THROWS(basic_state.reset(new rmf_task::agv::State{
+    CHECK_THROWS(rmf_task::State().load_basic(
         basic_start,
         0,
-        0.0 - 1e-4}));
+        0.0 - 1e-4));
   }
 }

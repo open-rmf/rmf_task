@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://open-rmf.org/rmf_task_sequence/description_PickUp/0.1",
+  "title": "Pick Up Description",
+  "description": "The description of a Pick Up task",
+  "properties": {
+    "pickup_location": {
+      "type": "string",
+      "enum": ["pharmacy", "vending_machines", "kitchen"]
+    },
+    "dispenser": {
+      "type": "string",
+      "enum": ["pharmacist", "soda_dispenser", "candy_dispenser", "chef"]
+    },
+    "payload": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "sku": { "type": "string" },
+          "quantity": { "type": "integer" },
+          "compartment": { "type": "string" }
+        },
+        "required": ["sku", "quantity"]
+      }
+    }
+  },
+  "required": ["pickup_location", "dispenser", "payload"]
+}

@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format2.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>rmf_task_sequence</name>
+  <version>2.0.0</version>
+  <description>Implementation of phase-sequence tasks for the Robotics Middleware Framework</description>
+  <maintainer email="grey@openrobotics.org">Grey</maintainer>
+  <maintainer email="marco@openrobotics.org">Marco A. Gutiérrez</maintainer>
+  <license>Apache License 2.0</license>
+  <author>Grey</author>
+
+  <depend>rmf_api_msgs</depend>
+  <depend>rmf_task</depend>
+  <depend>nlohmann-json-dev</depend>
+  <depend>nlohmann_json_schema_validator_vendor</depend>
+
+  <test_depend>ament_cmake_catch2</test_depend>
+  <test_depend>ament_cmake_uncrustify</test_depend>
+
+  <export>
+    <build_type>cmake</build_type>
+  </export>
+</package>

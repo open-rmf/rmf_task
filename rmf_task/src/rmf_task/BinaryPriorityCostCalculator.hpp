@@ -39,10 +39,9 @@ public:
 
   /// Compute the cost of assignments
   double compute_cost(
-    rmf_task::agv::TaskPlanner::Assignments assignments) const final;
+    rmf_task::TaskPlanner::Assignments assignments) const final;
 
 private:
-  using TaskPlanner = rmf_task::agv::TaskPlanner;
   using Assignments = TaskPlanner::Assignments;
 
   double _priority_penalty;

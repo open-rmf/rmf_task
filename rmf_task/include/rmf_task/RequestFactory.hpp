@@ -31,7 +31,7 @@ public:
   /// Generate a request for the AGV given the state that the robot will have
   /// when it is ready to perform the request
   virtual ConstRequestPtr make_request(
-    const agv::State& state) const = 0;
+    const State& state) const = 0;
 
   virtual ~RequestFactory() = default;
 };

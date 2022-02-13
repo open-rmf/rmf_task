@@ -1,5 +1,5 @@
 name: tsan
-on: 
+on:
   pull_request:
   schedule:
     - cron: '31 0 * * *'
@@ -23,9 +23,9 @@ jobs:
           target-ros2-distro: foxy
           # build all packages listed in the meta package
           package-name: |
-            rmf_task 
+            rmf_task
           vcs-repo-file-url: |
-            https://raw.githubusercontent.com/open-rmf/rmf/main/rmf.repos
+            https://raw.githubusercontent.com/open-rmf/rmf/redesign_v2/rmf.repos
           colcon-defaults: |
             {
               "build": {

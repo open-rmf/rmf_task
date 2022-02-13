@@ -23,20 +23,20 @@ namespace rmf_task {
 namespace requests {
 
 //==============================================================================
-class Delivery::Model : public Request::Model
+class Delivery::Model : public Task::Model
 {
 public:
 
   std::optional<Estimate> estimate_finish(
-    const agv::State& initial_state,
-    const agv::Constraints& task_planning_constraints,
-    EstimateCache& estimate_cache) const final;
+    const State& initial_state,
+    const Constraints& task_planning_constraints,
+    const TravelEstimator& travel_estimator) const final;
 
   rmf_traffic::Duration invariant_duration() const final;
 
   Model(
     const rmf_traffic::Time earliest_start_time,
-    const agv::Parameters& parameters,
+    const Parameters& parameters,
     std::size_t pickup_waypoint,
     rmf_traffic::Duration pickup_wait,
     std::size_t dropoff_waypoint,
@@ -44,11 +44,9 @@ public:
 
 private:
   rmf_traffic::Time _earliest_start_time;
-  agv::Parameters _parameters;
+  Parameters _parameters;
   std::size_t _pickup_waypoint;
-  rmf_traffic::Duration _pickup_wait;
   std::size_t _dropoff_waypoint;
-  rmf_traffic::Duration _dropoff_wait;
 
   rmf_traffic::Duration _invariant_duration;
   double _invariant_battery_drain;
@@ -57,7 +55,7 @@ private:
 //==============================================================================
 Delivery::Model::Model(
   const rmf_traffic::Time earliest_start_time,
-  const agv::Parameters& parameters,
+  const Parameters& parameters,
   std::size_t pickup_waypoint,
   rmf_traffic::Duration pickup_wait,
   std::size_t dropoff_waypoint,
@@ -107,161 +105,91 @@ Delivery::Model::Model(
 
 //==============================================================================
 std::optional<rmf_task::Estimate> Delivery::Model::estimate_finish(
-  const agv::State& initial_state,
-  const agv::Constraints& task_planning_constraints,
-  EstimateCache& estimate_cache) const
+  const State& initial_state,
+  const Constraints& task_planning_constraints,
+  const TravelEstimator& travel_estimator) const
 {
   rmf_traffic::agv::Plan::Start final_plan_start{
-    initial_state.finish_time(),
+    initial_state.time().value(),
     _dropoff_waypoint,
-    initial_state.location().orientation()};
-  agv::State state{
+    initial_state.orientation().value()};
+
+  auto state = State().load_basic(
     std::move(final_plan_start),
-    initial_state.charging_waypoint(),
-    initial_state.battery_soc()};
+    initial_state.dedicated_charging_waypoint().value(),
+    initial_state.battery_soc().value());
 
   rmf_traffic::Duration variant_duration(0);
 
-  const rmf_traffic::Time start_time = initial_state.finish_time();
-  double battery_soc = initial_state.battery_soc();
-  double dSOC_motion = 0.0;
-  double dSOC_device = 0.0;
+  double battery_soc = initial_state.battery_soc().value();
   const bool drain_battery = task_planning_constraints.drain_battery();
-  const auto& planner = *_parameters.planner();
-  const auto& motion_sink = *_parameters.motion_sink();
   const auto& ambient_sink = *_parameters.ambient_sink();
+  const double battery_threshold = task_planning_constraints.threshold_soc();
 
   // Factor in battery drain while moving to start waypoint of task
   if (initial_state.waypoint() != _pickup_waypoint)
   {
-    const auto endpoints = std::make_pair(initial_state.waypoint(),
-        _pickup_waypoint);
-    const auto& cache_result = estimate_cache.get(endpoints);
-    // Use previously memoized values if possible
-    if (cache_result)
-    {
-      variant_duration = cache_result->duration;
-      if (drain_battery)
-        battery_soc = battery_soc - cache_result->dsoc;
-    }
-    else
-    {
-      // Compute plan to pickup waypoint along with battery drain
-      rmf_traffic::agv::Planner::Goal goal{endpoints.second};
-      const auto result_to_pickup = planner.plan(
-        initial_state.location(), goal);
-      // We assume we can always compute a plan
-      auto itinerary_start_time = start_time;
-      double variant_battery_drain = 0.0;
-      for (const auto& itinerary : result_to_pickup->get_itinerary())
-      {
-        const auto& trajectory = itinerary.trajectory();
-        const auto& finish_time = *trajectory.finish_time();
-        const rmf_traffic::Duration itinerary_duration =
-          finish_time - itinerary_start_time;
+    const auto travel = travel_estimator.estimate(
+      initial_state.extract_plan_start().value(),
+      _pickup_waypoint);
 
-        if (drain_battery)
-        {
-          // Compute battery drain
-          dSOC_motion = motion_sink.compute_change_in_charge(
-            trajectory);
-          dSOC_device =
-            ambient_sink.compute_change_in_charge(
-            rmf_traffic::time::to_seconds(itinerary_duration));
-          battery_soc = battery_soc - dSOC_motion - dSOC_device;
-          variant_battery_drain += dSOC_device + dSOC_motion;
-        }
-        itinerary_start_time = finish_time;
-        variant_duration += itinerary_duration;
-      }
-      estimate_cache.set(endpoints, variant_duration,
-        variant_battery_drain);
-    }
+    if (!travel)
+      return std::nullopt;
 
-    if (battery_soc <= task_planning_constraints.threshold_soc())
+    variant_duration = travel->duration();
+    if (drain_battery)
+      battery_soc = battery_soc - travel->change_in_charge();
+
+    if (battery_soc <= battery_threshold)
       return std::nullopt;
   }
 
   const rmf_traffic::Time ideal_start = _earliest_start_time - variant_duration;
   const rmf_traffic::Time wait_until =
-    initial_state.finish_time() > ideal_start ?
-    initial_state.finish_time() : ideal_start;
+    initial_state.time().value() > ideal_start ?
+    initial_state.time().value() : ideal_start;
 
   // Factor in battery drain while waiting to move to start waypoint. If a robot
   // is initially at a charging waypoint, it is assumed to be continually charging
-  if (drain_battery && wait_until > initial_state.finish_time() &&
-    initial_state.waypoint() != initial_state.charging_waypoint())
+  if (drain_battery && wait_until > initial_state.time().value() &&
+    initial_state.waypoint() != initial_state.dedicated_charging_waypoint())
   {
-    rmf_traffic::Duration wait_duration(
-      wait_until - initial_state.finish_time());
-    dSOC_device = ambient_sink.compute_change_in_charge(
+    const rmf_traffic::Duration wait_duration(
+      wait_until - initial_state.time().value());
+
+    const double dSOC_device = ambient_sink.compute_change_in_charge(
       rmf_traffic::time::to_seconds(wait_duration));
+
     battery_soc = battery_soc - dSOC_device;
 
-    if (battery_soc <= task_planning_constraints.threshold_soc())
-    {
+    if (battery_soc <= battery_threshold)
       return std::nullopt;
-    }
   }
 
   // Factor in invariants
-  state.finish_time(
-    wait_until + variant_duration + _invariant_duration);
+  state.time(wait_until + variant_duration + _invariant_duration);
 
   if (drain_battery)
   {
+    // Calculate how much battery is drained while waiting for the pickup and
+    // waiting for the dropoff
     battery_soc -= _invariant_battery_drain;
-    if (battery_soc <= task_planning_constraints.threshold_soc())
+    if (battery_soc <= battery_threshold)
       return std::nullopt;
 
     // Check if the robot has enough charge to head back to nearest charger
-    double retreat_battery_drain = 0.0;
-    if (_dropoff_waypoint != state.charging_waypoint())
+    if (_dropoff_waypoint != state.dedicated_charging_waypoint().value())
     {
-      const auto endpoints = std::make_pair(_dropoff_waypoint,
-          state.charging_waypoint());
-      const auto& cache_result = estimate_cache.get(endpoints);
-      if (cache_result)
-      {
-        retreat_battery_drain = cache_result->dsoc;
-      }
-      else
-      {
-        rmf_traffic::agv::Planner::Start start{
-          state.finish_time(),
-          endpoints.first,
-          0.0};
+      const auto travel = travel_estimator.estimate(
+        state.extract_plan_start().value(),
+        state.dedicated_charging_waypoint().value());
 
-        rmf_traffic::agv::Planner::Goal goal{endpoints.second};
+      if (!travel.has_value())
+        return std::nullopt;
 
-        const auto result_to_charger = planner.plan(start, goal);
-        // We assume we can always compute a plan
-        auto itinerary_start_time = state.finish_time();
-        rmf_traffic::Duration retreat_duration(0);
-        for (const auto& itinerary : result_to_charger->get_itinerary())
-        {
-          const auto& trajectory = itinerary.trajectory();
-          const auto& finish_time = *trajectory.finish_time();
-          const rmf_traffic::Duration itinerary_duration =
-            finish_time - itinerary_start_time;
-
-          dSOC_motion =
-            motion_sink.compute_change_in_charge(trajectory);
-          dSOC_device = ambient_sink.compute_change_in_charge(
-            rmf_traffic::time::to_seconds(itinerary_duration));
-          retreat_battery_drain += dSOC_motion + dSOC_device;
-
-          itinerary_start_time = finish_time;
-          retreat_duration += itinerary_duration;
-        }
-        estimate_cache.set(endpoints, retreat_duration,
-          retreat_battery_drain);
-      }
+      if (battery_soc - travel->change_in_charge() <= battery_threshold)
+        return std::nullopt;
     }
-
-    if (battery_soc - retreat_battery_drain <=
-      task_planning_constraints.threshold_soc())
-      return std::nullopt;
 
     state.battery_soc(battery_soc);
   }
@@ -280,42 +208,50 @@ class Delivery::Description::Implementation
 {
 public:
 
-  Implementation()
-  {}
-
   std::size_t pickup_waypoint;
   rmf_traffic::Duration pickup_wait;
   std::size_t dropoff_waypoint;
   rmf_traffic::Duration dropoff_wait;
+  rmf_task::Payload payload;
+  std::string pickup_from_dispenser;
+  std::string dropoff_to_ingestor;
 };
 
 //==============================================================================
-rmf_task::DescriptionPtr Delivery::Description::make(
+Task::ConstDescriptionPtr Delivery::Description::make(
   std::size_t pickup_waypoint,
   rmf_traffic::Duration pickup_wait,
   std::size_t dropoff_waypoint,
-  rmf_traffic::Duration dropoff_wait)
+  rmf_traffic::Duration dropoff_wait,
+  Payload payload,
+  std::string pickup_from_dispenser,
+  std::string dropoff_to_ingestor)
 {
   std::shared_ptr<Description> delivery(new Description());
-  delivery->_pimpl->pickup_waypoint = pickup_waypoint;
-  delivery->_pimpl->pickup_wait = pickup_wait;
-  delivery->_pimpl->dropoff_waypoint = dropoff_waypoint;
-  delivery->_pimpl->dropoff_wait = dropoff_wait;
+  delivery->_pimpl = rmf_utils::make_impl<Implementation>(
+    Implementation{
+      pickup_waypoint,
+      pickup_wait,
+      dropoff_waypoint,
+      dropoff_wait,
+      std::move(payload),
+      std::move(pickup_from_dispenser),
+      std::move(dropoff_to_ingestor)
+    });
 
   return delivery;
 }
 
 //==============================================================================
 Delivery::Description::Description()
-: _pimpl(rmf_utils::make_impl<Implementation>(Implementation()))
 {
   // Do nothing
 }
 
 //==============================================================================
-std::shared_ptr<Request::Model> Delivery::Description::make_model(
+Task::ConstModelPtr Delivery::Description::make_model(
   rmf_traffic::Time earliest_start_time,
-  const agv::Parameters& parameters) const
+  const Parameters& parameters) const
 {
   return std::make_shared<Delivery::Model>(
     earliest_start_time,
@@ -327,9 +263,34 @@ std::shared_ptr<Request::Model> Delivery::Description::make_model(
 }
 
 //==============================================================================
+auto Delivery::Description::generate_info(
+  const State&,
+  const Parameters& parameters) const -> Info
+{
+  const auto& graph = parameters.planner()->get_configuration().graph();
+  return Info{
+    "Delivery from " + standard_waypoint_name(graph, _pimpl->pickup_waypoint)
+    + " to " + standard_waypoint_name(graph, _pimpl->dropoff_waypoint),
+    "" // TODO(MXG): Add details about the payload
+  };
+}
+
+//==============================================================================
 std::size_t Delivery::Description::pickup_waypoint() const
 {
   return _pimpl->pickup_waypoint;
+}
+
+//==============================================================================
+std::string Delivery::Description::pickup_from_dispenser() const
+{
+  return _pimpl->pickup_from_dispenser;
+}
+
+//==============================================================================
+std::string Delivery::Description::dropoff_to_ingestor() const
+{
+  return _pimpl->dropoff_to_ingestor;
 }
 
 //==============================================================================
@@ -351,21 +312,33 @@ std::size_t Delivery::Description::dropoff_waypoint() const
 }
 
 //==============================================================================
+const Payload& Delivery::Description::payload() const
+{
+  return _pimpl->payload;
+}
+
+//==============================================================================
 ConstRequestPtr Delivery::make(
   std::size_t pickup_waypoint,
   rmf_traffic::Duration pickup_wait,
   std::size_t dropoff_waypoint,
   rmf_traffic::Duration dropoff_wait,
+  Payload payload,
   const std::string& id,
   rmf_traffic::Time earliest_start_time,
   ConstPriorityPtr priority,
-  bool automatic)
+  bool automatic,
+  std::string pickup_from_dispenser,
+  std::string dropoff_to_ingestor)
 {
   const auto description = Description::make(
     pickup_waypoint,
     pickup_wait,
     dropoff_waypoint,
-    dropoff_wait);
+    dropoff_wait,
+    std::move(payload),
+    std::move(pickup_from_dispenser),
+    std::move(dropoff_to_ingestor));
 
   return std::make_shared<Request>(
     id, earliest_start_time, std::move(priority), description, automatic);

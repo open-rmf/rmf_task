@@ -36,9 +36,9 @@ ChargeBatteryFactory::ChargeBatteryFactory()
 
 //==============================================================================
 ConstRequestPtr ChargeBatteryFactory::make_request(
-  const agv::State& state) const
+  const State& state) const
 {
-  return ChargeBattery::make(state.finish_time());
+  return ChargeBattery::make(state.time().value());
 }
 
 } // namespace requests

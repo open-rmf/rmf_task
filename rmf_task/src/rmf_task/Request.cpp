@@ -23,11 +23,8 @@ namespace rmf_task {
 class Request::Implementation
 {
 public:
-  std::string id;
-  rmf_traffic::Time earliest_start_time;
-  rmf_task::ConstPriorityPtr priority;
-  DescriptionPtr description;
-  bool automatic;
+  Task::ConstBookingPtr booking;
+  Task::ConstDescriptionPtr description;
 };
 
 //==============================================================================
@@ -35,48 +32,28 @@ Request::Request(
   const std::string& id,
   rmf_traffic::Time earliest_start_time,
   ConstPriorityPtr priority,
-  DescriptionPtr description,
+  Task::ConstDescriptionPtr description,
   bool automatic)
 : _pimpl(rmf_utils::make_impl<Implementation>(
       Implementation {
-        id,
-        earliest_start_time,
-        std::move(priority),
-        std::move(description),
-        automatic
+        std::make_shared<Task::Booking>(
+          id, earliest_start_time, std::move(priority), automatic),
+        std::move(description)
       }))
 {
   // Do nothing
 }
 
 //==============================================================================
-const std::string& Request::id() const
+const Task::ConstBookingPtr& Request::booking() const
 {
-  return _pimpl->id;
+  return _pimpl->booking;
 }
 
 //==============================================================================
-rmf_traffic::Time Request::earliest_start_time() const
-{
-  return _pimpl->earliest_start_time;
-}
-
-//==============================================================================
-ConstPriorityPtr Request::priority() const
-{
-  return _pimpl->priority;
-}
-
-//==============================================================================
-const Request::DescriptionPtr& Request::description() const
+const Task::ConstDescriptionPtr& Request::description() const
 {
   return _pimpl->description;
-}
-
-//==============================================================================
-bool Request::automatic() const
-{
-  return _pimpl->automatic;
 }
 
 } // namespace rmf_task
