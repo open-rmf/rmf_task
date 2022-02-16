@@ -855,9 +855,6 @@ void Task::Active::_issue_backup(
 void Task::Active::_prepare_cancellation_sequence(
   std::vector<Phase::ConstDescriptionPtr> sequence)
 {
-  std::cout << "Preparing cancellation sequence (previous pending stages "
-            << _pending_stages.size() << " : " << _pending_phases.size() << ")"
-            << std::endl;
   _pending_phases.clear();
   _pending_stages.clear();
 
@@ -873,7 +870,6 @@ void Task::Active::_prepare_cancellation_sequence(
         }));
   }
 
-  std::cout << "Now have " << _pending_stages.size() << " stages" << std::endl;
   _generate_pending_phases();
 }
 
