@@ -523,22 +523,7 @@ void Task::Active::cancel()
   }
 
   _cancelled_on_phase = _active_phase->tag()->id();
-
-  _pending_phases.clear();
-  _pending_phases.reserve(_active_stage->cancellation_sequence.size());
-  auto next_id = _cancel_sequence_initial_id;
-  auto state = _get_state();
-  for (const auto& desc : _active_stage->cancellation_sequence)
-  {
-    _pending_phases.emplace_back(
-      std::make_shared<Phase::Tag>(
-        ++next_id,
-        desc->generate_header(state, *_parameters))
-    );
-
-    state = desc->make_model(state, *_parameters)->invariant_finish_state();
-  }
-
+  _prepare_cancellation_sequence(_active_stage->cancellation_sequence);
   _active_phase->cancel();
 }
 
