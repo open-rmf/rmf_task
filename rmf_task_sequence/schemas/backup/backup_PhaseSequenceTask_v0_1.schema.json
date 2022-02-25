@@ -3,38 +3,57 @@
   "$id": "https://open-rmf.org/rmf_task_sequence/backup_PhaseSequenceTask/0.1",
   "title": "Phase Sequence Task Backup",
   "description": "A backup state for a task which is defined by a fixed sequence of phases",
-  "properties": {
-    "schema_version": {
-      "description": "The version of the Phase Sequence Task Backup schema being used",
-      "const": "0.1"
-    },
-    "current_phase": {
-      "description": "The current phase of the task when the backup occurred",
+  "oneOf": [
+    {
       "properties": {
-        "id": {
-          "description": "The integer ID of the phase",
+        "schema_version": {
+          "description": "The version of the Phase Sequence Task Backup schema being used",
           "type": "integer",
-          "minimum": 0
+          "enum": [1]
         },
-        "cancelled_from": {
-          "description": "The integer ID of the phase that was cancelled to reach the current phase",
-          "type": "integer",
-          "minimum": 0
+        "current_phase": {
+          "description": "The current phase of the task when the backup occurred",
+          "properties": {
+            "id": {
+              "description": "The integer ID of the phase",
+              "type": "integer",
+              "minimum": 0
+            },
+            "cancelled_from": {
+              "description": "The integer ID of the phase that was cancelled to reach the current phase",
+              "type": "integer",
+              "minimum": 0
+            },
+            "state": {
+              "description": "The serialized state of the backed up current phase"
+            }
+          },
+          "required": [ "id", "state" ]
         },
-        "state": {
-          "description": "The serialized state of the backed up current phase"
+        "skip_phases": {
+          "description": "A list of pending phases that are supposed to be skipped",
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
         }
       },
-      "required": [ "id", "state" ]
+      "required": [ "schema_version", "current_phase" ]
     },
-    "skip_phases": {
-      "description": "A list of pending phases that are supposed to be skipped",
-      "type": "array",
-      "items": {
-        "type": "integer",
-        "minimum": 0
-      }
+    {
+      "properties": {
+        "schema_version": {
+          "description": "The version of the Phase Sequence Task Backup schema being used",
+          "type": "integer",
+          "enum": [1]
+        },
+        "finished": {
+          "description": "True if the task is finished, or false if the task has not started",
+          "type": "boolean"
+        }
+      },
+      "required": [ "schema_version", "finished" ]
     }
-  },
-  "required": [ "schema_version", "current_phase" ]
+  ]
 }

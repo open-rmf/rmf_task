@@ -168,6 +168,9 @@ public:
   Event::Status status_overview() const final;
 
   // Documentation inherited
+  bool finished() const final;
+
+  // Documentation inherited
   const std::vector<Phase::ConstCompletedPtr>& completed_phases() const final;
 
   // Documentation inherited
@@ -231,6 +234,8 @@ private:
     Phase::Tag::Id current_phase_id,
     Phase::Active::Backup phase_backup) const;
 
+  Backup _empty_backup() const;
+
   Active(
     Phase::ConstActivatorPtr phase_activator,
     std::function<rmf_traffic::Time()> clock,
@@ -286,6 +291,7 @@ private:
   std::optional<Resume> _resume_interrupted_phase;
   std::optional<Phase::Tag::Id> _cancelled_on_phase = std::nullopt;
   bool _killed = false;
+  bool _finished = false;
 
   mutable std::optional<uint64_t> _last_phase_backup_sequence_number;
   mutable uint64_t _next_task_backup_sequence_number = 0;
@@ -440,6 +446,12 @@ rmf_task::Event::Status Task::Active::status_overview() const
 }
 
 //==============================================================================
+bool Task::Active::finished() const
+{
+  return _finished;
+}
+
+//==============================================================================
 const std::vector<Phase::ConstCompletedPtr>&
 Task::Active::completed_phases() const
 {
@@ -473,6 +485,9 @@ const Task::ConstTagPtr& Task::Active::tag() const
 //==============================================================================
 rmf_traffic::Duration Task::Active::estimate_remaining_time() const
 {
+  if (_finished)
+    return rmf_traffic::Duration(0);
+
   auto remaining_time =
     _active_phase ? _active_phase->estimate_remaining_time() :
     rmf_traffic::Duration(0);
@@ -485,6 +500,9 @@ rmf_traffic::Duration Task::Active::estimate_remaining_time() const
 //==============================================================================
 auto Task::Active::backup() const -> Backup
 {
+  if (!_active_phase || _finished)
+    return _empty_backup();
+
   return _generate_backup(
     _active_phase->tag()->id(),
     _active_phase->backup());
@@ -519,6 +537,13 @@ void Task::Active::cancel()
   {
     // If this already has a value, then the task is already running through
     // its cancellation sequence.
+    return;
+  }
+
+  if (_finished)
+  {
+    // If the task is already finished, then there is no need to do anything
+    // for the cancellation.
     return;
   }
 
@@ -616,6 +641,21 @@ void Task::Active::_load_backup(std::string backup_state_str)
   {
     restore_phase->parsing_failed(result->message);
     return failed_to_restore();
+  }
+
+  const auto finished_it = backup_state.find("finished");
+  if (finished_it != backup_state.end())
+  {
+    auto finished = finished_it.value().get<bool>();
+    if (finished)
+    {
+      _task_finished();
+      return;
+    }
+
+    _generate_pending_phases();
+    _begin_next_stage();
+    return;
   }
 
   const auto& current_phase_json = backup_state["current_phase"];
@@ -823,6 +863,7 @@ void Task::Active::_begin_next_stage(std::optional<nlohmann::json> restore)
 //==============================================================================
 void Task::Active::_finish_task()
 {
+  _finished = true;
   _task_finished();
 }
 
@@ -897,6 +938,20 @@ auto Task::Active::_generate_backup(
   root["current_phase"] = std::move(current_phase);
   root["skip_phases"] = std::move(skipping_phases);
   // TODO(MXG): Is there anything else we need to consider as part of the state?
+
+  return Backup::make(_next_task_backup_sequence_number++, root.dump());
+}
+
+//==============================================================================
+auto Task::Active::_empty_backup() const -> Backup
+{
+  // Either the task is finished or the first phase has not started. Either way
+  // there is no phase information to provide for the backup. This special case
+  // is handled by providing a "finished" property where true means the task
+  // finished while false means the task has not yet started.
+  nlohmann::json root;
+  root["schema_version"] = 1;
+  root["finished"] = _finished;
 
   return Backup::make(_next_task_backup_sequence_number++, root.dump());
 }

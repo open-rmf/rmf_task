@@ -201,6 +201,10 @@ public:
   /// Get a quick overview status of how the task is going
   virtual Event::Status status_overview() const = 0;
 
+  /// Check if this task is finished, which could include successful completion
+  /// or cancellation.
+  virtual bool finished() const = 0;
+
   /// Descriptions of the phases that have been completed
   virtual const std::vector<Phase::ConstCompletedPtr>&
   completed_phases() const = 0;
