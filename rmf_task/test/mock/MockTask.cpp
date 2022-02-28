@@ -29,6 +29,15 @@ rmf_task::Event::Status MockTask::Active::status_overview() const
 }
 
 //==============================================================================
+bool MockTask::Active::finished() const
+{
+  if (_active_phase)
+    _active_phase->final_event()->finished();
+
+  return true;
+}
+
+//==============================================================================
 auto MockTask::Active::completed_phases() const
 -> const std::vector<Phase::ConstCompletedPtr>&
 {
