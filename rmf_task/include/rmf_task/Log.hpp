@@ -40,6 +40,23 @@ public:
   class View;
   class Reader;
 
+  /// A computer-friendly ranking of how serious the log entry is.
+  enum class Tier : uint32_t
+  {
+    /// This is a sentinel value that should not generally be used.
+    Uninitialized = 0,
+
+    /// An expected occurrence took place.
+    Info,
+
+    /// An unexpected, problematic occurrence took place, but it can be
+    /// recovered from. Human attention is recommended but not necessary.
+    Warning,
+
+    /// A problem happened, and humans should be alerted.
+    Error
+  };
+
   /// Construct a log.
   ///
   /// \param[in] clock
@@ -57,6 +74,9 @@ public:
 
   /// Add an error to the log.
   void error(std::string text);
+
+  /// Push an entry of the specified severity.
+  void push(Tier tier, std::string text);
 
   /// Insert an arbitrary entry into the log.
   void insert(Log::Entry entry);
@@ -76,23 +96,6 @@ private:
 class Log::Entry
 {
 public:
-
-  /// A computer-friendly ranking of how serious the log entry is.
-  enum class Tier : uint32_t
-  {
-    /// This is a sentinel value that should not generally be used.
-    Uninitialized = 0,
-
-    /// An expected occurrence took place.
-    Info,
-
-    /// An unexpected, problematic occurrence took place, but it can be
-    /// recovered from. Human attention is recommended but not necessary.
-    Warning,
-
-    /// A problem happened, and humans should be alerted.
-    Error
-  };
 
   /// What was the tier of this entry.
   Tier tier() const;

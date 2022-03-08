@@ -245,25 +245,35 @@ Log::Log(std::function<rmf_traffic::Time()> clock)
 //==============================================================================
 void Log::info(std::string text)
 {
-  _pimpl->entries->emplace_back(
-    Entry::Implementation::make(
-      Entry::Tier::Info, _pimpl->seq++, _pimpl->clock(), std::move(text)));
+  push(Tier::Info, std::move(text));
 }
 
 //==============================================================================
 void Log::warn(std::string text)
 {
-  _pimpl->entries->emplace_back(
-    Entry::Implementation::make(
-      Entry::Tier::Warning, _pimpl->seq++, _pimpl->clock(), std::move(text)));
+  push(Tier::Warning, std::move(text));
 }
 
 //==============================================================================
 void Log::error(std::string text)
 {
+  push(Tier::Error, std::move(text));
+}
+
+//==============================================================================
+void Log::push(Tier tier, std::string text)
+{
+  if (Tier::Uninitialized == tier)
+  {
+    // *INDENT-OFF*
+    throw std::runtime_error(
+      "[Log::push] Tier was set to Uninitialized, which is illegal.");
+    // *INDENT-ON*
+  }
+
   _pimpl->entries->emplace_back(
     Entry::Implementation::make(
-      Entry::Tier::Error, _pimpl->seq++, _pimpl->clock(), std::move(text)));
+      tier, _pimpl->seq++, _pimpl->clock(), std::move(text)));
 }
 
 //==============================================================================
