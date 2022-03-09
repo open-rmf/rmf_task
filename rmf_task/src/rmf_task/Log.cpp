@@ -17,6 +17,7 @@
 
 #include <rmf_task/Log.hpp>
 
+#include <stdexcept>
 #include <list>
 
 namespace rmf_task {
