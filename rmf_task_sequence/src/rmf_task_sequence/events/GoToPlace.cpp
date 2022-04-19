@@ -181,6 +181,7 @@ class GoToPlace::Description::Implementation
 public:
 
   rmf_traffic::agv::Plan::Goal destination;
+  std::vector<rmf_traffic::agv::Plan::Goal> expected_next_destinations;
 };
 
 //==============================================================================
@@ -188,9 +189,7 @@ auto GoToPlace::Description::make(Goal goal) -> DescriptionPtr
 {
   auto desc = std::shared_ptr<Description>(new Description);
   desc->_pimpl = rmf_utils::make_impl<Implementation>(
-    Implementation{
-      std::move(goal)
-    });
+    Implementation{std::move(goal), {}});
 
   return desc;
 }
@@ -274,6 +273,21 @@ std::string GoToPlace::Description::destination_name(
   return rmf_task::standard_waypoint_name(
     parameters.planner()->get_configuration().graph(),
     _pimpl->destination.waypoint());
+}
+
+//==============================================================================
+auto GoToPlace::Description::expected_next_destinations() const
+-> const std::vector<Goal>&
+{
+  return _pimpl->expected_next_destinations;
+}
+
+//==============================================================================
+auto GoToPlace::Description::expected_next_destinations(std::vector<Goal> value)
+-> Description&
+{
+  _pimpl->expected_next_destinations = std::move(value);
+  return *this;
 }
 
 //==============================================================================
