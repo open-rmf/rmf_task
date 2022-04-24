@@ -19,20 +19,28 @@
 
 #include <stdexcept>
 #include <list>
+#include <mutex>
 
 namespace rmf_task {
+
+//==============================================================================
+struct LogData
+{
+  mutable std::mutex mutex;
+  std::list<Log::Entry> entries;
+};
 
 //==============================================================================
 class Log::Implementation
 {
 public:
   std::function<rmf_traffic::Time()> clock;
-  std::shared_ptr<std::list<Log::Entry>> entries;
+  std::shared_ptr<LogData> data;
   uint32_t seq = 0;
 
   Implementation(std::function<rmf_traffic::Time()> clock_)
   : clock(std::move(clock_)),
-    entries(std::make_shared<std::list<Log::Entry>>())
+    data(std::make_shared<LogData>())
   {
     if (!clock)
     {
@@ -86,18 +94,17 @@ public:
   {
     View output;
 
-    if (log._pimpl->entries->empty())
+    if (log._pimpl->data->entries.empty())
     {
       output._pimpl = rmf_utils::make_impl<Implementation>(
-        Implementation{log._pimpl->entries, std::nullopt, std::nullopt});
+        Implementation{log._pimpl->data, std::nullopt});
     }
     else
     {
       output._pimpl = rmf_utils::make_impl<Implementation>(
         Implementation{
-          log._pimpl->entries,
-          log._pimpl->entries->cbegin(),
-          --log._pimpl->entries->cend()
+          log._pimpl->data,
+          log._pimpl->data->entries.cbegin()
         });
     }
 
@@ -109,15 +116,10 @@ public:
     return *view._pimpl;
   }
 
-  std::shared_ptr<const std::list<Log::Entry>> shared;
+  std::shared_ptr<const LogData> shared;
 
   /// begin is the iterator for the first entry in the entire log
   std::optional<std::list<Log::Entry>::const_iterator> begin;
-
-  /// last is the iterator for the last entry that will be provided by this
-  /// view. This is NOT the usual end() iterator, but instead it is one-before
-  /// the usual end() iterator.
-  std::optional<std::list<Log::Entry>::const_iterator> last;
 };
 
 //==============================================================================
@@ -125,12 +127,14 @@ class Log::Reader::Implementation
 {
 public:
 
+  using OptListIterator = std::optional<std::list<Log::Entry>::const_iterator>;
   struct Memory
   {
-    std::weak_ptr<const std::list<Log::Entry>> weak;
-    std::optional<std::list<Log::Entry>::const_iterator> last;
+    std::weak_ptr<const LogData> weak;
+    std::shared_ptr<OptListIterator> last;
 
     Memory()
+      : last(std::make_shared<OptListIterator>(std::nullopt))
     {
       // Do nothing
     }
@@ -146,13 +150,11 @@ class Log::Reader::Iterable::Implementation
 {
 public:
   using base_iterator = std::list<Log::Entry>::const_iterator;
-  std::shared_ptr<const std::list<Log::Entry>> shared;
+  std::shared_ptr<const LogData> shared;
   std::optional<iterator> begin;
 
-  static Log::Reader::Iterable make(
-    std::shared_ptr<const std::list<Log::Entry>> shared,
-    std::optional<base_iterator> begin,
-    std::optional<base_iterator> last);
+  static Log::Reader::Iterable make(std::shared_ptr<const LogData> shared,
+    std::optional<base_iterator> begin);
 };
 
 //==============================================================================
@@ -161,13 +163,13 @@ class Log::Reader::Iterable::iterator::Implementation
 public:
   using base_iterator = std::list<Log::Entry>::const_iterator;
   base_iterator it;
-  base_iterator last;
+  std::shared_ptr<const LogData> data;
 
-  static iterator make(base_iterator it, base_iterator last)
+  static iterator make(base_iterator it, std::shared_ptr<const LogData> data)
   {
     iterator output;
     output._pimpl = rmf_utils::make_impl<Implementation>(
-      Implementation{std::move(it), std::move(last)});
+      Implementation{std::move(it), std::move(data)});
 
     return output;
   }
@@ -180,30 +182,26 @@ public:
 
 //==============================================================================
 Log::Reader::Iterable Log::Reader::Iterable::Implementation::make(
-  std::shared_ptr<const std::list<Log::Entry>> shared,
-  std::optional<base_iterator> begin,
-  std::optional<base_iterator> last)
+  std::shared_ptr<const LogData> shared,
+  std::optional<base_iterator> begin)
 {
   Iterable iterable;
-  iterable._pimpl = rmf_utils::make_impl<Implementation>();
-  iterable._pimpl->shared = std::move(shared);
+
   if (begin.has_value())
   {
-    if (++base_iterator(last.value()) == *begin)
-    {
-      // If the beginning iterator is already the end() iterator, we should
-      // directly set it to that right now.
-      iterable._pimpl->begin = iterator::Implementation::end();
-    }
-    else
-    {
-      iterable._pimpl->begin =
-        iterator::Implementation::make(*begin, last.value());
-    }
+    iterable._pimpl = rmf_utils::make_impl<Implementation>(
+      Implementation{
+        std::move(shared),
+        iterator::Implementation::make(*begin, shared)
+      });
   }
   else
   {
-    iterable._pimpl->begin = iterator::Implementation::end();
+    iterable._pimpl = rmf_utils::make_impl<Implementation>(
+      Implementation{
+        std::move(shared),
+        iterator::Implementation::end()
+      });
   }
 
   return iterable;
@@ -217,21 +215,18 @@ auto Log::Reader::Implementation::read(const View& view) -> Iterable
   auto& memory = it->second;
   if (memory.weak.lock())
   {
-    if (!memory.last.has_value())
-      memory.last = v.begin;
+    if (!memory.last->has_value())
+      *memory.last = v.begin;
     else
-      ++(*memory.last);
+      ++(**memory.last);
   }
   else
   {
     memory.weak = v.shared;
-    memory.last = v.begin;
+    *memory.last = v.begin;
   }
 
-  auto iterable = Iterable::Implementation::make(
-    v.shared, memory.last, v.last);
-
-  memory.last = v.last;
+  auto iterable = Iterable::Implementation::make(v.shared, memory.last);
 
   return iterable;
 }
@@ -272,7 +267,7 @@ void Log::push(Tier tier, std::string text)
     // *INDENT-ON*
   }
 
-  _pimpl->entries->emplace_back(
+  _pimpl->data->emplace_back(
     Entry::Implementation::make(
       tier, _pimpl->seq++, _pimpl->clock(), std::move(text)));
 }
@@ -280,7 +275,7 @@ void Log::push(Tier tier, std::string text)
 //==============================================================================
 void Log::insert(Log::Entry entry)
 {
-  _pimpl->entries->emplace_back(std::move(entry));
+  _pimpl->data->emplace_back(std::move(entry));
 }
 
 //==============================================================================
