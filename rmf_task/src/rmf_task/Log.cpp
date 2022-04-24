@@ -17,6 +17,7 @@
 
 #include <rmf_task/Log.hpp>
 
+#include <mutex>
 #include <stdexcept>
 #include <list>
 
@@ -28,6 +29,7 @@ class Log::Implementation
 public:
   std::function<rmf_traffic::Time()> clock;
   std::shared_ptr<std::list<Log::Entry>> entries;
+  mutable std::mutex mutex;
   uint32_t seq = 0;
 
   Implementation(std::function<rmf_traffic::Time()> clock_)
@@ -182,24 +184,15 @@ public:
 Log::Reader::Iterable Log::Reader::Iterable::Implementation::make(
   std::shared_ptr<const std::list<Log::Entry>> shared,
   std::optional<base_iterator> begin,
-  std::optional<base_iterator> last)
+  std::optional<base_iterator> last_in_view)
 {
   Iterable iterable;
   iterable._pimpl = rmf_utils::make_impl<Implementation>();
   iterable._pimpl->shared = std::move(shared);
   if (begin.has_value())
   {
-    if (++base_iterator(last.value()) == *begin)
-    {
-      // If the beginning iterator is already the end() iterator, we should
-      // directly set it to that right now.
-      iterable._pimpl->begin = iterator::Implementation::end();
-    }
-    else
-    {
-      iterable._pimpl->begin =
-        iterator::Implementation::make(*begin, last.value());
-    }
+    iterable._pimpl->begin =
+      iterator::Implementation::make(*begin, last_in_view.value());
   }
   else
   {
@@ -218,12 +211,37 @@ auto Log::Reader::Implementation::read(const View& view) -> Iterable
   if (memory.weak.lock())
   {
     if (!memory.last.has_value())
+    {
       memory.last = v.begin;
+    }
+    else if (v.last.has_value())
+    {
+      if ((*memory.last)->seq() >= (*v.last)->seq())
+      {
+        // If the last memory of this reader is more recent than this view, then
+        // we will return an empty iterable.
+        return Iterable::Implementation::make(
+          v.shared, std::nullopt, std::nullopt);
+      }
+      else
+      {
+        // If the last memory of this reader is behind the last value in the
+        // view, then we will move it forward by one.
+        ++(*memory.last);
+      }
+    }
     else
-      ++(*memory.last);
+    {
+      // The view is missing a "last" value, meaning it's an empty view.
+      // TODO(MXG): We should write explicit unit tests for this.
+      return Iterable::Implementation::make(
+        v.shared, std::nullopt, std::nullopt);
+    }
   }
   else
   {
+    // Reset this memory, because it points at an expired list whose memory
+    // address is being recycled.
     memory.weak = v.shared;
     memory.last = v.begin;
   }
@@ -238,7 +256,7 @@ auto Log::Reader::Implementation::read(const View& view) -> Iterable
 
 //==============================================================================
 Log::Log(std::function<rmf_traffic::Time()> clock)
-: _pimpl(rmf_utils::make_impl<Implementation>(std::move(clock)))
+: _pimpl(rmf_utils::make_unique_impl<Implementation>(std::move(clock)))
 {
   // Do nothing
 }
@@ -272,6 +290,7 @@ void Log::push(Tier tier, std::string text)
     // *INDENT-ON*
   }
 
+  std::lock_guard<std::mutex> lock(_pimpl->mutex);
   _pimpl->entries->emplace_back(
     Entry::Implementation::make(
       tier, _pimpl->seq++, _pimpl->clock(), std::move(text)));
@@ -286,6 +305,7 @@ void Log::insert(Log::Entry entry)
 //==============================================================================
 Log::View Log::view() const
 {
+  std::lock_guard<std::mutex> lock(_pimpl->mutex);
   return View::Implementation::make(*this);
 }
 
@@ -401,6 +421,7 @@ bool Log::Reader::Iterable::iterator::operator!=(const iterator& other) const
 
 //==============================================================================
 Log::Reader::Iterable::iterator::iterator()
+: _pimpl(nullptr)
 {
   // Do nothing
 }

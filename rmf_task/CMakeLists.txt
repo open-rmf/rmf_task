@@ -24,6 +24,7 @@ find_package(rmf_utils REQUIRED)
 find_package(rmf_traffic REQUIRED)
 find_package(rmf_battery REQUIRED)
 find_package(Eigen3 REQUIRED)
+find_package(Threads)
 
 find_package(ament_cmake_catch2 QUIET)
 find_package(ament_cmake_uncrustify QUIET)
@@ -40,6 +41,7 @@ add_library(rmf_task SHARED
 target_link_libraries(rmf_task
   PUBLIC
     rmf_battery::rmf_battery
+    Threads::Threads
 )
 
 target_include_directories(rmf_task
