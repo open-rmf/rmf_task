@@ -154,7 +154,7 @@ SCENARIO("Multi-threaded read/write with synced view")
       }
     }, all_seqs, all_text, sync, test_finished);
 
-  std::this_thread::sleep_for(std::chrono::seconds(100));
+  std::this_thread::sleep_for(std::chrono::seconds(5));
   test_finished->store(true);
 
   // Use this condition variable to wake up the consumer, in case it's waiting
@@ -228,7 +228,7 @@ SCENARIO("Multi-threaded read/write without syncing")
       }
     }, log, all_seqs, all_text, test_finished);
 
-  std::this_thread::sleep_for(std::chrono::seconds(100));
+  std::this_thread::sleep_for(std::chrono::seconds(5));
   test_finished->store(true);
 
   producer.join();
