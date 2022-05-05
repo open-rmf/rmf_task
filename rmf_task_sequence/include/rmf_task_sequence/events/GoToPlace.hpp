@@ -56,6 +56,19 @@ public:
   /// will be referred to as "#x" where "x" is the index number of the waypoint.
   std::string destination_name(const rmf_task::Parameters& parameters) const;
 
+  /// Get the expected future destinations that may come after this one.
+  const std::vector<Goal>& expected_next_destinations() const;
+
+  /// Set the expected future destinations that may come after this one. This
+  /// GoToPlace event will be completed when it arrives at its specified primary
+  /// destination, regardless of these expected next destinations.
+  ///
+  /// The expected next destinations will only be used by the traffic system to
+  /// help optimize traffic throughput. When this is left empty, the traffic
+  /// system might perform poorly if the robot does not have exclusive rights to
+  /// be at its destination.
+  Description& expected_next_destinations(std::vector<Goal> value);
+
   // Documentation inherited
   Activity::ConstModelPtr make_model(
     State invariant_initial_state,

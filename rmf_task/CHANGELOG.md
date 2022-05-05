@@ -1,5 +1,8 @@
 ## Changelog for package rmf_task
 
+2.1.0 (2022-XX-YY)
+------------------
+
 2.0.0 (2022-02-14)
 ------------------
 * Support flexible task definitions [#39](https://github.com/open-rmf/rmf_task/pull/39)
