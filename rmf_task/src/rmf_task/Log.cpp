@@ -17,6 +17,7 @@
 
 #include <rmf_task/Log.hpp>
 
+#include <optional>
 #include <mutex>
 #include <stdexcept>
 #include <list>
