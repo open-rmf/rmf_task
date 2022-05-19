@@ -741,7 +741,7 @@ void Task::Active::_load_backup(std::string backup_state_str)
     }
   }
 
-  _begin_next_stage(current_phase_json["state"]);
+  _begin_next_stage(std::optional<nlohmann::json>(current_phase_json["state"]));
 }
 
 //==============================================================================

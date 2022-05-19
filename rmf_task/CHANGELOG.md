@@ -1,6 +1,6 @@
 ## Changelog for package rmf_task
 
-2.1.0 (2022-XX-YY)
+2.1.0 (2022-05-19)
 ------------------
 * Fix undefined behavior in log: [#62](https://github.com/open-rmf/rmf_task/pull/62)
 
