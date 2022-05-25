@@ -1,6 +1,6 @@
 ## Changelog for package rmf_task_sequence
 
-2.1.0 (2022-XX-YY)
+2.1.0 (2022-05-19)
 ------------------
 *  Allow GoToPlace to know about expected future destinations [#61](https://github.com/open-rmf/rmf_task/pull/61)
 
