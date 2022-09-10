@@ -4,20 +4,47 @@ on:
   pull_request:
   schedule:
     - cron: '23 0 * * *'
-
+defaults:
+  run:
+    shell: bash
 jobs:
   build_and_test:
+    strategy:
+      fail-fast: false
+      matrix:
+        ros_distribution:
+          - foxy
+          - galactic
+          - humble
+        ubuntu_distribution:
+          - focal
+          - jammy
+        exclude:
+          - ros_distribution: foxy
+            ubuntu_distribution: jammy
+          - ros_distribution: galactic
+            ubuntu_distribution: jammy
+          - ros_distribution: humble
+            ubuntu_distribution: focal
+
     name: Build and test
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
+    container:
+      image: rostooling/setup-ros-docker:ubuntu-${{ matrix.ubuntu_distribution }}-latest
     steps:
       - name: deps
-        uses: ros-tooling/setup-ros@v0.2
+        uses: ros-tooling/setup-ros@v0.4
         with:
-          required-ros-distributions: foxy
+          required-ros-distributions: ${{ matrix.ros_distribution }}
+      - name: install_clang
+        run: sudo apt update && sudo apt install -y clang clang-tools lld
       - name: build
         uses: ros-tooling/action-ros-ci@v0.2
+        env:
+          CC: clang
+          CXX: clang++
         with:
-          target-ros2-distro: foxy
+          target-ros2-distro: ${{ matrix.ros_distribution }}
           # build all packages listed in the meta package
           package-name: |
             rmf_task
@@ -26,10 +53,16 @@ jobs:
           colcon-defaults: |
             {
               "build": {
-                "mixin": ["coverage-gcc"]
+                "mixin": ["coverage-gcc", "lld"]
               }
             }
           colcon-mixin-repository: https://raw.githubusercontent.com/colcon/colcon-mixin-repository/master/index.yaml
+      - name: Upload failed test results
+        uses: actions/upload-artifact@v2
+        if: failure()
+        with:
+          name: test-results
+          path: ros_ws/build/*/test_results/*/*.catch2.xml
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1
         with:
