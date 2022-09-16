@@ -1,7 +1,6 @@
 name: build
 on:
-  push:
-  pull_request:
+pull_request:
   schedule:
     - cron: '23 0 * * *'
 
