@@ -24,6 +24,7 @@ find_package(rmf_api_msgs REQUIRED)
 find_package(rmf_task REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(nlohmann_json_schema_validator_vendor REQUIRED)
+find_package(nlohmann_json_schema_validator REQUIRED)
 
 find_package(ament_cmake_catch2 QUIET)
 find_package(ament_cmake_uncrustify QUIET)
