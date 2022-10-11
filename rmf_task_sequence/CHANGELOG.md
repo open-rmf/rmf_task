@@ -1,5 +1,15 @@
 ## Changelog for package rmf_task_sequence
 
+2.1.1 (2022-10-11)
+------------------
+* Add find_package/find_dependency for vendored project.
+  The vendor package for nlohmann_json_schema_validator was previously
+  exporting dependency info for that package, however that is not the
+  recommended workflow for vendor packages which are ideally as
+  transparent as possible.
+* Allow GoToPlace to know about expected future destinations (`#61 <https://github.com/open-rmf/rmf_task/issues/61>`_)
+* Contributors: Grey, Marco A. Gutiérrez, Steven! Ragnarök
+
 2.1.0 (2022-05-19)
 ------------------
 *  Allow GoToPlace to know about expected future destinations [#61](https://github.com/open-rmf/rmf_task/pull/61)

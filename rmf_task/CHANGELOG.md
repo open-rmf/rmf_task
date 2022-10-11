@@ -1,5 +1,10 @@
 ## Changelog for package rmf_task
 
+2.1.1 (2022-10-11)
+------------------
+* Allow GoToPlace to know about expected future destinations [#61](https://github.com/open-rmf/rmf_task/issues/61)
+* Contributors: Grey, Marco A. Gutiérrez
+
 2.1.0 (2022-05-19)
 ------------------
 * Fix undefined behavior in log: [#62](https://github.com/open-rmf/rmf_task/pull/62)
