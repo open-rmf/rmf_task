@@ -34,6 +34,19 @@ file(GLOB_RECURSE lib_srcs
   "src/rmf_task/*.cpp"
 )
 
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  if(CMAKE_SYSTEM_VERSION VERSION_LESS 19.0.0)
+      set(STD_CXX_FS c++fs)
+  else ()
+      set(STD_CXX_FS "")
+  endif()
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  set(STD_CXX_FS stdc++fs)
+else ()
+  message(WARNING "Unknown compiler, filesystem library not set")
+endif()
+
+
 add_library(rmf_task SHARED
   ${lib_srcs}
 )
@@ -42,6 +55,8 @@ target_link_libraries(rmf_task
   PUBLIC
     rmf_battery::rmf_battery
     Threads::Threads
+    ${STD_CXX_FS}
+
 )
 
 target_include_directories(rmf_task
