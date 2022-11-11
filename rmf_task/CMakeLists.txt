@@ -35,11 +35,7 @@ file(GLOB_RECURSE lib_srcs
 )
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-  if(CMAKE_SYSTEM_VERSION VERSION_LESS 19.0.0)
-      set(STD_CXX_FS c++fs)
-  else ()
-      set(STD_CXX_FS "")
-  endif()
+    set(STD_CXX_FS "")
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   set(STD_CXX_FS stdc++fs)
 else ()
