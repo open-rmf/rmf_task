@@ -1,5 +1,12 @@
 ## Changelog for package rmf_task
 
+2.1.2 (2022-11-14)
+------------------
+* Removed c++fs option for clang
+* Fixing need of  stdc++fs to build RPM package
+  [rmf #265](https://github.com/open-rmf/rmf/issues/265#issuecomment-1308419896)
+* Contributors: Esteban Martinena
+
 2.1.1 (2022-10-11)
 ------------------
 * Allow GoToPlace to know about expected future destinations [#61](https://github.com/open-rmf/rmf_task/issues/61)

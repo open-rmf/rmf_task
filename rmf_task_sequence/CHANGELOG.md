@@ -1,5 +1,8 @@
 ## Changelog for package rmf_task_sequence
 
+2.1.2 (2022-11-14)
+------------------
+
 2.1.1 (2022-10-11)
 ------------------
 * Add find_package/find_dependency for vendored project.
