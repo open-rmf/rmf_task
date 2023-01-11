@@ -169,7 +169,7 @@ SCENARIO("Test GoToPlace and PerformAction Compose task")
     // Result for both scenarios when battery is low should be the same
     const auto now = std::chrono::steady_clock::now();
     const double default_orientation = 0.0;
-    const double initial_soc = 0.5;
+    const double initial_soc = 0.3;
 
     rmf_traffic::agv::Plan::Start first_location{now, 0, default_orientation};
     rmf_task::State initial_state = rmf_task::State().load_basic(first_location, 0, initial_soc);
@@ -178,28 +178,22 @@ SCENARIO("Test GoToPlace and PerformAction Compose task")
     {
       TaskPlanner task_planner(task_config, default_options);
 
-      auto start_time = std::chrono::steady_clock::now();
       const auto optimal_result = task_planner.plan(
         now, {initial_state}, {compose_request});
       const auto optimal_assignments = std::get_if<
         TaskPlanner::Assignments>(&optimal_result);
-      REQUIRE(optimal_assignments);
-      const double optimal_cost = task_planner.compute_cost(*optimal_assignments);
-      auto finish_time = std::chrono::steady_clock::now();
+      CHECK(optimal_assignments);
     }
 
     WHEN("It is two separate tasks with one phase")
     {
       TaskPlanner task_planner(task_config, default_options);
 
-      auto start_time = std::chrono::steady_clock::now();
       const auto optimal_result = task_planner.plan(
         now, {initial_state}, {gotoplace_request, action_request});
       const auto optimal_assignments = std::get_if<
         TaskPlanner::Assignments>(&optimal_result);
-      REQUIRE(optimal_assignments);
-      const double optimal_cost = task_planner.compute_cost(*optimal_assignments);
-      auto finish_time = std::chrono::steady_clock::now();
+      CHECK(optimal_assignments);
     }
   }
 }
