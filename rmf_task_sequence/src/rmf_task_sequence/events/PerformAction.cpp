@@ -89,8 +89,9 @@ std::optional<rmf_task::Estimate> PerformAction::Model::estimate_finish(
     initial_state.orientation(_invariant_finish_state.orientation().value());
 
   if (constraints.drain_battery())
-    initial_state.battery_soc(
-      initial_state.battery_soc().value() - _invariant_battery_drain);
+    initial_state.battery_soc(std::max(0.0,
+      initial_state.battery_soc().value() - _invariant_battery_drain));
+
 
   if (initial_state.battery_soc().value() <= constraints.threshold_soc())
     return std::nullopt;
