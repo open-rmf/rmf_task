@@ -1,5 +1,10 @@
 ## Changelog for package rmf_task_sequence
 
+2.1.x (2022-xx-xx)
+------------------
+* Fix battery consumption modeling for perform_action tasks [#76](https://github.com/open-rmf/rmf_task/pull/76)
+* Contributors: Luca Della Vedova, Yadunund
+
 2.1.1 (2022-10-11)
 ------------------
 * Add find_package/find_dependency for vendored project.
