@@ -172,7 +172,7 @@ SCENARIO("Test GoToPlace and PerformAction Compose task")
     const double initial_soc = 0.5;
 
     rmf_traffic::agv::Plan::Start first_location{now, 0, default_orientation};
-    rmf_task::State initial_state = rmf_task::State().load_basic(first_location, 13, initial_soc);
+    rmf_task::State initial_state = rmf_task::State().load_basic(first_location, 0, initial_soc);
 
     WHEN("It is a compose task with two phases")
     {
