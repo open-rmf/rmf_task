@@ -123,15 +123,19 @@ SCENARIO("Test GoToPlace and PerformAction Compose task")
     nullptr,
     nullptr};
 
-  auto gotoplace_description = GoToPlace::Description::make(GoToPlace::Goal(dest_wp.index()));
+  auto gotoplace_description =
+    GoToPlace::Description::make(GoToPlace::Goal(dest_wp.index()));
   auto action_description = PerformAction::Description::make(
-      "clean",
-      {}, // TODO description json object
-      rmf_traffic::time::from_seconds(3600),
-      true);
+    "clean",
+    {}, // TODO description json object
+    rmf_traffic::time::from_seconds(3600),
+    true);
 
-  auto gotoplace_phase = rmf_task_sequence::phases::SimplePhase::Description::make(gotoplace_description);
-  auto action_phase = rmf_task_sequence::phases::SimplePhase::Description::make(action_description);
+  auto gotoplace_phase =
+    rmf_task_sequence::phases::SimplePhase::Description::make(
+    gotoplace_description);
+  auto action_phase = rmf_task_sequence::phases::SimplePhase::Description::make(
+    action_description);
 
   // Build the task
   rmf_task_sequence::Task::Builder builder;
@@ -147,22 +151,22 @@ SCENARIO("Test GoToPlace and PerformAction Compose task")
   auto action_task = builder.build("mock_category", "mock_tag");
 
   auto compose_request = std::make_shared<rmf_task::Request>(
-      "mock_id",
-      std::chrono::steady_clock::now(),
-      nullptr,
-      compose_task);
+    "mock_id",
+    std::chrono::steady_clock::now(),
+    nullptr,
+    compose_task);
 
   auto gotoplace_request = std::make_shared<rmf_task::Request>(
-      "mock_id2",
-      std::chrono::steady_clock::now(),
-      nullptr,
-      gotoplace_task);
+    "mock_id2",
+    std::chrono::steady_clock::now(),
+    nullptr,
+    gotoplace_task);
 
   auto action_request = std::make_shared<rmf_task::Request>(
-      "mock_id3",
-      std::chrono::steady_clock::now(),
-      nullptr,
-      action_task);
+    "mock_id3",
+    std::chrono::steady_clock::now(),
+    nullptr,
+    action_task);
 
   WHEN("Planning for a task with a gotoplace and perform_action phase")
   {
@@ -172,7 +176,9 @@ SCENARIO("Test GoToPlace and PerformAction Compose task")
     const double initial_soc = 0.3;
 
     rmf_traffic::agv::Plan::Start first_location{now, 0, default_orientation};
-    rmf_task::State initial_state = rmf_task::State().load_basic(first_location, 0, initial_soc);
+    rmf_task::State initial_state = rmf_task::State().load_basic(first_location,
+        0,
+        initial_soc);
 
     WHEN("It is a compose task with two phases")
     {
