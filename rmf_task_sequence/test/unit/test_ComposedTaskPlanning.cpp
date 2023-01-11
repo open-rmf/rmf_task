@@ -15,7 +15,12 @@
  *
 */
 
-#include <rmf_task/Activator.hpp>
+#include <rmf_battery/agv/BatterySystem.hpp>
+#include <rmf_battery/agv/MechanicalSystem.hpp>
+#include <rmf_battery/agv/PowerSystem.hpp>
+#include <rmf_battery/agv/SimpleMotionPowerSink.hpp>
+#include <rmf_battery/agv/SimpleDevicePowerSink.hpp>
+
 #include <rmf_task/BinaryPriorityScheme.hpp>
 #include <rmf_task/TaskPlanner.hpp>
 
@@ -27,12 +32,6 @@
 #include <rmf_task_sequence/phases/SimplePhase.hpp>
 
 #include <rmf_traffic/geometry/Circle.hpp>
-
-#include <rmf_battery/agv/BatterySystem.hpp>
-#include <rmf_battery/agv/MechanicalSystem.hpp>
-#include <rmf_battery/agv/PowerSystem.hpp>
-#include <rmf_battery/agv/SimpleMotionPowerSink.hpp>
-#include <rmf_battery/agv/SimpleDevicePowerSink.hpp>
 
 #include <rmf_utils/catch.hpp>
 
@@ -53,12 +52,8 @@ SCENARIO("Test GoToPlace and PerformAction Compose task")
   // Simple graph with just two waypoints
   rmf_traffic::agv::Graph graph;
   const std::string map_name = "test_map";
-  auto& charger_wp = graph.add_waypoint(map_name, {0.0, 0.0});
-
-  charger_wp.set_charger(true);
-
-  auto& dest_wp = graph.add_waypoint(map_name, {0.0, 10.0});
-  // TODO prob not needed?
+  graph.add_waypoint(map_name, {0.0, 0.0}).set_charger(true);
+  graph.add_waypoint(map_name, {0.0, 10.0});
 
   graph.add_lane(0, 1);
   graph.add_lane(1, 0);
@@ -124,10 +119,10 @@ SCENARIO("Test GoToPlace and PerformAction Compose task")
     nullptr};
 
   auto gotoplace_description =
-    GoToPlace::Description::make(GoToPlace::Goal(dest_wp.index()));
+    GoToPlace::Description::make(GoToPlace::Goal(1));
   auto action_description = PerformAction::Description::make(
     "clean",
-    {}, // TODO description json object
+    {},
     rmf_traffic::time::from_seconds(3600),
     true);
 
