@@ -10,6 +10,8 @@
   <author>Aaron</author>
   <author>Yadunund</author>
 
+  <buildtool_depend>cmake</buildtool_depend>
+
   <depend>rmf_battery</depend>
   <depend>rmf_utils</depend>
 
