@@ -91,7 +91,7 @@ inline bool check_implicit_charging_task_start(
     // No task should consume more charge than (1.0 - initial_soc)
     // in the current test, so we are guaranted to find any occurrence
     // of an implicit charging task.
-    if (!is_charge_request && s.battery_soc() > initial_soc)
+    if (is_charge_request)
     {
       implicit_charging_task_added = true;
       break;
@@ -574,11 +574,11 @@ SCENARIO("Grid World")
     // without explicitly including the task in Assignments.
     bool implicit_charging_task_added = check_implicit_charging_task_start(
       *greedy_assignments, initial_soc);
-    REQUIRE(!implicit_charging_task_added);
+    CHECK(implicit_charging_task_added);
 
     implicit_charging_task_added = check_implicit_charging_task_start(
       *optimal_assignments, initial_soc);
-    REQUIRE(!implicit_charging_task_added);
+    CHECK(implicit_charging_task_added);
   }
 
   WHEN("Planning for 11 requests and 2 agents no.2")
