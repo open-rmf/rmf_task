@@ -78,10 +78,39 @@ public:
   ///
   /// \param[in] automatic_
   ///   Whether this booking was automatically generated
+  ///
+  /// TODO(AA): Deprecate this constructor
   Booking(
     std::string id_,
     rmf_traffic::Time earliest_start_time_,
     ConstPriorityPtr priority_,
+    bool automatic_ = false);
+
+  /// Constructor
+  ///
+  /// \param[in] id_
+  ///   The identity of the booking
+  ///
+  /// \param[in] earliest_start_time_
+  ///   The earliest time that the task may begin
+  ///
+  /// \param[in] request_time_
+  ///   The time that this task was booked
+  ///
+  /// \param[in] priority_
+  ///   The priority of the booking
+  ///
+  /// \param[in] initiator_
+  ///   The name of the entity that requested this task
+  ///
+  /// \param[in] automatic_
+  ///   Whether this booking was automatically generated
+  Booking(
+    std::string id_,
+    rmf_traffic::Time earliest_start_time_,
+    rmf_traffic::Time request_time_,
+    ConstPriorityPtr priority_,
+    std::string initiator_,
     bool automatic_ = false);
 
   /// The unique id for this booking
@@ -90,8 +119,14 @@ public:
   /// Get the earliest time that this booking may begin
   rmf_traffic::Time earliest_start_time() const;
 
+  /// Get the time that this booking was requested
+  rmf_traffic::Time request_time() const;
+
   /// Get the priority of this booking
   ConstPriorityPtr priority() const;
+
+  /// Get the name of the entity that requested this booking
+  const std::string& initiator() const;
 
   // Returns true if this booking was automatically generated
   bool automatic() const;

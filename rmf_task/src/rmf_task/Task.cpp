@@ -27,7 +27,9 @@ class Task::Booking::Implementation
 public:
   std::string id;
   rmf_traffic::Time earliest_start_time;
+  rmf_traffic::Time request_time;
   rmf_task::ConstPriorityPtr priority;
+  std::string initiator;
   bool automatic;
 };
 
@@ -41,7 +43,30 @@ Task::Booking::Booking(
       Implementation{
         std::move(id_),
         earliest_start_time_,
+        earliest_start_time_,
         std::move(priority_),
+        std::string("default"),
+        automatic_
+      }))
+{
+  // Do nothing
+}
+
+//==============================================================================
+Task::Booking::Booking(
+  std::string id_,
+  rmf_traffic::Time earliest_start_time_,
+  rmf_traffic::Time request_time,
+  ConstPriorityPtr priority_,
+  std::string initiator_,
+  bool automatic_)
+: _pimpl(rmf_utils::make_impl<Implementation>(
+      Implementation{
+        std::move(id_),
+        earliest_start_time_,
+        request_time,
+        std::move(priority_),
+        std::move(initiator_),
         automatic_
       }))
 {
@@ -61,9 +86,21 @@ rmf_traffic::Time Task::Booking::earliest_start_time() const
 }
 
 //==============================================================================
+rmf_traffic::Time Task::Booking::request_time() const
+{
+  return _pimpl->request_time;
+}
+
+//==============================================================================
 ConstPriorityPtr Task::Booking::priority() const
 {
   return _pimpl->priority;
+}
+
+//==============================================================================
+const std::string& Task::Booking::initiator() const
+{
+  return _pimpl->initiator;
 }
 
 //==============================================================================
