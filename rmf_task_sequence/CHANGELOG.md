@@ -1,9 +1,10 @@
 ## Changelog for package rmf_task_sequence
 
-2.1.x (2022-xx-xx)
+2.1.3 (2022-04-17)
 ------------------
 * Fix battery consumption modeling for perform_action tasks [#76](https://github.com/open-rmf/rmf_task/pull/76)
-* Contributors: Luca Della Vedova, Yadunund
+* Add missing buildtool_depend on cmake [#75](https://github.com/open-rmf/rmf_task/issues/75)
+* Contributors: Luca Della Vedova, Scott K Logan, Yadunund
 
 2.1.2 (2022-11-14)
 ------------------
