@@ -17,7 +17,7 @@ Provides APIs and base classes for defining and managing Tasks in RMF.
 * [rmf_task::TaskPlanner](https://docs.ros.org/en/rolling/p/rmf_task/generated/classrmf__task_1_1TaskPlanner.html): API which solves the problem of optimal allocation of tasks among available robots. For a given collection of tasks and robots belonging to a fleet (ie, they share physical and kinematic traits), the planner determines the best ordering of tasks across robots such that tasks are completed in the shortest durations given their requested start times. It does this while also accounting for resource constraints of the robots such as battery level and automatically injects recharging tasks in the robot’s task itinerary when needed. Here tasks are represented by [Requests](https://docs.ros.org/en/rolling/p/rmf_task/generated/classrmf__task_1_1Request.html) which are made up of `Booking` and `Description` elements respectively.
 
 ### rmf_task_sequence
-*Provides an out-of-the-box implementation of `rmf_task`.
+Provides an out-of-the-box implementation of `rmf_task`.
 * [rmf_task_sequence::Task](https://docs.ros.org/en/rolling/p/rmf_task_sequence/generated/classrmf__task__sequence_1_1Task.html), which assumes a task to be composed of a sequence of [phases](https://docs.ros.org/en/rolling/p/rmf_task_sequence/generated/classrmf__task__sequence_1_1Phase.html) that need to be executed in-order for the task to be completed. A phase inturn may be composed of a set of [Events](https://docs.ros.org/en/rolling/p/rmf_task_sequence/generated/classrmf__task__sequence_1_1Event.html).
 * The following events that are presently available (contributions are welcome):
   * [Bundle](https://docs.ros.org/en/rolling/p/rmf_task_sequence/generated/classrmf__task__sequence_1_1events_1_1Bundle.html#exhale-class-classrmf-task-sequence-1-1events-1-1bundle)
@@ -29,7 +29,7 @@ Provides APIs and base classes for defining and managing Tasks in RMF.
   * [WaitFor](https://docs.ros.org/en/rolling/p/rmf_task_sequence/generated/classrmf__task__sequence_1_1events_1_1WaitFor.html#exhale-class-classrmf-task-sequence-1-1events-1-1waitfor)
 * See [Usage](#usage) for information on how composed tasks are integrated with the rest of Open-RMF.
 
-### Full API documentation: 
+### Full API documentation:
 * [rmf_task](https://docs.ros.org/en/rolling/p/rmf_task)
 * [rmf_task_sequence](https://docs.ros.org/en/rolling/p/rmf_task_sequence)
 
