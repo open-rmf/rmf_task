@@ -4,7 +4,7 @@
 [![codecov](https://codecov.io/gh/open-rmf/rmf_task/branch/main/graph/badge.svg)](https://codecov.io/gh/open-rmf/rmf_task)
 
 ## Overview
-The rmf_task repository contains two packages
+The rmf_task repository contains two packages, `rmf_task` and `rmf_task_sequence`.
 
 ### rmf_task
 Provides APIs and base classes for defining and managing Tasks in RMF.
