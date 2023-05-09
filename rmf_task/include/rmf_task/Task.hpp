@@ -100,8 +100,8 @@ public:
   /// \param[in] priority_
   ///   The priority of the booking
   ///
-  /// \param[in] initiator_
-  ///   The name of the entity that requested this task
+  /// \param[in] requester_
+  ///   The identifier of the entity that requested this task
   ///
   /// \param[in] automatic_
   ///   Whether this booking was automatically generated
@@ -110,7 +110,7 @@ public:
     rmf_traffic::Time earliest_start_time_,
     rmf_traffic::Time request_time_,
     ConstPriorityPtr priority_,
-    std::string initiator_,
+    std::string requester_,
     bool automatic_ = false);
 
   /// The unique id for this booking
@@ -125,8 +125,8 @@ public:
   /// Get the priority of this booking
   ConstPriorityPtr priority() const;
 
-  /// Get the name of the entity that requested this booking
-  const std::string& initiator() const;
+  /// Get the identifier of the entity that requested this booking
+  const std::string& requester() const;
 
   // Returns true if this booking was automatically generated
   bool automatic() const;

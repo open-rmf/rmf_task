@@ -220,7 +220,7 @@ ConstRequestPtr ChargeBattery::make(
   rmf_traffic::Time earliest_start_time,
   rmf_traffic::Time request_time,
   ConstPriorityPtr priority,
-  const std::string& initiator,
+  const std::string& requester,
   bool automatic)
 {
   std::string id = "Charge" + generate_uuid();
@@ -230,7 +230,7 @@ ConstRequestPtr ChargeBattery::make(
     earliest_start_time,
     request_time,
     std::move(priority),
-    initiator,
+    requester,
     automatic);
   const auto description = Description::make();
   return std::make_shared<Request>(std::move(booking), description);

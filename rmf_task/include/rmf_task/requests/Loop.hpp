@@ -142,7 +142,7 @@ public:
   /// \param[in] priority
   ///   The priority for this request
   ///
-  /// \param[in] initiator
+  /// \param[in] requester
   ///   The entity that started this request
   ///
   /// \param[in] automatic
@@ -155,7 +155,7 @@ public:
     rmf_traffic::Time earliest_start_time,
     rmf_traffic::Time request_time,
     ConstPriorityPtr priority = nullptr,
-    const std::string& initiator = "",
+    const std::string& requester = "",
     bool automatic = false);
 };
 

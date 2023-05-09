@@ -315,7 +315,7 @@ ConstRequestPtr Loop::make(
     rmf_traffic::Time earliest_start_time,
     rmf_traffic::Time request_time,
     ConstPriorityPtr priority,
-    const std::string& initiator,
+    const std::string& requester,
     bool automatic)
 {
   Task::ConstBookingPtr booking =
@@ -324,7 +324,7 @@ ConstRequestPtr Loop::make(
     earliest_start_time,
     request_time,
     std::move(priority),
-    initiator,
+    requester,
     automatic);
   const auto description = Description::make(
     start_waypoint,
