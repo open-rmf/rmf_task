@@ -37,6 +37,8 @@ public:
 
   ChargeBatteryFactory();
 
+  ChargeBatteryFactory(const std::string& requester);
+
   /// Documentation inherited
   ConstRequestPtr make_request(
     const State& state) const final;

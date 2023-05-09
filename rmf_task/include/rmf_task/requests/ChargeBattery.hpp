@@ -79,9 +79,35 @@ public:
   ///
   /// \param[in] automatic
   ///   True if this request is auto-generated
+  ///
+  /// TODO(AC): Deprecate this constructor
   static ConstRequestPtr make(
     rmf_traffic::Time earliest_start_time,
     ConstPriorityPtr priority = nullptr,
+    bool automatic = true);
+
+  /// Generate a chargebattery request
+  ///
+  /// \param[in] earliest_start_time
+  ///   The desired start time for this request
+  ///
+  /// \param[in] request_time
+  ///   The time this request was generated or submitted, to be part of the
+  ///   booking information
+  ///
+  /// \param[in] priority
+  ///   The priority for this request
+  ///
+  /// \param[in] initiator
+  ///   The entity that started this request
+  ///
+  /// \param[in] automatic
+  ///   True if this request is auto-generated
+  static ConstRequestPtr make(
+    rmf_traffic::Time earliest_start_time,
+    rmf_traffic::Time request_time,
+    ConstPriorityPtr priority = nullptr,
+    const std::string& initiator = "",
     bool automatic = true);
 };
 

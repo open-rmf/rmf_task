@@ -45,7 +45,7 @@ Task::Booking::Booking(
         earliest_start_time_,
         earliest_start_time_,
         std::move(priority_),
-        std::string("default"),
+        std::string(""),
         automatic_
       }))
 {

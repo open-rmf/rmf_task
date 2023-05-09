@@ -49,6 +49,8 @@ class ParkRobotFactory::Implementation
 {
 public:
 
+  std::string requester;
+
   std::optional<std::size_t> parking_waypoint;
 };
 
@@ -57,6 +59,20 @@ ParkRobotFactory::ParkRobotFactory(
   std::optional<std::size_t> parking_waypoint)
 : _pimpl(rmf_utils::make_impl<Implementation>(
       Implementation{
+        "",
+        parking_waypoint
+      }))
+{
+  // Do nothing
+}
+
+//==============================================================================
+ParkRobotFactory::ParkRobotFactory(
+  const std::string& requester,
+  std::optional<std::size_t> parking_waypoint)
+: _pimpl(rmf_utils::make_impl<Implementation>(
+      Implementation{
+        requester,
         parking_waypoint
       }))
 {
@@ -79,7 +95,9 @@ ConstRequestPtr ParkRobotFactory::make_request(
     1,
     id,
     state.time().value(),
+    state.time().value(),
     nullptr,
+    _pimpl->requester,
     true);
 
   return request;

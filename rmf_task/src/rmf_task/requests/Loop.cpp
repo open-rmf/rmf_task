@@ -294,14 +294,43 @@ ConstRequestPtr Loop::make(
   ConstPriorityPtr priority,
   bool automatic)
 {
+  return make(
+    start_waypoint,
+    finish_waypoint,
+    num_loops,
+    id,
+    earliest_start_time,
+    earliest_start_time,
+    priority,
+    "",
+    automatic);
+}
+
+//==============================================================================
+ConstRequestPtr Loop::make(
+    std::size_t start_waypoint,
+    std::size_t finish_waypoint,
+    std::size_t num_loops,
+    const std::string& id,
+    rmf_traffic::Time earliest_start_time,
+    rmf_traffic::Time request_time,
+    ConstPriorityPtr priority,
+    const std::string& initiator,
+    bool automatic)
+{
+  Task::ConstBookingPtr booking =
+    std::make_shared<const rmf_task::Task::Booking>(
+    id,
+    earliest_start_time,
+    request_time,
+    std::move(priority),
+    initiator,
+    automatic);
   const auto description = Description::make(
     start_waypoint,
     finish_waypoint,
     num_loops);
-
-  return std::make_shared<Request>(
-    id, earliest_start_time, std::move(priority), description, automatic);
-
+  return std::make_shared<Request>(std::move(booking), description);
 }
 
 } // namespace requests
