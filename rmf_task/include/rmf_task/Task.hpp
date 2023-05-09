@@ -79,7 +79,7 @@ public:
   /// \param[in] automatic_
   ///   Whether this booking was automatically generated
   ///
-  /// TODO(AA): Deprecate this constructor
+  /// TODO(AC): Deprecate this constructor
   Booking(
     std::string id_,
     rmf_traffic::Time earliest_start_time_,

@@ -308,15 +308,15 @@ ConstRequestPtr Loop::make(
 
 //==============================================================================
 ConstRequestPtr Loop::make(
-    std::size_t start_waypoint,
-    std::size_t finish_waypoint,
-    std::size_t num_loops,
-    const std::string& id,
-    rmf_traffic::Time earliest_start_time,
-    rmf_traffic::Time request_time,
-    ConstPriorityPtr priority,
-    const std::string& requester,
-    bool automatic)
+  std::size_t start_waypoint,
+  std::size_t finish_waypoint,
+  std::size_t num_loops,
+  const std::string& id,
+  rmf_traffic::Time earliest_start_time,
+  rmf_traffic::Time request_time,
+  ConstPriorityPtr priority,
+  const std::string& requester,
+  bool automatic)
 {
   Task::ConstBookingPtr booking =
     std::make_shared<const rmf_task::Task::Booking>(
