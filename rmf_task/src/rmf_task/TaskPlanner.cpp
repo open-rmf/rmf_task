@@ -538,7 +538,9 @@ public:
             requests.size(), time_now, interrupter);
 
       if (!node)
+      {
         return {};
+      }
 
       // Here we prune assignments to remove any charging tasks at the back of
       // the assignment list
