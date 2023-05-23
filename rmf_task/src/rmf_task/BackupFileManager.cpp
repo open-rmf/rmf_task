@@ -72,7 +72,7 @@ public:
   }
 
   template<typename... Args>
-  static std::shared_ptr<Group> make(Args&& ... args)
+  static std::shared_ptr<Group> make(Args&&... args)
   {
     Group output;
     output._pimpl = rmf_utils::make_unique_impl<Implementation>(
@@ -107,7 +107,7 @@ public:
   }
 
   template<typename... Args>
-  static std::shared_ptr<Robot> make(Args&& ... args)
+  static std::shared_ptr<Robot> make(Args&&... args)
   {
     Robot output;
     output._pimpl = rmf_utils::make_unique_impl<Implementation>(
