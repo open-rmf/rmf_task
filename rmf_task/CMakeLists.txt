@@ -42,6 +42,7 @@ target_link_libraries(rmf_task
   PUBLIC
     rmf_battery::rmf_battery
     Threads::Threads
+    $<$<CXX_COMPILER_ID:GNU>:stdc++fs>
 )
 
 target_include_directories(rmf_task
