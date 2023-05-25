@@ -21,6 +21,7 @@
 #include <mutex>
 #include <stdexcept>
 #include <list>
+#include <unordered_map>
 
 namespace rmf_task {
 

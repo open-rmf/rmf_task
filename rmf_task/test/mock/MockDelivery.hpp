@@ -45,7 +45,7 @@ public:
     Active(
       const Description& desc,
       std::optional<std::string> backup,
-      Args&& ... args)
+      Args&&... args)
     : MockTask::Active(std::forward<Args>(args)...),
       _description(desc),
       _restored_state(std::move(backup))
