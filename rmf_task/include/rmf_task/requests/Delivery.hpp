@@ -99,82 +99,48 @@ public:
     rmf_utils::impl_ptr<Implementation> _pimpl;
   };
 
-  /// Generate a delivery request
+  /// Generate a delivery request.
   ///
   /// \param[in] pickup_waypoint
-  ///   The graph index for the pickup location
+  ///   The graph index for the pickup location.
   ///
   /// \param[in] pickup_wait
   ///   The expected duration the AGV has to wait at the pickup location for
-  ///   the items to be loaded
+  ///   the items to be loaded.
   ///
   /// \param[in] dropoff_waypoint
-  ///   The graph index for the dropoff location
+  ///   The graph index for the dropoff location.
   ///
   /// \param[in] dropoff_wait
   ///   The expected duration the AGV has to wait at the dropoff location for
-  ///   the items to be unloaded
+  ///   the items to be unloaded.
   ///
   /// \param[in] id
-  ///   A unique id for this request
+  ///   A unique id for this request.
   ///
   /// \param[in] earliest_start_time
-  ///   The desired start time for this request
+  ///   The desired start time for this request.
   ///
   /// \param[in] priority
-  ///   The priority for this request
+  ///   The priority for this request.
   ///
   /// \param[in] automatic
-  ///   True if this request is auto-generated
+  ///   True if this request is auto-generated, default value as false.
   ///
-  /// TODO(AC): Deprecate this constructor
-  static ConstRequestPtr make(
-    std::size_t pickup_waypoint,
-    rmf_traffic::Duration pickup_wait,
-    std::size_t dropoff_waypoint,
-    rmf_traffic::Duration dropoff_wait,
-    Payload payload,
-    const std::string& id,
-    rmf_traffic::Time earliest_start_time,
-    ConstPriorityPtr priority = nullptr,
-    bool automatic = false,
-    std::string pickup_from_dispenser = "",
-    std::string dropoff_to_ingestor = "");
-
-  /// Generate a delivery request
+  /// \param[in] pickup_from_dispenser
+  ///   The name of the dispenser to pick up the delivery item from, at the
+  ///   designated pickup waypoint. This field is optional.
   ///
-  /// \param[in] pickup_waypoint
-  ///   The graph index for the pickup location
+  /// \param[in] dropoff_to_ingestor
+  ///   The name of the ingestor to drop off the delivery item to, at the
+  ///   designated dropoff waypoint. This field is optional.
   ///
-  /// \param[in] pickup_wait
-  ///   The expected duration the AGV has to wait at the pickup location for
-  ///   the items to be loaded
-  ///
-  /// \param[in] dropoff_waypoint
-  ///   The graph index for the dropoff location
-  ///
-  /// \param[in] dropoff_wait
-  ///   The expected duration the AGV has to wait at the dropoff location for
-  ///   the items to be unloaded
-  ///
-  /// \param[in] id
-  ///   A unique id for this request
-  ///
-  /// \param[in] earliest_start_time
-  ///   The desired start time for this request
+  /// \param[in] requester
+  ///   The entity that started this request. This field is optional.
   ///
   /// \param[in] request_time
   ///   The time this request was generated or submitted, to be part of the
-  ///   booking information
-  ///
-  /// \param[in] priority
-  ///   The priority for this request
-  ///
-  /// \param[in] requester
-  ///   The entity that started this request
-  ///
-  /// \param[in] automatic
-  ///   True if this request is auto-generated
+  ///   booking information. This field is optional.
   static ConstRequestPtr make(
     std::size_t pickup_waypoint,
     rmf_traffic::Duration pickup_wait,
@@ -183,12 +149,12 @@ public:
     Payload payload,
     const std::string& id,
     rmf_traffic::Time earliest_start_time,
-    rmf_traffic::Time request_time,
     ConstPriorityPtr priority = nullptr,
-    const std::string& requester = "",
     bool automatic = false,
     std::string pickup_from_dispenser = "",
-    std::string dropoff_to_ingestor = "");
+    std::string dropoff_to_ingestor = "",
+    std::optional<std::string> requester = std::nullopt,
+    std::optional<rmf_traffic::Time> request_time = std::nullopt);
 };
 
 } // namespace requests

@@ -44,8 +44,7 @@ public:
   ///
   /// \param[in] automatic
   ///   True if this request is auto-generated
-  //
-  // TODO(MXG): Deprecate this constructor?
+  [[deprecated]]
   Request(
     const std::string& id,
     rmf_traffic::Time earliest_start_time,

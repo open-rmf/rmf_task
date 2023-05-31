@@ -329,48 +329,18 @@ ConstRequestPtr Delivery::make(
   ConstPriorityPtr priority,
   bool automatic,
   std::string pickup_from_dispenser,
-  std::string dropoff_to_ingestor)
-{
-  return make(
-    pickup_waypoint,
-    pickup_wait,
-    dropoff_waypoint,
-    dropoff_wait,
-    payload,
-    id,
-    earliest_start_time,
-    earliest_start_time,
-    priority,
-    "",
-    automatic,
-    pickup_from_dispenser,
-    dropoff_to_ingestor);
-}
-
-//==============================================================================
-ConstRequestPtr Delivery::make(
-  std::size_t pickup_waypoint,
-  rmf_traffic::Duration pickup_wait,
-  std::size_t dropoff_waypoint,
-  rmf_traffic::Duration dropoff_wait,
-  Payload payload,
-  const std::string& id,
-  rmf_traffic::Time earliest_start_time,
-  rmf_traffic::Time request_time,
-  ConstPriorityPtr priority,
-  const std::string& requester,
-  bool automatic,
-  std::string pickup_from_dispenser,
-  std::string dropoff_to_ingestor)
+  std::string dropoff_to_ingestor,
+  std::optional<std::string> requester,
+  std::optional<rmf_traffic::Time> request_time)
 {
   Task::ConstBookingPtr booking =
     std::make_shared<const rmf_task::Task::Booking>(
     id,
     earliest_start_time,
-    request_time,
     std::move(priority),
-    requester,
-    automatic);
+    automatic,
+    std::move(requester),
+    std::move(request_time));
   const auto description = Description::make(
     pickup_waypoint,
     pickup_wait,

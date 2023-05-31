@@ -378,7 +378,12 @@ public:
 
   ConstRequestPtr make_charging_request(rmf_traffic::Time start_time)
   {
-    return rmf_task::requests::ChargeBattery::make(start_time, start_time);
+    return rmf_task::requests::ChargeBattery::make(
+      start_time,
+      nullptr,
+      true,
+      std::nullopt,
+      start_time);
   }
 
   TaskPlanner::Assignments prune_assignments(

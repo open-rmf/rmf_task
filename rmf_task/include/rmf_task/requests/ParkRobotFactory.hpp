@@ -44,23 +44,13 @@ public:
   ///   If nullopt, the AGV will return to its charging_waypoint and remain idle
   ///   there. It will not wait for its battery to charge up before undertaking
   ///   new tasks.
-  ParkRobotFactory(
-    std::optional<std::size_t> parking_waypoint = std::nullopt);
-
-  /// Constructor
   ///
   /// \param[in] requester
-  ///   The identifier for the entity that would make parking requests.
-  ///
-  /// \param[in] parking_waypoint
-  ///   The graph index of the waypoint assigned to this AGV for parking.
-  ///   If nullopt, the AGV will return to its charging_waypoint and remain idle
-  ///   there. It will not wait for its battery to charge up before undertaking
-  ///   new tasks.
+  ///   The identifier for the entity that would make parking requests. This
+  ///   field is optional.
   ParkRobotFactory(
-    const std::string& requester,
-    std::optional<std::size_t> parking_waypoint = std::nullopt);
-
+    std::optional<std::size_t> parking_waypoint = std::nullopt,
+    std::optional<std::string> requester = std::nullopt);
 
   /// Documentation inherited
   ConstRequestPtr make_request(

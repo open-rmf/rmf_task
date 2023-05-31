@@ -279,40 +279,18 @@ ConstRequestPtr Clean::make(
   const std::string& id,
   rmf_traffic::Time earliest_start_time,
   ConstPriorityPtr priority,
-  bool automatic)
-{
-  return make(
-    start_waypoint,
-    end_waypoint,
-    cleaning_path,
-    id,
-    earliest_start_time,
-    earliest_start_time,
-    priority,
-    "",
-    automatic);
-}
-
-//==============================================================================
-ConstRequestPtr Clean::make(
-  std::size_t start_waypoint,
-  std::size_t end_waypoint,
-  const rmf_traffic::Trajectory& cleaning_path,
-  const std::string& id,
-  rmf_traffic::Time earliest_start_time,
-  rmf_traffic::Time request_time,
-  ConstPriorityPtr priority,
-  const std::string& requester,
-  bool automatic)
+  bool automatic,
+  std::optional<std::string> requester,
+  std::optional<rmf_traffic::Time> request_time)
 {
   Task::ConstBookingPtr booking =
     std::make_shared<const rmf_task::Task::Booking>(
     id,
     earliest_start_time,
-    request_time,
     std::move(priority),
-    requester,
-    automatic);
+    automatic,
+    std::move(requester),
+    std::move(request_time));
   const auto description = Clean::Description::make(
     start_waypoint,
     end_waypoint,

@@ -83,80 +83,46 @@ public:
     rmf_utils::impl_ptr<Implementation> _pimpl;
   };
 
-  /// Generate a loop request
+  /// Generate a loop request.
   ///
   /// \param[in] start_waypoint
-  ///   The graph index for the starting waypoint of the loop
+  ///   The graph index for the starting waypoint of the loop.
   ///
   /// \param[in] finish_waypoint
-  ///   The graph index for the finishing waypoint of the loop
+  ///   The graph index for the finishing waypoint of the loop.
   ///
   /// \param[in] num_loops
   ///   The number of times the AGV should loop between the start_waypoint and
-  ///   finish_waypoint
+  ///   finish_waypoint.
   ///
   /// \param[in] id
-  ///   A unique id for this request
+  ///   A unique id for this request.
   ///
   /// \param[in] earliest_start_time
-  ///   The desired start time for this request
+  ///   The desired start time for this request.
   ///
   /// \param[in] priority
-  ///   The priority for this request
+  ///   The priority for this request.
   ///
   /// \param[in] automatic
-  ///   True if this request is auto-generated
+  ///   True if this request is auto-generated, default as false.
   ///
-  /// TODO(AC): Deprecate this constructor
-  static ConstRequestPtr make(
-    std::size_t start_waypoint,
-    std::size_t finish_waypoint,
-    std::size_t num_loops,
-    const std::string& id,
-    rmf_traffic::Time earliest_start_time,
-    ConstPriorityPtr priority = nullptr,
-    bool automatic = false);
-
-  /// Generate a loop request
-  ///
-  /// \param[in] start_waypoint
-  ///   The graph index for the starting waypoint of the loop
-  ///
-  /// \param[in] finish_waypoint
-  ///   The graph index for the finishing waypoint of the loop
-  ///
-  /// \param[in] num_loops
-  ///   The number of times the AGV should loop between the start_waypoint and
-  ///   finish_waypoint
-  ///
-  /// \param[in] id
-  ///   A unique id for this request
-  ///
-  /// \param[in] earliest_start_time
-  ///   The desired start time for this request
+  /// \param[in] requester
+  ///   The entity that started this request. This field is optional.
   ///
   /// \param[in] request_time
   ///   The time this request was generated or submitted, to be part of the
-  ///   booking information
-  ///
-  /// \param[in] priority
-  ///   The priority for this request
-  ///
-  /// \param[in] requester
-  ///   The entity that started this request
-  ///
-  /// \param[in] automatic
-  ///   True if this request is auto-generated
+  ///   booking information. This field is optional.
   static ConstRequestPtr make(
     std::size_t start_waypoint,
     std::size_t finish_waypoint,
     std::size_t num_loops,
     const std::string& id,
     rmf_traffic::Time earliest_start_time,
-    rmf_traffic::Time request_time,
     ConstPriorityPtr priority = nullptr,
-    const std::string& requester = "",
-    bool automatic = false);
+    bool automatic = false,
+    std::optional<std::string> requester = std::nullopt,
+    std::optional<rmf_traffic::Time> request_time = std::nullopt);
 };
 
 } // namespace tasks

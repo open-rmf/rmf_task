@@ -124,7 +124,11 @@ std::shared_ptr<Candidates> Candidates::make(
     else
     {
       auto charge_battery = requests::ChargeBattery::make(
-        start_time, start_time);
+        start_time,
+        nullptr,
+        true,
+        std::nullopt,
+        start_time);
       const auto battery_model = charge_battery->description()->make_model(
         start_time,
         parameters);

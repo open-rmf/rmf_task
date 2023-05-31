@@ -69,46 +69,29 @@ public:
     rmf_utils::impl_ptr<Implementation> _pimpl;
   };
 
-  /// Generate a chargebattery request
+  /// Generate a chargebattery request.
   ///
   /// \param[in] earliest_start_time
-  ///   The desired start time for this request
+  ///   The desired start time for this request.
   ///
   /// \param[in] priority
-  ///   The priority for this request
+  ///   The priority for this request.
   ///
   /// \param[in] automatic
-  ///   True if this request is auto-generated
+  ///   True if this request is auto-generated, default value as true.
   ///
-  /// TODO(AC): Deprecate this constructor
-  static ConstRequestPtr make(
-    rmf_traffic::Time earliest_start_time,
-    ConstPriorityPtr priority = nullptr,
-    bool automatic = true);
-
-  /// Generate a chargebattery request
-  ///
-  /// \param[in] earliest_start_time
-  ///   The desired start time for this request
+  /// \param[in] requester
+  ///   The entity that started this request. This field is optional.
   ///
   /// \param[in] request_time
   ///   The time this request was generated or submitted, to be part of the
-  ///   booking information
-  ///
-  /// \param[in] priority
-  ///   The priority for this request
-  ///
-  /// \param[in] requester
-  ///   The entity that started this request
-  ///
-  /// \param[in] automatic
-  ///   True if this request is auto-generated
+  ///   booking information. This field is optional.
   static ConstRequestPtr make(
     rmf_traffic::Time earliest_start_time,
-    rmf_traffic::Time request_time,
     ConstPriorityPtr priority = nullptr,
-    const std::string& requester = "",
-    bool automatic = true);
+    bool automatic = true,
+    std::optional<std::string> requester = std::nullopt,
+    std::optional<rmf_traffic::Time> request_time = std::nullopt);
 };
 
 } // namespace requests

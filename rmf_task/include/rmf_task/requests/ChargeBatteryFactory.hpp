@@ -18,6 +18,9 @@
 #ifndef RMF_TASK__REQUESTS__FACTORY__CHARGEBATTERYFACTORY_HPP
 #define RMF_TASK__REQUESTS__FACTORY__CHARGEBATTERYFACTORY_HPP
 
+#include <optional>
+#include <string>
+
 #include <rmf_task/RequestFactory.hpp>
 #include <rmf_task/State.hpp>
 
@@ -35,9 +38,7 @@ class ChargeBatteryFactory : public RequestFactory
 {
 public:
 
-  ChargeBatteryFactory();
-
-  ChargeBatteryFactory(const std::string& requester);
+  ChargeBatteryFactory(std::optional<std::string> requester = std::nullopt);
 
   /// Documentation inherited
   ConstRequestPtr make_request(

@@ -25,19 +25,14 @@ namespace requests {
 class ChargeBatteryFactory::Implementation
 {
 public:
-  std::string requester;
+  std::optional<std::string> requester;
+
 };
 
 //==============================================================================
-ChargeBatteryFactory::ChargeBatteryFactory()
-: _pimpl(rmf_utils::make_impl<Implementation>(Implementation{""}))
-{
-  // Do nothing
-}
-
-//==============================================================================
-ChargeBatteryFactory::ChargeBatteryFactory(const std::string& requester)
-: _pimpl(rmf_utils::make_impl<Implementation>(Implementation{requester}))
+ChargeBatteryFactory::ChargeBatteryFactory(std::optional<std::string> requester)
+: _pimpl(rmf_utils::make_impl<Implementation>(
+      Implementation{std::move(requester)}))
 {
   // Do nothing
 }
@@ -48,9 +43,10 @@ ConstRequestPtr ChargeBatteryFactory::make_request(
 {
   return ChargeBattery::make(
     state.time().value(),
-    state.time().value(),
     nullptr,
-    _pimpl->requester);
+    true,
+    _pimpl->requester,
+    state.time().value());
 }
 
 } // namespace requests
