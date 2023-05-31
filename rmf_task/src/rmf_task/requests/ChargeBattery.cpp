@@ -219,7 +219,9 @@ ConstRequestPtr ChargeBattery::make(
     std::move(requester),
     std::move(request_time));
   const auto description = Description::make();
-  return std::make_shared<Request>(std::move(booking), description);
+  return std::make_shared<Request>(
+    std::move(booking),
+    std::move(description));
 }
 
 } // namespace requests

@@ -295,7 +295,9 @@ ConstRequestPtr Clean::make(
     start_waypoint,
     end_waypoint,
     cleaning_path);
-  return std::make_shared<Request>(std::move(booking), description);
+  return std::make_shared<Request>(
+    std::move(booking),
+    std::move(description));
 }
 
 } // namespace requests

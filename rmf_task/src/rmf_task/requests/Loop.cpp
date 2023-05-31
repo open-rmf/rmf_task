@@ -308,7 +308,9 @@ ConstRequestPtr Loop::make(
     start_waypoint,
     finish_waypoint,
     num_loops);
-  return std::make_shared<Request>(std::move(booking), description);
+  return std::make_shared<Request>(
+    std::move(booking),
+    std::move(description));
 }
 
 } // namespace requests

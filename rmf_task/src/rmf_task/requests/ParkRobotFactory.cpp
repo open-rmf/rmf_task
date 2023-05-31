@@ -50,7 +50,6 @@ class ParkRobotFactory::Implementation
 public:
 
   std::optional<std::size_t> parking_waypoint;
-
   std::optional<std::string> requester;
 };
 

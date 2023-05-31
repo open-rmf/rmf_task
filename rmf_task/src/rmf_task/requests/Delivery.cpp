@@ -349,7 +349,9 @@ ConstRequestPtr Delivery::make(
     std::move(payload),
     std::move(pickup_from_dispenser),
     std::move(dropoff_to_ingestor));
-  return std::make_shared<Request>(std::move(booking), description);
+  return std::make_shared<Request>(
+    std::move(booking),
+    std::move(description));
 }
 
 } // namespace requests
