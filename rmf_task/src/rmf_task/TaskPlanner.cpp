@@ -370,13 +370,14 @@ const rmf_traffic::Duration segmentation_threshold =
 class TaskPlanner::Implementation
 {
 public:
-  static constexpr std::string_view DefaultTaskPlannerName = "task_planner";
-
   Configuration config;
   Options default_options;
   ConstTravelEstimatorPtr travel_estimator;
+  std::string task_planner_name;
   bool check_priority = false;
   ConstCostCalculatorPtr cost_calculator = nullptr;
+
+  static constexpr std::string_view DefaultTaskPlannerName = "task_planner";
 
   ConstRequestPtr make_charging_request(
     rmf_traffic::Time start_time,
@@ -386,7 +387,7 @@ public:
       start_time,
       nullptr,
       true,
-      std::string(DefaultTaskPlannerName),
+      task_planner_name,
       time_now);
   }
 
@@ -442,7 +443,7 @@ public:
       const auto& state = agent.back().finish_state();
       const auto request = factory.make_request(
         state,
-        std::string(DefaultTaskPlannerName),
+        task_planner_name,
         time_now);
 
       // TODO(YV) Currently we are unable to recursively call complete_solve()
@@ -1112,7 +1113,24 @@ TaskPlanner::TaskPlanner(
       Implementation{
         configuration,
         default_options,
-        std::make_shared<TravelEstimator>(configuration.parameters())
+        std::make_shared<TravelEstimator>(configuration.parameters()),
+        std::string(Implementation::DefaultTaskPlannerName)
+      }))
+{
+  // Do nothing
+}
+
+// ============================================================================
+TaskPlanner::TaskPlanner(
+  Configuration configuration,
+  Options default_options,
+  const std::string& task_planner_name)
+: _pimpl(rmf_utils::make_impl<Implementation>(
+      Implementation{
+        configuration,
+        default_options,
+        std::make_shared<TravelEstimator>(configuration.parameters()),
+        task_planner_name
       }))
 {
   // Do nothing
