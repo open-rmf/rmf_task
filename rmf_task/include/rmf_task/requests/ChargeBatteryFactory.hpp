@@ -41,6 +41,10 @@ public:
   ChargeBatteryFactory();
 
   /// Documentation inherited
+  [[deprecated]]
+  ConstRequestPtr make_request(const State& state) const final;
+
+  /// Documentation inherited
   ConstRequestPtr make_request(
     const State& state,
     const std::string& requester,

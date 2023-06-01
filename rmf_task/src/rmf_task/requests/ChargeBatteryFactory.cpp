@@ -34,6 +34,17 @@ ChargeBatteryFactory::ChargeBatteryFactory()
 }
 
 //==============================================================================
+ConstRequestPtr ChargeBatteryFactory::make_request(const State& state) const
+{
+  return ChargeBattery::make(
+    state.time().value(),
+    nullptr,
+    true,
+    std::nullopt,
+    std::nullopt);
+}
+
+//==============================================================================
 ConstRequestPtr ChargeBatteryFactory::make_request(
   const State& state,
   const std::string& requester,

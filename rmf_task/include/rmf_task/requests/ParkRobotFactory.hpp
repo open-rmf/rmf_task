@@ -48,6 +48,10 @@ public:
     std::optional<std::size_t> parking_waypoint = std::nullopt);
 
   /// Documentation inherited
+  [[deprecated]]
+  ConstRequestPtr make_request(const State& state) const final;
+
+  /// Documentation inherited
   ConstRequestPtr make_request(
     const State& state,
     const std::string& requester,
