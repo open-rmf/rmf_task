@@ -26,6 +26,7 @@
 
 #include <limits>
 #include <queue>
+#include <string_view>
 
 namespace rmf_task {
 
@@ -369,6 +370,7 @@ const rmf_traffic::Duration segmentation_threshold =
 class TaskPlanner::Implementation
 {
 public:
+  static constexpr std::string_view DefaultTaskPlannerName = "task_planner";
 
   Configuration config;
   Options default_options;
@@ -376,14 +378,16 @@ public:
   bool check_priority = false;
   ConstCostCalculatorPtr cost_calculator = nullptr;
 
-  ConstRequestPtr make_charging_request(rmf_traffic::Time start_time)
+  ConstRequestPtr make_charging_request(
+    rmf_traffic::Time start_time,
+    rmf_traffic::Time time_now)
   {
     return rmf_task::requests::ChargeBattery::make(
       start_time,
       nullptr,
       true,
-      std::nullopt,
-      start_time);
+      std::string(DefaultTaskPlannerName),
+      time_now);
   }
 
   TaskPlanner::Assignments prune_assignments(
@@ -425,7 +429,8 @@ public:
 
   void append_finishing_request(
     const RequestFactory& factory,
-    TaskPlanner::Assignments& complete_assignments)
+    TaskPlanner::Assignments& complete_assignments,
+    rmf_traffic::Time time_now)
   {
     for (auto& agent : complete_assignments)
     {
@@ -435,7 +440,10 @@ public:
       }
 
       const auto& state = agent.back().finish_state();
-      const auto request = factory.make_request(state);
+      const auto request = factory.make_request(
+        state,
+        std::string(DefaultTaskPlannerName),
+        time_now);
 
       // TODO(YV) Currently we are unable to recursively call complete_solve()
       // here as the prune_assignments() function will remove any ChargeBattery
@@ -463,7 +471,7 @@ public:
         // Insufficient battery to perform the finishing request. We check if
         // adding a ChargeBattery task before will allow for it to be performed
         const auto charging_request =
-          make_charging_request(state.time().value());
+          make_charging_request(state.time().value(), time_now);
         const auto charge_battery_model =
           charging_request->description()->make_model(
           state.time().value(),
@@ -566,7 +574,10 @@ public:
         auto pruned_assignments = prune_assignments(complete_assignments);
         if (finishing_request != nullptr)
         {
-          append_finishing_request(*finishing_request, pruned_assignments);
+          append_finishing_request(
+            *finishing_request,
+            pruned_assignments,
+            time_now);
         }
 
         return pruned_assignments;
@@ -603,7 +614,10 @@ public:
     // the assignments for each agent
     if (finishing_request != nullptr)
     {
-      append_finishing_request(*finishing_request, complete_assignments);
+      append_finishing_request(
+        *finishing_request,
+        complete_assignments,
+        time_now);
     }
 
     return complete_assignments;
@@ -726,7 +740,7 @@ public:
           assignments.back().assignment.request()->description()))
       {
         auto charge_battery = make_charging_request(
-          entry.previous_state.time().value());
+          entry.previous_state.time().value(), time_now);
         const auto charge_battery_model =
           charge_battery->description()->make_model(
           charge_battery->booking()->earliest_start_time(),
@@ -804,7 +818,7 @@ public:
     if (add_charger)
     {
       auto charge_battery = make_charging_request(
-        entry.state.time().value());
+        entry.state.time().value(), time_now);
 
       const auto charge_battery_model =
         charge_battery->description()->make_model(
@@ -891,7 +905,7 @@ public:
       state = assignments.back().assignment.finish_state();
     }
 
-    auto charge_battery = make_charging_request(state.time().value());
+    auto charge_battery = make_charging_request(state.time().value(), time_now);
     const auto charge_battery_model =
       charge_battery->description()->make_model(
       charge_battery->booking()->earliest_start_time(),

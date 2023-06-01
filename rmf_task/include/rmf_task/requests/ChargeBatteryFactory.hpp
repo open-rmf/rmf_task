@@ -38,11 +38,13 @@ class ChargeBatteryFactory : public RequestFactory
 {
 public:
 
-  ChargeBatteryFactory(std::optional<std::string> requester = std::nullopt);
+  ChargeBatteryFactory();
 
   /// Documentation inherited
   ConstRequestPtr make_request(
-    const State& state) const final;
+    const State& state,
+    const std::string& requester,
+    rmf_traffic::Time time_now) const final;
 
   class Implementation;
 

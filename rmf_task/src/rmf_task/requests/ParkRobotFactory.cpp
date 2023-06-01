@@ -48,42 +48,28 @@ std::string generate_uuid(const std::size_t length = 3)
 class ParkRobotFactory::Implementation
 {
 public:
-
   std::optional<std::size_t> parking_waypoint;
-  std::optional<std::string> requester;
-  std::function<rmf_traffic::Time()> clock;
 };
 
 //==============================================================================
 ParkRobotFactory::ParkRobotFactory(
-  std::optional<std::size_t> parking_waypoint,
-  std::optional<std::string> requester,
-  std::function<rmf_traffic::Time()> clock)
-: _pimpl(rmf_utils::make_impl<Implementation>(
-      Implementation{
-        parking_waypoint,
-        std::move(requester),
-        std::move(clock)
-      }))
+  std::optional<std::size_t> parking_waypoint)
+: _pimpl(rmf_utils::make_impl<Implementation>(Implementation{parking_waypoint}))
 {
   // Do nothing
 }
 
 //==============================================================================
 ConstRequestPtr ParkRobotFactory::make_request(
-  const State& state) const
+  const State& state,
+  const std::string& requester,
+  rmf_traffic::Time time_now) const
 {
   std::string id = "ParkRobot" + generate_uuid();
   const auto start_waypoint = state.waypoint().value();
   const auto finish_waypoint = _pimpl->parking_waypoint.has_value() ?
     _pimpl->parking_waypoint.value() :
     state.dedicated_charging_waypoint().value();
-
-  rmf_traffic::Time request_time = state.time().value();
-  if (_pimpl->clock)
-  {
-    request_time = _pimpl->clock();
-  }
 
   const auto request = Loop::make(
     start_waypoint,
@@ -93,8 +79,8 @@ ConstRequestPtr ParkRobotFactory::make_request(
     state.time().value(),
     nullptr,
     true,
-    _pimpl->requester,
-    request_time);
+    requester,
+    time_now);
   return request;
 }
 

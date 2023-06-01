@@ -19,7 +19,6 @@
 #define RMF_TASK__REQUESTS__FACTORY__PARKROBOTFACTORY_HPP
 
 #include <optional>
-#include <functional>
 
 #include <rmf_task/RequestFactory.hpp>
 #include <rmf_task/State.hpp>
@@ -45,18 +44,14 @@ public:
   ///   If nullopt, the AGV will return to its charging_waypoint and remain idle
   ///   there. It will not wait for its battery to charge up before undertaking
   ///   new tasks.
-  ///
-  /// \param[in] requester
-  ///   The identifier for the entity that would make parking requests. This
-  ///   field is optional.
   ParkRobotFactory(
-    std::optional<std::size_t> parking_waypoint = std::nullopt,
-    std::optional<std::string> requester = std::nullopt,
-    std::function<rmf_traffic::Time()> clock = nullptr);
+    std::optional<std::size_t> parking_waypoint = std::nullopt);
 
   /// Documentation inherited
   ConstRequestPtr make_request(
-    const State& state) const final;
+    const State& state,
+    const std::string& requester,
+    rmf_traffic::Time time_now) const final;
 
   class Implementation;
 
