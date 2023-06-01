@@ -18,12 +18,13 @@
 #ifndef RMF_TASK__REQUESTS__FACTORY__PARKROBOTFACTORY_HPP
 #define RMF_TASK__REQUESTS__FACTORY__PARKROBOTFACTORY_HPP
 
+#include <optional>
+#include <functional>
+
 #include <rmf_task/RequestFactory.hpp>
 #include <rmf_task/State.hpp>
 
 #include <rmf_utils/impl_ptr.hpp>
-
-#include <optional>
 
 namespace rmf_task {
 namespace requests {
@@ -50,7 +51,8 @@ public:
   ///   field is optional.
   ParkRobotFactory(
     std::optional<std::size_t> parking_waypoint = std::nullopt,
-    std::optional<std::string> requester = std::nullopt);
+    std::optional<std::string> requester = std::nullopt,
+    std::function<rmf_traffic::Time()> clock = nullptr);
 
   /// Documentation inherited
   ConstRequestPtr make_request(

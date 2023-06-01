@@ -51,16 +51,19 @@ public:
 
   std::optional<std::size_t> parking_waypoint;
   std::optional<std::string> requester;
+  std::function<rmf_traffic::Time()> clock;
 };
 
 //==============================================================================
 ParkRobotFactory::ParkRobotFactory(
   std::optional<std::size_t> parking_waypoint,
-  std::optional<std::string> requester)
+  std::optional<std::string> requester,
+  std::function<rmf_traffic::Time()> clock)
 : _pimpl(rmf_utils::make_impl<Implementation>(
       Implementation{
         parking_waypoint,
-        std::move(requester)
+        std::move(requester),
+        std::move(clock)
       }))
 {
   // Do nothing
@@ -76,6 +79,12 @@ ConstRequestPtr ParkRobotFactory::make_request(
     _pimpl->parking_waypoint.value() :
     state.dedicated_charging_waypoint().value();
 
+  rmf_traffic::Time request_time = state.time().value();
+  if (_pimpl->clock)
+  {
+    request_time = _pimpl->clock();
+  }
+
   const auto request = Loop::make(
     start_waypoint,
     finish_waypoint,
@@ -85,7 +94,7 @@ ConstRequestPtr ParkRobotFactory::make_request(
     nullptr,
     true,
     _pimpl->requester,
-    state.time().value());
+    request_time);
   return request;
 }
 
