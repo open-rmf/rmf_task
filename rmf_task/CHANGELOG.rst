@@ -2,8 +2,8 @@
 Changelog for package rmf_task
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.1.4 (2023-06-05)
+------------------
 * Update github actions and fix style as per uncrustify 0.72 (`#74 <https://github.com/open-rmf/rmf_task/pull/74>`_)
 * Contributors: Esteban Martinena, Yadunund
 
