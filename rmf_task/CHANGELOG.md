@@ -1,5 +1,18 @@
 ## Changelog for package rmf_task
 
+2.1.3 (2022-04-17)
+------------------
+* Fixed unit test for checking automatic insertion of ChargeBattery task [#76](https://github.com/open-rmf/rmf_task/pull/76)
+* Add missing buildtool_depend on cmake [#75](https://github.com/open-rmf/rmf_task/issues/75)
+* Contributors: Luca Della Vedova, Scott K Logan, Yadunund
+
+2.1.2 (2022-11-14)
+------------------
+* Removed c++fs option for clang
+* Fixing need of  stdc++fs to build RPM package
+  [rmf #265](https://github.com/open-rmf/rmf/issues/265#issuecomment-1308419896)
+* Contributors: Esteban Martinena
+
 2.1.1 (2022-10-11)
 ------------------
 * Allow GoToPlace to know about expected future destinations [#61](https://github.com/open-rmf/rmf_task/issues/61)
