@@ -2,6 +2,11 @@
 Changelog for package rmf_task_sequence
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Switch to rst changelogs
+* Contributors: Yadunund
+
 2.1.3 (2022-04-17)
 ------------------
 * Fix battery consumption modeling for perform_action tasks (`#76 <https://github.com/open-rmf/rmf_task/pull/76>`_)
