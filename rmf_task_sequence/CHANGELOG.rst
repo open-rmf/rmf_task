@@ -1,9 +1,16 @@
-## Changelog for package rmf_task_sequence
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Changelog for package rmf_task_sequence
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+2.2.0 (2023-06-06)
+------------------
+* Switch to rst changelogs
+* Contributors: Yadunund
 
 2.1.3 (2022-04-17)
 ------------------
-* Fix battery consumption modeling for perform_action tasks [#76](https://github.com/open-rmf/rmf_task/pull/76)
-* Add missing buildtool_depend on cmake [#75](https://github.com/open-rmf/rmf_task/issues/75)
+* Fix battery consumption modeling for perform_action tasks (`#76 <https://github.com/open-rmf/rmf_task/pull/76>`_)
+* Add missing buildtool_depend on cmake (`#75 <https://github.com/open-rmf/rmf_task/pull/75>`_)
 * Contributors: Luca Della Vedova, Scott K Logan, Yadunund
 
 2.1.2 (2022-11-14)
@@ -16,16 +23,16 @@
   exporting dependency info for that package, however that is not the
   recommended workflow for vendor packages which are ideally as
   transparent as possible.
-* Allow GoToPlace to know about expected future destinations (`#61 <https://github.com/open-rmf/rmf_task/issues/61>`_)
+* Allow GoToPlace to know about expected future destinations (`#61 <https://github.com/open-rmf/rmf_task/pull/61>`_)
 * Contributors: Grey, Marco A. Gutiérrez, Steven! Ragnarök
 
 2.1.0 (2022-05-19)
 ------------------
-*  Allow GoToPlace to know about expected future destinations [#61](https://github.com/open-rmf/rmf_task/pull/61)
+*  Allow GoToPlace to know about expected future destinations (`#61 <https://github.com/open-rmf/rmf_task/pull/61>`_)
 
 2.0.0 (2022-02-14)
 ------------------
-* Support flexible task definitions [#39](https://github.com/open-rmf/rmf_task/pull/39)
+* Support flexible task definitions (`#39 <https://github.com/open-rmf/rmf_task/pull/39>`_)
   * Provide an implementation for phase-sequence based tasks
   * Arbitrary phases can be implemented downstream
   * A simple event-wrapping phase implementation is provided
