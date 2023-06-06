@@ -2,8 +2,8 @@
 Changelog for package rmf_task
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.2.0 (2023-06-06)
+------------------
 * Switch to rst changelogs
 * Update github actions and fix style as per uncrustify 0.72 (`#74 <https://github.com/open-rmf/rmf_task/pull/74>`_)
 * Fix build with apple clang (`#77 <https://github.com/open-rmf/rmf_task/pull/77>`_)
