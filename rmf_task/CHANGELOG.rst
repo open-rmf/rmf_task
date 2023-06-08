@@ -2,6 +2,9 @@
 Changelog for package rmf_task
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 2.2.0 (2023-06-06)
 ------------------
 * Switch to rst changelogs
