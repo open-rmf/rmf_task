@@ -56,7 +56,7 @@ public:
 ParkRobotFactory::ParkRobotFactory(
   std::optional<std::size_t> parking_waypoint)
 : _pimpl(rmf_utils::make_impl<Implementation>(
-  Implementation{std::nullopt, std::move(parking_waypoint)}))
+      Implementation{std::nullopt, std::move(parking_waypoint)}))
 {
   // Do nothing
 }
@@ -66,7 +66,7 @@ ParkRobotFactory::ParkRobotFactory(
   const std::string& requester,
   std::optional<std::size_t> parking_waypoint)
 : _pimpl(rmf_utils::make_impl<Implementation>(
-  Implementation{requester, std::move(parking_waypoint)}))
+      Implementation{requester, std::move(parking_waypoint)}))
 {
   // Do nothing
 }
@@ -100,7 +100,7 @@ ConstRequestPtr ParkRobotFactory::make_request(const State& state) const
     id,
     state.time().value(),
     nullptr,
-    true);;
+    true);
 }
 
 } // namespace requests
