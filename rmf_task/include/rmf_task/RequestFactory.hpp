@@ -34,25 +34,7 @@ public:
   /// \param[in] state
   ///   The state that the robot will have when it is ready to perform the
   ///   request.
-  [[deprecated]]
   virtual ConstRequestPtr make_request(const State& state) const = 0;
-
-  /// Generate a request for the AGV given the state that the robot will have
-  /// when it is ready to perform the request.
-  ///
-  /// \param[in] state
-  ///   The state that the robot will have when it is ready to perform the
-  ///   request.
-  ///
-  /// \param[in] requester
-  ///   The identifier of the entity that requested this task.
-  ///
-  /// \param[in] time_now
-  ///   The current time.
-  virtual ConstRequestPtr make_request(
-    const State& state,
-    const std::string& requester,
-    rmf_traffic::Time time_now) const = 0;
 
   virtual ~RequestFactory() = default;
 };

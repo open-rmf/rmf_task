@@ -292,17 +292,42 @@ ConstRequestPtr Loop::make(
   const std::string& id,
   rmf_traffic::Time earliest_start_time,
   ConstPriorityPtr priority,
-  bool automatic,
-  std::optional<std::string> requester,
-  std::optional<rmf_traffic::Time> request_time)
+  bool automatic)
 {
   Task::ConstBookingPtr booking =
     std::make_shared<const rmf_task::Task::Booking>(
     id,
     earliest_start_time,
     std::move(priority),
-    std::move(requester),
-    std::move(request_time),
+    automatic);
+  const auto description = Description::make(
+    start_waypoint,
+    finish_waypoint,
+    num_loops);
+  return std::make_shared<Request>(
+    std::move(booking),
+    std::move(description));
+}
+
+//==============================================================================
+ConstRequestPtr Loop::make(
+  std::size_t start_waypoint,
+  std::size_t finish_waypoint,
+  std::size_t num_loops,
+  const std::string& id,
+  rmf_traffic::Time earliest_start_time,
+  const std::string& requester,
+  rmf_traffic::Time request_time,
+  ConstPriorityPtr priority,
+  bool automatic)
+{
+  Task::ConstBookingPtr booking =
+    std::make_shared<const rmf_task::Task::Booking>(
+    id,
+    earliest_start_time,
+    std::move(priority),
+    requester,
+    request_time,
     automatic);
   const auto description = Description::make(
     start_waypoint,

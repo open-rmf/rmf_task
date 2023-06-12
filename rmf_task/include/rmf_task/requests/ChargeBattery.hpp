@@ -69,29 +69,43 @@ public:
     rmf_utils::impl_ptr<Implementation> _pimpl;
   };
 
+  /// Generate a chargebattery request
+  ///
+  /// \param[in] earliest_start_time
+  ///   The desired start time for this request
+  ///
+  /// \param[in] priority
+  ///   The priority for this request
+  ///
+  /// \param[in] automatic
+  ///   True if this request is auto-generated
+  static ConstRequestPtr make(
+    rmf_traffic::Time earliest_start_time,
+    ConstPriorityPtr priority = nullptr,
+    bool automatic = true);
+
   /// Generate a chargebattery request.
   ///
   /// \param[in] earliest_start_time
   ///   The desired start time for this request.
+  ///
+  /// \param[in] requester
+  ///   The entity that started this request.
+  ///
+  /// \param[in] request_time
+  ///   The time this request was generated or submitted.
   ///
   /// \param[in] priority
   ///   The priority for this request.
   ///
   /// \param[in] automatic
   ///   True if this request is auto-generated, default value as true.
-  ///
-  /// \param[in] requester
-  ///   The entity that started this request. This field is optional.
-  ///
-  /// \param[in] request_time
-  ///   The time this request was generated or submitted, to be part of the
-  ///   booking information. This field is optional.
   static ConstRequestPtr make(
     rmf_traffic::Time earliest_start_time,
+    const std::string& requester,
+    rmf_traffic::Time request_time,
     ConstPriorityPtr priority = nullptr,
-    bool automatic = true,
-    std::optional<std::string> requester = std::nullopt,
-    std::optional<rmf_traffic::Time> request_time = std::nullopt);
+    bool automatic = true);
 };
 
 } // namespace requests

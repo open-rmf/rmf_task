@@ -385,10 +385,10 @@ public:
   {
     return rmf_task::requests::ChargeBattery::make(
       start_time,
-      nullptr,
-      true,
       task_planner_name,
-      time_now);
+      time_now,
+      nullptr,
+      true);
   }
 
   TaskPlanner::Assignments prune_assignments(
@@ -441,10 +441,7 @@ public:
       }
 
       const auto& state = agent.back().finish_state();
-      const auto request = factory.make_request(
-        state,
-        task_planner_name,
-        time_now);
+      const auto request = factory.make_request(state);
 
       // TODO(YV) Currently we are unable to recursively call complete_solve()
       // here as the prune_assignments() function will remove any ChargeBattery
@@ -646,6 +643,7 @@ public:
         config.parameters(),
         request,
         *travel_estimator,
+        task_planner_name,
         error);
 
       if (!pending_task)

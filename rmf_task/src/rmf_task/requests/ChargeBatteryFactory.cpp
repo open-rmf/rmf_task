@@ -24,11 +24,20 @@ namespace requests {
 //==============================================================================
 class ChargeBatteryFactory::Implementation
 {
+public:
+  std::optional<std::string> requester;
 };
 
 //==============================================================================
 ChargeBatteryFactory::ChargeBatteryFactory()
-: _pimpl(rmf_utils::make_impl<Implementation>(Implementation()))
+: _pimpl(rmf_utils::make_impl<Implementation>(Implementation{std::nullopt}))
+{
+  // Do nothing
+}
+
+//==============================================================================
+ChargeBatteryFactory::ChargeBatteryFactory(const std::string& requester)
+: _pimpl(rmf_utils::make_impl<Implementation>(Implementation{requester}))
 {
   // Do nothing
 }
@@ -36,26 +45,19 @@ ChargeBatteryFactory::ChargeBatteryFactory()
 //==============================================================================
 ConstRequestPtr ChargeBatteryFactory::make_request(const State& state) const
 {
+  if (_pimpl->requester.has_value())
+  {
+    return ChargeBattery::make(
+      state.time().value(),
+      _pimpl->requester.value(),
+      state.time().value(),
+      nullptr,
+      true);
+  }
   return ChargeBattery::make(
     state.time().value(),
     nullptr,
-    true,
-    std::nullopt,
-    std::nullopt);
-}
-
-//==============================================================================
-ConstRequestPtr ChargeBatteryFactory::make_request(
-  const State& state,
-  const std::string& requester,
-  rmf_traffic::Time time_now) const
-{
-  return ChargeBattery::make(
-    state.time().value(),
-    nullptr,
-    true,
-    requester,
-    time_now);
+    true);
 }
 
 } // namespace requests

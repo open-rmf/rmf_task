@@ -102,6 +102,7 @@ std::shared_ptr<Candidates> Candidates::make(
   const Parameters& parameters,
   const Task::Model& task_model,
   const TravelEstimator& travel_estimator,
+  const std::string& requester,
   TaskPlanner::TaskPlannerError& error)
 {
   Map initial_map;
@@ -125,10 +126,10 @@ std::shared_ptr<Candidates> Candidates::make(
     {
       auto charge_battery = requests::ChargeBattery::make(
         start_time,
+        requester,
+        start_time,
         nullptr,
-        true,
-        std::nullopt,
-        start_time);
+        true);
       const auto battery_model = charge_battery->description()->make_model(
         start_time,
         parameters);
@@ -200,6 +201,7 @@ std::shared_ptr<PendingTask> PendingTask::make(
   const Parameters& parameters,
   const ConstRequestPtr request_,
   const TravelEstimator& travel_estimator,
+  const std::string& requester,
   TaskPlanner::TaskPlannerError& error)
 {
   const auto earliest_start_time = std::max(
@@ -209,7 +211,7 @@ std::shared_ptr<PendingTask> PendingTask::make(
     earliest_start_time, parameters);
 
   const auto candidates = Candidates::make(start_time, initial_states,
-      constraints, parameters, *model, travel_estimator, error);
+      constraints, parameters, *model, travel_estimator, requester, error);
 
   if (!candidates)
     return nullptr;

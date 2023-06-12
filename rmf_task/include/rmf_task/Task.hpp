@@ -97,11 +97,10 @@ public:
   ///   The priority of the booking.
   ///
   /// \param[in] requester
-  ///   The identifier of the entity that requested this task. This field is
-  ///   optional.
+  ///   The identifier of the entity that requested this task.
   ///
   /// \param[in] request_time
-  ///   The time that this task was booked. This field is optional.
+  ///   The time that this task was booked.
   ///
   /// \param[in] automatic
   ///   Whether this booking was automatically generated, default value as
@@ -110,8 +109,8 @@ public:
     std::string id,
     rmf_traffic::Time earliest_start_time,
     ConstPriorityPtr priority,
-    std::optional<std::string> requester,
-    std::optional<rmf_traffic::Time> request_time,
+    const std::string& requester,
+    rmf_traffic::Time request_time,
     bool automatic = false);
 
   /// The unique id for this booking.

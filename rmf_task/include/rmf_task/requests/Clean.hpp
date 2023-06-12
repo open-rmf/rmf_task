@@ -78,6 +78,41 @@ public:
     rmf_utils::impl_ptr<Implementation> _pimpl;
   };
 
+  /// Generate a clean request
+  ///
+  /// \param[in] start_waypoint
+  ///   The graph index for the location where the AGV should begin its cleaning
+  ///   operation
+  ///
+  /// \param[in] end_waypoint
+  ///   The graph index for the location where the AGV ends up after its cleaning
+  ///   operation
+  ///
+  /// \param[in] cleaning_path
+  ///   A trajectory that describes the motion of the AGV during the cleaning
+  ///   operation. This is used to determine the process duration and expected
+  ///   battery drain
+  ///
+  /// \param[in] id
+  ///   A unique id for this request
+  ///
+  /// \param[in] earliest_start_time
+  ///   The desired start time for this request
+  ///
+  /// \param[in] priority
+  ///   The priority for this request
+  ///
+  /// \param[in] automatic
+  ///   True if this request is auto-generated
+  static ConstRequestPtr make(
+    std::size_t start_waypoint,
+    std::size_t end_waypoint,
+    const rmf_traffic::Trajectory& cleaning_path,
+    const std::string& id,
+    rmf_traffic::Time earliest_start_time,
+    ConstPriorityPtr priority = nullptr,
+    bool automatic = false);
+
   /// Generate a clean request.
   ///
   /// \param[in] start_waypoint
@@ -99,28 +134,27 @@ public:
   /// \param[in] earliest_start_time
   ///   The desired start time for this request.
   ///
+  /// \param[in] requester
+  ///   The entity that started this request.
+  ///
+  /// \param[in] request_time
+  ///   The time this request was generated or submitted.
+  ///
   /// \param[in] priority
   ///   The priority for this request.
   ///
   /// \param[in] automatic
   ///   True if this request is auto-generated, default value as false.
-  ///
-  /// \param[in] requester
-  ///   The entity that started this request. This field is optional.
-  ///
-  /// \param[in] request_time
-  ///   The time this request was generated or submitted, to be part of the
-  ///   booking information. This field is optional.
   static ConstRequestPtr make(
     std::size_t start_waypoint,
     std::size_t end_waypoint,
     const rmf_traffic::Trajectory& cleaning_path,
     const std::string& id,
     rmf_traffic::Time earliest_start_time,
+    const std::string& requester,
+    rmf_traffic::Time request_time,
     ConstPriorityPtr priority = nullptr,
-    bool automatic = false,
-    std::optional<std::string> requester = std::nullopt,
-    std::optional<rmf_traffic::Time> request_time = std::nullopt);
+    bool automatic = false);
 };
 
 } // namespace requests
