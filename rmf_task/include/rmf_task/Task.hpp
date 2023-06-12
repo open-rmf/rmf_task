@@ -68,6 +68,25 @@ public:
 
   /// Constructor
   ///
+  /// \param[in] id_
+  ///   The identity of the booking
+  ///
+  /// \param[in] earliest_start_time_
+  ///   The earliest time that the task may begin
+  ///
+  /// \param[in] priority_
+  ///   The priority of the booking
+  ///
+  /// \param[in] automatic_
+  ///   Whether this booking was automatically generated
+  Booking(
+    std::string id_,
+    rmf_traffic::Time earliest_start_time_,
+    ConstPriorityPtr priority_,
+    bool automatic_ = false);
+
+  /// Constructor
+  ///
   /// \param[in] id
   ///   The identity of the booking.
   ///
@@ -77,23 +96,23 @@ public:
   /// \param[in] priority
   ///   The priority of the booking.
   ///
-  /// \param[in] automatic
-  ///   Whether this booking was automatically generated, default value as
-  ///   false.
-  ///
   /// \param[in] requester
   ///   The identifier of the entity that requested this task. This field is
   ///   optional.
   ///
   /// \param[in] request_time
   ///   The time that this task was booked. This field is optional.
+  ///
+  /// \param[in] automatic
+  ///   Whether this booking was automatically generated, default value as
+  ///   false.
   Booking(
     std::string id,
     rmf_traffic::Time earliest_start_time,
     ConstPriorityPtr priority,
-    bool automatic = false,
-    std::optional<std::string> requester = std::nullopt,
-    std::optional<rmf_traffic::Time> request_time = std::nullopt);
+    std::optional<std::string> requester,
+    std::optional<rmf_traffic::Time> request_time,
+    bool automatic = false);
 
   /// The unique id for this booking.
   const std::string& id() const;
@@ -104,9 +123,6 @@ public:
   /// Get the priority of this booking.
   ConstPriorityPtr priority() const;
 
-  // Returns true if this booking was automatically generated.
-  bool automatic() const;
-
   /// Get the identifier of the entity that requested this booking. Returns a
   /// nullopt if no requester was defined.
   std::optional<std::string> requester() const;
@@ -114,6 +130,9 @@ public:
   /// Get the time that this booking was requested. Returns a nullopt if no
   /// request time was defined.
   std::optional<rmf_traffic::Time> request_time() const;
+
+  // Returns true if this booking was automatically generated.
+  bool automatic() const;
 
   class Implementation;
 private:

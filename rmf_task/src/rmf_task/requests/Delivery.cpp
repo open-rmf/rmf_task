@@ -338,9 +338,9 @@ ConstRequestPtr Delivery::make(
     id,
     earliest_start_time,
     std::move(priority),
-    automatic,
     std::move(requester),
-    std::move(request_time));
+    std::move(request_time),
+    automatic);
   const auto description = Description::make(
     pickup_waypoint,
     pickup_wait,

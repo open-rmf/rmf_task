@@ -215,9 +215,9 @@ ConstRequestPtr ChargeBattery::make(
     id,
     earliest_start_time,
     std::move(priority),
-    automatic,
     std::move(requester),
-    std::move(request_time));
+    std::move(request_time),
+    automatic);
   const auto description = Description::make();
   return std::make_shared<Request>(
     std::move(booking),

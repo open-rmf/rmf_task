@@ -28,9 +28,9 @@ public:
   std::string id;
   rmf_traffic::Time earliest_start_time;
   rmf_task::ConstPriorityPtr priority;
-  bool automatic;
   std::optional<std::string> requester;
   std::optional<rmf_traffic::Time> request_time;
+  bool automatic;
 };
 
 //==============================================================================
@@ -38,17 +38,36 @@ Task::Booking::Booking(
   std::string id,
   rmf_traffic::Time earliest_start_time,
   ConstPriorityPtr priority,
-  bool automatic,
-  std::optional<std::string> requester,
-  std::optional<rmf_traffic::Time> request_time)
+  bool automatic)
 : _pimpl(rmf_utils::make_impl<Implementation>(
       Implementation{
         std::move(id),
         earliest_start_time,
         std::move(priority),
+        std::nullopt,
+        std::nullopt,
         automatic,
+      }))
+{
+  // Do nothing
+}
+
+//==============================================================================
+Task::Booking::Booking(
+  std::string id,
+  rmf_traffic::Time earliest_start_time,
+  ConstPriorityPtr priority,
+  std::optional<std::string> requester,
+  std::optional<rmf_traffic::Time> request_time,
+  bool automatic)
+: _pimpl(rmf_utils::make_impl<Implementation>(
+      Implementation{
+        std::move(id),
+        earliest_start_time,
+        std::move(priority),
         std::move(requester),
-        std::move(request_time)
+        std::move(request_time),
+        automatic,
       }))
 {
   // Do nothing
@@ -73,12 +92,6 @@ ConstPriorityPtr Task::Booking::priority() const
 }
 
 //==============================================================================
-bool Task::Booking::automatic() const
-{
-  return _pimpl->automatic;
-}
-
-//==============================================================================
 std::optional<std::string> Task::Booking::requester() const
 {
   return _pimpl->requester;
@@ -88,6 +101,12 @@ std::optional<std::string> Task::Booking::requester() const
 std::optional<rmf_traffic::Time> Task::Booking::request_time() const
 {
   return _pimpl->request_time;
+}
+
+//==============================================================================
+bool Task::Booking::automatic() const
+{
+  return _pimpl->automatic;
 }
 
 //==============================================================================

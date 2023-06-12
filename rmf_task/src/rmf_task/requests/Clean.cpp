@@ -288,9 +288,9 @@ ConstRequestPtr Clean::make(
     id,
     earliest_start_time,
     std::move(priority),
-    automatic,
     std::move(requester),
-    std::move(request_time));
+    std::move(request_time),
+    automatic);
   const auto description = Clean::Description::make(
     start_waypoint,
     end_waypoint,
