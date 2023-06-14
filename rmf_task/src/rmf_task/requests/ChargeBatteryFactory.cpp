@@ -26,18 +26,23 @@ class ChargeBatteryFactory::Implementation
 {
 public:
   std::optional<std::string> requester;
+  std::function<rmf_traffic::Time()> time_now_cb;
 };
 
 //==============================================================================
 ChargeBatteryFactory::ChargeBatteryFactory()
-: _pimpl(rmf_utils::make_impl<Implementation>(Implementation{std::nullopt}))
+: _pimpl(rmf_utils::make_impl<Implementation>(
+      Implementation{std::nullopt, nullptr}))
 {
   // Do nothing
 }
 
 //==============================================================================
-ChargeBatteryFactory::ChargeBatteryFactory(const std::string& requester)
-: _pimpl(rmf_utils::make_impl<Implementation>(Implementation{requester}))
+ChargeBatteryFactory::ChargeBatteryFactory(
+  const std::string& requester,
+  std::function<rmf_traffic::Time()> time_now_cb)
+: _pimpl(rmf_utils::make_impl<Implementation>(
+      Implementation{requester, std::move(time_now_cb)}))
 {
   // Do nothing
 }
@@ -45,12 +50,13 @@ ChargeBatteryFactory::ChargeBatteryFactory(const std::string& requester)
 //==============================================================================
 ConstRequestPtr ChargeBatteryFactory::make_request(const State& state) const
 {
-  if (_pimpl->requester.has_value())
+
+  if (_pimpl->requester.has_value() && _pimpl->time_now_cb)
   {
     return ChargeBattery::make(
       state.time().value(),
       _pimpl->requester.value(),
-      state.time().value(),
+      _pimpl->time_now_cb(),
       nullptr,
       true);
   }

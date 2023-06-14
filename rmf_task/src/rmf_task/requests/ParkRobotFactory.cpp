@@ -49,6 +49,7 @@ class ParkRobotFactory::Implementation
 {
 public:
   std::optional<std::string> requester;
+  std::function<rmf_traffic::Time()> time_now_cb;
   std::optional<std::size_t> parking_waypoint;
 };
 
@@ -56,7 +57,7 @@ public:
 ParkRobotFactory::ParkRobotFactory(
   std::optional<std::size_t> parking_waypoint)
 : _pimpl(rmf_utils::make_impl<Implementation>(
-      Implementation{std::nullopt, std::move(parking_waypoint)}))
+      Implementation{std::nullopt, nullptr, std::move(parking_waypoint)}))
 {
   // Do nothing
 }
@@ -64,9 +65,10 @@ ParkRobotFactory::ParkRobotFactory(
 //==============================================================================
 ParkRobotFactory::ParkRobotFactory(
   const std::string& requester,
+  std::function<rmf_traffic::Time()> time_now_cb,
   std::optional<std::size_t> parking_waypoint)
-: _pimpl(rmf_utils::make_impl<Implementation>(
-      Implementation{requester, std::move(parking_waypoint)}))
+: _pimpl(rmf_utils::make_impl<Implementation>(Implementation{
+      requester, std::move(time_now_cb), std::move(parking_waypoint)}))
 {
   // Do nothing
 }
@@ -80,7 +82,7 @@ ConstRequestPtr ParkRobotFactory::make_request(const State& state) const
     _pimpl->parking_waypoint.value() :
     state.dedicated_charging_waypoint().value();
 
-  if (_pimpl->requester.has_value())
+  if (_pimpl->requester.has_value() && _pimpl->time_now_cb)
   {
     return Loop::make(
       start_waypoint,
@@ -89,7 +91,7 @@ ConstRequestPtr ParkRobotFactory::make_request(const State& state) const
       id,
       state.time().value(),
       _pimpl->requester.value(),
-      state.time().value(),
+      _pimpl->time_now_cb(),
       nullptr,
       true);
   }

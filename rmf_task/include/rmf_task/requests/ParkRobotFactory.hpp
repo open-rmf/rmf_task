@@ -18,11 +18,13 @@
 #ifndef RMF_TASK__REQUESTS__FACTORY__PARKROBOTFACTORY_HPP
 #define RMF_TASK__REQUESTS__FACTORY__PARKROBOTFACTORY_HPP
 
+#include <functional>
 #include <optional>
 #include <string>
 
 #include <rmf_task/RequestFactory.hpp>
 #include <rmf_task/State.hpp>
+#include <rmf_traffic/Time.hpp>
 
 #include <rmf_utils/impl_ptr.hpp>
 
@@ -54,6 +56,9 @@ public:
   ///   The identifier of the entity that owns this RequestFactory, that will be
   ///   the designated requester of each new request.
   ///
+  /// \param[in] time_now_cb
+  ///   Callback function that returns the current time.
+  ///
   /// \param[in] parking_waypoint
   ///   The graph index of the waypoint assigned to this AGV for parking.
   ///   If nullopt, the AGV will return to its charging_waypoint and remain idle
@@ -61,6 +66,7 @@ public:
   ///   new tasks.
   ParkRobotFactory(
     const std::string& requester,
+    std::function<rmf_traffic::Time()> time_now_cb,
     std::optional<std::size_t> parking_waypoint = std::nullopt);
 
   /// Documentation inherited

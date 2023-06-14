@@ -18,11 +18,13 @@
 #ifndef RMF_TASK__REQUESTS__FACTORY__CHARGEBATTERYFACTORY_HPP
 #define RMF_TASK__REQUESTS__FACTORY__CHARGEBATTERYFACTORY_HPP
 
+#include <functional>
 #include <optional>
 #include <string>
 
 #include <rmf_task/RequestFactory.hpp>
 #include <rmf_task/State.hpp>
+#include <rmf_traffic/Time.hpp>
 
 #include <rmf_utils/impl_ptr.hpp>
 
@@ -47,7 +49,12 @@ public:
   /// \param[in] requester
   ///   The identifier of the entity that owns this RequestFactory, that will be
   ///   the designated requester of each new request.
-  explicit ChargeBatteryFactory(const std::string& requester);
+  ///
+  /// \param[in] time_now_cb
+  ///   Callback function that returns the current time.
+  explicit ChargeBatteryFactory(
+    const std::string& requester,
+    std::function<rmf_traffic::Time()> time_now_cb);
 
   /// Documentation inherited
   ConstRequestPtr make_request(const State& state) const final;
