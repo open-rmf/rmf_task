@@ -373,7 +373,7 @@ public:
   Configuration config;
   Options default_options;
   ConstTravelEstimatorPtr travel_estimator;
-  std::string task_planner_name;
+  std::string planner_id;
   bool check_priority = false;
   ConstCostCalculatorPtr cost_calculator = nullptr;
 
@@ -385,7 +385,7 @@ public:
   {
     return rmf_task::requests::ChargeBattery::make(
       start_time,
-      task_planner_name,
+      planner_id,
       time_now,
       nullptr,
       true);
@@ -643,7 +643,7 @@ public:
         config.parameters(),
         request,
         *travel_estimator,
-        task_planner_name,
+        planner_id,
         error);
 
       if (!pending_task)
@@ -1120,15 +1120,15 @@ TaskPlanner::TaskPlanner(
 
 // ============================================================================
 TaskPlanner::TaskPlanner(
+  const std::string& planner_id,
   Configuration configuration,
-  Options default_options,
-  const std::string& task_planner_name)
+  Options default_options)
 : _pimpl(rmf_utils::make_impl<Implementation>(
       Implementation{
         configuration,
         default_options,
         std::make_shared<TravelEstimator>(configuration.parameters()),
-        task_planner_name
+        planner_id
       }))
 {
   // Do nothing
