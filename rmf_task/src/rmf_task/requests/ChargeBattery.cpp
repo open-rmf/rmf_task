@@ -207,10 +207,10 @@ ConstRequestPtr ChargeBattery::make(
   ConstPriorityPtr priority,
   bool automatic)
 {
-  std::string id = "Charge" + generate_uuid();
+  const std::string id = "Charge" + generate_uuid();
   Task::ConstBookingPtr booking =
     std::make_shared<const rmf_task::Task::Booking>(
-    id,
+    std::move(id),
     earliest_start_time,
     std::move(priority),
     automatic);
@@ -228,10 +228,10 @@ ConstRequestPtr ChargeBattery::make(
   ConstPriorityPtr priority,
   bool automatic)
 {
-  std::string id = "Charge" + generate_uuid();
+  const std::string id = "Charge" + generate_uuid();
   Task::ConstBookingPtr booking =
     std::make_shared<const rmf_task::Task::Booking>(
-    id,
+    std::move(id),
     earliest_start_time,
     std::move(priority),
     requester,

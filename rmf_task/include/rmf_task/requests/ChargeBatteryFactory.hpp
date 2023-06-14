@@ -39,8 +39,14 @@ class ChargeBatteryFactory : public RequestFactory
 {
 public:
 
+  /// Constructor
   ChargeBatteryFactory();
 
+  /// Constructor
+  ///
+  /// \param[in] requester
+  ///   The identifier of the entity that owns this RequestFactory, that will be
+  ///   the designated requester of each new request.
   explicit ChargeBatteryFactory(const std::string& requester);
 
   /// Documentation inherited

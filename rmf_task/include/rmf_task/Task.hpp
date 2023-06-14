@@ -68,22 +68,22 @@ public:
 
   /// Constructor
   ///
-  /// \param[in] id_
+  /// \param[in] id
   ///   The identity of the booking
   ///
-  /// \param[in] earliest_start_time_
+  /// \param[in] earliest_start_time
   ///   The earliest time that the task may begin
   ///
-  /// \param[in] priority_
+  /// \param[in] priority
   ///   The priority of the booking
   ///
-  /// \param[in] automatic_
+  /// \param[in] automatic
   ///   Whether this booking was automatically generated
   Booking(
-    std::string id_,
-    rmf_traffic::Time earliest_start_time_,
-    ConstPriorityPtr priority_,
-    bool automatic_ = false);
+    std::string id,
+    rmf_traffic::Time earliest_start_time,
+    ConstPriorityPtr priority,
+    bool automatic = false);
 
   /// Constructor
   ///

@@ -134,7 +134,7 @@ public:
   ///   The desired start time for this request.
   ///
   /// \param[in] requester
-  ///   The entity that started this request. This field is optional.
+  ///   The entity that issued this request.
   ///
   /// \param[in] request_time
   ///   The time this request was generated or submitted.
