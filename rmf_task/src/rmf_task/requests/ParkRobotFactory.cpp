@@ -48,7 +48,8 @@ std::string generate_uuid(const std::size_t length = 3)
 class ParkRobotFactory::Implementation
 {
 public:
-
+  std::optional<std::string> requester;
+  std::function<rmf_traffic::Time()> time_now_cb;
   std::optional<std::size_t> parking_waypoint;
 };
 
@@ -56,16 +57,24 @@ public:
 ParkRobotFactory::ParkRobotFactory(
   std::optional<std::size_t> parking_waypoint)
 : _pimpl(rmf_utils::make_impl<Implementation>(
-      Implementation{
-        parking_waypoint
-      }))
+      Implementation{std::nullopt, nullptr, std::move(parking_waypoint)}))
 {
   // Do nothing
 }
 
 //==============================================================================
-ConstRequestPtr ParkRobotFactory::make_request(
-  const State& state) const
+ParkRobotFactory::ParkRobotFactory(
+  const std::string& requester,
+  std::function<rmf_traffic::Time()> time_now_cb,
+  std::optional<std::size_t> parking_waypoint)
+: _pimpl(rmf_utils::make_impl<Implementation>(Implementation{
+      requester, std::move(time_now_cb), std::move(parking_waypoint)}))
+{
+  // Do nothing
+}
+
+//==============================================================================
+ConstRequestPtr ParkRobotFactory::make_request(const State& state) const
 {
   std::string id = "ParkRobot" + generate_uuid();
   const auto start_waypoint = state.waypoint().value();
@@ -73,7 +82,20 @@ ConstRequestPtr ParkRobotFactory::make_request(
     _pimpl->parking_waypoint.value() :
     state.dedicated_charging_waypoint().value();
 
-  const auto request = Loop::make(
+  if (_pimpl->requester.has_value() && _pimpl->time_now_cb)
+  {
+    return Loop::make(
+      start_waypoint,
+      finish_waypoint,
+      1,
+      id,
+      state.time().value(),
+      _pimpl->requester.value(),
+      _pimpl->time_now_cb(),
+      nullptr,
+      true);
+  }
+  return Loop::make(
     start_waypoint,
     finish_waypoint,
     1,
@@ -81,8 +103,6 @@ ConstRequestPtr ParkRobotFactory::make_request(
     state.time().value(),
     nullptr,
     true);
-
-  return request;
 }
 
 } // namespace requests

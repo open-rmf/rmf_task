@@ -45,6 +45,16 @@ Request::Request(
 }
 
 //==============================================================================
+Request::Request(
+  Task::ConstBookingPtr booking,
+  Task::ConstDescriptionPtr description)
+: _pimpl(rmf_utils::make_impl<Implementation>(
+      Implementation {std::move(booking), std::move(description)}))
+{
+  // Do nothing
+}
+
+//==============================================================================
 const Task::ConstBookingPtr& Request::booking() const
 {
   return _pimpl->booking;

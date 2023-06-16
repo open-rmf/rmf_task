@@ -18,8 +18,13 @@
 #ifndef RMF_TASK__REQUESTS__FACTORY__CHARGEBATTERYFACTORY_HPP
 #define RMF_TASK__REQUESTS__FACTORY__CHARGEBATTERYFACTORY_HPP
 
+#include <functional>
+#include <optional>
+#include <string>
+
 #include <rmf_task/RequestFactory.hpp>
 #include <rmf_task/State.hpp>
+#include <rmf_traffic/Time.hpp>
 
 #include <rmf_utils/impl_ptr.hpp>
 
@@ -30,16 +35,29 @@ namespace requests {
 /// The ChargeBatteryFactory will generate a ChargeBattery request which
 /// requires an AGV to return to its desginated charging_waypoint as specified
 /// in its agv::State and wait till its battery charges up to the recharge_soc
-/// confugred in agv::Constraints recharge_soc specified in its agv::Constraints
+/// configured in agv::Constraints recharge_soc specified in its
+/// agv::Constraints
 class ChargeBatteryFactory : public RequestFactory
 {
 public:
 
+  /// Constructor
   ChargeBatteryFactory();
 
+  /// Constructor
+  ///
+  /// \param[in] requester
+  ///   The identifier of the entity that owns this RequestFactory, that will be
+  ///   the designated requester of each new request.
+  ///
+  /// \param[in] time_now_cb
+  ///   Callback function that returns the current time.
+  explicit ChargeBatteryFactory(
+    const std::string& requester,
+    std::function<rmf_traffic::Time()> time_now_cb);
+
   /// Documentation inherited
-  ConstRequestPtr make_request(
-    const State& state) const final;
+  ConstRequestPtr make_request(const State& state) const final;
 
   class Implementation;
 
