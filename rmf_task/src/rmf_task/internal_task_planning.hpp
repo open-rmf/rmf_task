@@ -77,6 +77,7 @@ public:
     const Parameters& parameters,
     const Task::Model& task_model,
     const TravelEstimator& travel_estimator,
+    const std::string& planner_id,
     TaskPlanner::TaskPlannerError& error);
 
   Candidates(const Candidates& other);
@@ -117,6 +118,7 @@ public:
     const Parameters& parameters,
     const ConstRequestPtr request_,
     const TravelEstimator& travel_estimator,
+    const std::string& planner_id,
     TaskPlanner::TaskPlannerError& error);
 
   rmf_task::ConstRequestPtr request;

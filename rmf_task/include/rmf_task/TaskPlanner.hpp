@@ -198,6 +198,23 @@ public:
     Configuration configuration,
     Options default_options);
 
+  /// Constructor
+  ///
+  /// \param[in] planner_id
+  ///   Identifier of this task planner, to be used for booking automated
+  ///   requests.
+  ///
+  /// \param[in] configuration
+  ///   The configuration for the planner.
+  ///
+  /// \param[in] default_options
+  ///   Default options for the task planner to use when solving for assignments.
+  ///   These options can be overriden each time a plan is requested.
+  TaskPlanner(
+    const std::string& planner_id,
+    Configuration configuration,
+    Options default_options);
+
   /// Get a const reference to configuration of this task planner
   const Configuration& configuration() const;
 

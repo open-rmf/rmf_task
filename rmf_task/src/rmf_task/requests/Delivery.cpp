@@ -331,6 +331,12 @@ ConstRequestPtr Delivery::make(
   std::string pickup_from_dispenser,
   std::string dropoff_to_ingestor)
 {
+  Task::ConstBookingPtr booking =
+    std::make_shared<const rmf_task::Task::Booking>(
+    id,
+    earliest_start_time,
+    std::move(priority),
+    automatic);
   const auto description = Description::make(
     pickup_waypoint,
     pickup_wait,
@@ -339,9 +345,46 @@ ConstRequestPtr Delivery::make(
     std::move(payload),
     std::move(pickup_from_dispenser),
     std::move(dropoff_to_ingestor));
-
   return std::make_shared<Request>(
-    id, earliest_start_time, std::move(priority), description, automatic);
+    std::move(booking),
+    std::move(description));
+}
+
+//==============================================================================
+ConstRequestPtr Delivery::make(
+  std::size_t pickup_waypoint,
+  rmf_traffic::Duration pickup_wait,
+  std::size_t dropoff_waypoint,
+  rmf_traffic::Duration dropoff_wait,
+  Payload payload,
+  const std::string& id,
+  rmf_traffic::Time earliest_start_time,
+  const std::string& requester,
+  rmf_traffic::Time request_time,
+  ConstPriorityPtr priority,
+  bool automatic,
+  std::string pickup_from_dispenser,
+  std::string dropoff_to_ingestor)
+{
+  Task::ConstBookingPtr booking =
+    std::make_shared<const rmf_task::Task::Booking>(
+    id,
+    earliest_start_time,
+    std::move(priority),
+    requester,
+    request_time,
+    automatic);
+  const auto description = Description::make(
+    pickup_waypoint,
+    pickup_wait,
+    dropoff_waypoint,
+    dropoff_wait,
+    std::move(payload),
+    std::move(pickup_from_dispenser),
+    std::move(dropoff_to_ingestor));
+  return std::make_shared<Request>(
+    std::move(booking),
+    std::move(description));
 }
 
 } // namespace requests
