@@ -22,6 +22,7 @@
 #include <rmf_battery/agv/SimpleDevicePowerSink.hpp>
 
 #include <rmf_task/BinaryPriorityScheme.hpp>
+#include <rmf_task/Task.hpp>
 #include <rmf_task/TaskPlanner.hpp>
 
 #include <rmf_task_sequence/Event.hpp>
@@ -145,23 +146,32 @@ SCENARIO("Test GoToPlace and PerformAction Compose task")
   builder.add_phase(action_phase, {});
   auto action_task = builder.build("mock_category", "mock_tag");
 
+  rmf_task::Task::ConstBookingPtr compose_booking =
+    std::make_shared<const rmf_task::Task::Booking>(
+      "mock_id",
+      std::chrono::steady_clock::now(),
+      nullptr);
   auto compose_request = std::make_shared<rmf_task::Request>(
-    "mock_id",
-    std::chrono::steady_clock::now(),
-    nullptr,
-    compose_task);
+    std::move(compose_booking),
+    std::move(compose_task));
 
+  rmf_task::Task::ConstBookingPtr gotoplace_booking =
+    std::make_shared<const rmf_task::Task::Booking>(
+      "mock_id2",
+      std::chrono::steady_clock::now(),
+      nullptr);
   auto gotoplace_request = std::make_shared<rmf_task::Request>(
-    "mock_id2",
-    std::chrono::steady_clock::now(),
-    nullptr,
-    gotoplace_task);
+    std::move(gotoplace_booking),
+    std::move(gotoplace_task));
 
+  rmf_task::Task::ConstBookingPtr action_booking =
+    std::make_shared<const rmf_task::Task::Booking>(
+      "mock_id3",
+      std::chrono::steady_clock::now(),
+      nullptr);
   auto action_request = std::make_shared<rmf_task::Request>(
-    "mock_id3",
-    std::chrono::steady_clock::now(),
-    nullptr,
-    action_task);
+    std::move(action_booking),
+    std::move(action_task));
 
   WHEN("Planning for a task with a gotoplace and perform_action phase")
   {

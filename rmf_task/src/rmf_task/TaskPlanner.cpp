@@ -26,6 +26,7 @@
 
 #include <limits>
 #include <queue>
+#include <string_view>
 
 namespace rmf_task {
 
@@ -369,16 +370,25 @@ const rmf_traffic::Duration segmentation_threshold =
 class TaskPlanner::Implementation
 {
 public:
-
   Configuration config;
   Options default_options;
   ConstTravelEstimatorPtr travel_estimator;
+  std::string planner_id;
   bool check_priority = false;
   ConstCostCalculatorPtr cost_calculator = nullptr;
 
-  ConstRequestPtr make_charging_request(rmf_traffic::Time start_time)
+  static constexpr std::string_view DefaultTaskPlannerName = "task_planner";
+
+  ConstRequestPtr make_charging_request(
+    rmf_traffic::Time start_time,
+    rmf_traffic::Time time_now)
   {
-    return rmf_task::requests::ChargeBattery::make(start_time);
+    return rmf_task::requests::ChargeBattery::make(
+      start_time,
+      planner_id,
+      time_now,
+      nullptr,
+      true);
   }
 
   TaskPlanner::Assignments prune_assignments(
@@ -420,7 +430,8 @@ public:
 
   void append_finishing_request(
     const RequestFactory& factory,
-    TaskPlanner::Assignments& complete_assignments)
+    TaskPlanner::Assignments& complete_assignments,
+    rmf_traffic::Time time_now)
   {
     for (auto& agent : complete_assignments)
     {
@@ -458,7 +469,7 @@ public:
         // Insufficient battery to perform the finishing request. We check if
         // adding a ChargeBattery task before will allow for it to be performed
         const auto charging_request =
-          make_charging_request(state.time().value());
+          make_charging_request(state.time().value(), time_now);
         const auto charge_battery_model =
           charging_request->description()->make_model(
           state.time().value(),
@@ -561,7 +572,10 @@ public:
         auto pruned_assignments = prune_assignments(complete_assignments);
         if (finishing_request != nullptr)
         {
-          append_finishing_request(*finishing_request, pruned_assignments);
+          append_finishing_request(
+            *finishing_request,
+            pruned_assignments,
+            time_now);
         }
 
         return pruned_assignments;
@@ -598,7 +612,10 @@ public:
     // the assignments for each agent
     if (finishing_request != nullptr)
     {
-      append_finishing_request(*finishing_request, complete_assignments);
+      append_finishing_request(
+        *finishing_request,
+        complete_assignments,
+        time_now);
     }
 
     return complete_assignments;
@@ -626,6 +643,7 @@ public:
         config.parameters(),
         request,
         *travel_estimator,
+        planner_id,
         error);
 
       if (!pending_task)
@@ -721,7 +739,7 @@ public:
           assignments.back().assignment.request()->description()))
       {
         auto charge_battery = make_charging_request(
-          entry.previous_state.time().value());
+          entry.previous_state.time().value(), time_now);
         const auto charge_battery_model =
           charge_battery->description()->make_model(
           charge_battery->booking()->earliest_start_time(),
@@ -799,7 +817,7 @@ public:
     if (add_charger)
     {
       auto charge_battery = make_charging_request(
-        entry.state.time().value());
+        entry.state.time().value(), time_now);
 
       const auto charge_battery_model =
         charge_battery->description()->make_model(
@@ -886,7 +904,7 @@ public:
       state = assignments.back().assignment.finish_state();
     }
 
-    auto charge_battery = make_charging_request(state.time().value());
+    auto charge_battery = make_charging_request(state.time().value(), time_now);
     const auto charge_battery_model =
       charge_battery->description()->make_model(
       charge_battery->booking()->earliest_start_time(),
@@ -1093,7 +1111,24 @@ TaskPlanner::TaskPlanner(
       Implementation{
         configuration,
         default_options,
-        std::make_shared<TravelEstimator>(configuration.parameters())
+        std::make_shared<TravelEstimator>(configuration.parameters()),
+        std::string(Implementation::DefaultTaskPlannerName)
+      }))
+{
+  // Do nothing
+}
+
+// ============================================================================
+TaskPlanner::TaskPlanner(
+  const std::string& planner_id,
+  Configuration configuration,
+  Options default_options)
+: _pimpl(rmf_utils::make_impl<Implementation>(
+      Implementation{
+        configuration,
+        default_options,
+        std::make_shared<TravelEstimator>(configuration.parameters()),
+        planner_id
       }))
 {
   // Do nothing
