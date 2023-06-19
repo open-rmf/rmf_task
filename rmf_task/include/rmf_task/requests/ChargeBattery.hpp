@@ -83,6 +83,29 @@ public:
     rmf_traffic::Time earliest_start_time,
     ConstPriorityPtr priority = nullptr,
     bool automatic = true);
+
+  /// Generate a chargebattery request.
+  ///
+  /// \param[in] earliest_start_time
+  ///   The desired start time for this request.
+  ///
+  /// \param[in] requester
+  ///   The entity that issued this request.
+  ///
+  /// \param[in] request_time
+  ///   The time this request was generated or submitted.
+  ///
+  /// \param[in] priority
+  ///   The priority for this request.
+  ///
+  /// \param[in] automatic
+  ///   True if this request is auto-generated, default value as true.
+  static ConstRequestPtr make(
+    rmf_traffic::Time earliest_start_time,
+    const std::string& requester,
+    rmf_traffic::Time request_time,
+    ConstPriorityPtr priority = nullptr,
+    bool automatic = true);
 };
 
 } // namespace requests
