@@ -17,3 +17,5 @@ jobs:
       packages: |
         rmf_task
         rmf_task_sequence
+      dist-matrix: |
+        [{"ros_distribution": "humble", "ubuntu_distribution": "jammy"}]

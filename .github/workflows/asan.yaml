@@ -12,11 +12,10 @@ jobs:
     name: rmf_task asan
     uses: open-rmf/rmf_ci_templates/.github/workflows/reusable_build.yaml@main
     with:
-      dist-matrix: |
-          [{"ros_distribution": "humble",
-            "ubuntu_distribution": "jammy"}]
       # NOTE: Avoid adding comments in the package lines, this can break some of the called scripts in github actions
       packages: |
         rmf_task
         rmf_task_sequence
       mixin: asan
+      dist-matrix: |
+        [{"ros_distribution": "humble", "ubuntu_distribution": "jammy"}]
