@@ -15,4 +15,7 @@ jobs:
     with:
       # NOTE: Avoid adding comments in the package lines, this can break some of the called scripts in github actions
       packages: |
-            rmf_task
+        rmf_task
+        rmf_task_sequence
+      dist-matrix: |
+        [{"ros_distribution": "humble", "ubuntu_distribution": "jammy"}]

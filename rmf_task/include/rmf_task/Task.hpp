@@ -31,6 +31,7 @@
 #include <rmf_traffic/Time.hpp>
 
 #include <memory>
+#include <optional>
 #include <functional>
 
 namespace rmf_task {
@@ -67,33 +68,69 @@ public:
 
   /// Constructor
   ///
-  /// \param[in] id_
+  /// \param[in] id
   ///   The identity of the booking
   ///
-  /// \param[in] earliest_start_time_
+  /// \param[in] earliest_start_time
   ///   The earliest time that the task may begin
   ///
-  /// \param[in] priority_
+  /// \param[in] priority
   ///   The priority of the booking
   ///
-  /// \param[in] automatic_
+  /// \param[in] automatic
   ///   Whether this booking was automatically generated
   Booking(
-    std::string id_,
-    rmf_traffic::Time earliest_start_time_,
-    ConstPriorityPtr priority_,
-    bool automatic_ = false);
+    std::string id,
+    rmf_traffic::Time earliest_start_time,
+    ConstPriorityPtr priority,
+    bool automatic = false);
 
-  /// The unique id for this booking
+  /// Constructor
+  ///
+  /// \param[in] id
+  ///   The identity of the booking.
+  ///
+  /// \param[in] earliest_start_time
+  ///   The earliest time that the task may begin.
+  ///
+  /// \param[in] priority
+  ///   The priority of the booking.
+  ///
+  /// \param[in] requester
+  ///   The identifier of the entity that requested this task.
+  ///
+  /// \param[in] request_time
+  ///   The time that this task was booked.
+  ///
+  /// \param[in] automatic
+  ///   Whether this booking was automatically generated, default value as
+  ///   false.
+  Booking(
+    std::string id,
+    rmf_traffic::Time earliest_start_time,
+    ConstPriorityPtr priority,
+    const std::string& requester,
+    rmf_traffic::Time request_time,
+    bool automatic = false);
+
+  /// The unique id for this booking.
   const std::string& id() const;
 
-  /// Get the earliest time that this booking may begin
+  /// Get the earliest time that this booking may begin.
   rmf_traffic::Time earliest_start_time() const;
 
-  /// Get the priority of this booking
+  /// Get the priority of this booking.
   ConstPriorityPtr priority() const;
 
-  // Returns true if this booking was automatically generated
+  /// Get the identifier of the entity that requested this booking. Returns a
+  /// nullopt if no requester was defined.
+  std::optional<std::string> requester() const;
+
+  /// Get the time that this booking was requested. Returns a nullopt if no
+  /// request time was defined.
+  std::optional<rmf_traffic::Time> request_time() const;
+
+  // Returns true if this booking was automatically generated.
   bool automatic() const;
 
   class Implementation;

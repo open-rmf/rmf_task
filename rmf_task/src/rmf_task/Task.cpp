@@ -28,21 +28,46 @@ public:
   std::string id;
   rmf_traffic::Time earliest_start_time;
   rmf_task::ConstPriorityPtr priority;
+  std::optional<std::string> requester;
+  std::optional<rmf_traffic::Time> request_time;
   bool automatic;
 };
 
 //==============================================================================
 Task::Booking::Booking(
-  std::string id_,
-  rmf_traffic::Time earliest_start_time_,
-  ConstPriorityPtr priority_,
-  bool automatic_)
+  std::string id,
+  rmf_traffic::Time earliest_start_time,
+  ConstPriorityPtr priority,
+  bool automatic)
 : _pimpl(rmf_utils::make_impl<Implementation>(
       Implementation{
-        std::move(id_),
-        earliest_start_time_,
-        std::move(priority_),
-        automatic_
+        std::move(id),
+        earliest_start_time,
+        std::move(priority),
+        std::nullopt,
+        std::nullopt,
+        automatic,
+      }))
+{
+  // Do nothing
+}
+
+//==============================================================================
+Task::Booking::Booking(
+  std::string id,
+  rmf_traffic::Time earliest_start_time,
+  ConstPriorityPtr priority,
+  const std::string& requester,
+  rmf_traffic::Time request_time,
+  bool automatic)
+: _pimpl(rmf_utils::make_impl<Implementation>(
+      Implementation{
+        std::move(id),
+        earliest_start_time,
+        std::move(priority),
+        requester,
+        std::move(request_time),
+        automatic,
       }))
 {
   // Do nothing
@@ -64,6 +89,18 @@ rmf_traffic::Time Task::Booking::earliest_start_time() const
 ConstPriorityPtr Task::Booking::priority() const
 {
   return _pimpl->priority;
+}
+
+//==============================================================================
+std::optional<std::string> Task::Booking::requester() const
+{
+  return _pimpl->requester;
+}
+
+//==============================================================================
+std::optional<rmf_traffic::Time> Task::Booking::request_time() const
+{
+  return _pimpl->request_time;
 }
 
 //==============================================================================
