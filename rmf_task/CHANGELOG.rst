@@ -2,6 +2,11 @@
 Changelog for package rmf_task
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Added ``requester`` and ``request_time`` fields to ``rmf_task::Task::Booking`` (`#81 <https://github.com/open-rmf/rmf_task/pull/81>`_)
+* Contributors: Aaron Chong
+
 2.1.4 (2023-06-05)
 ------------------
 * Update github actions and fix style as per uncrustify 0.72 (`#74 <https://github.com/open-rmf/rmf_task/pull/74>`_)
