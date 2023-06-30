@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format2.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>rmf_task_sequence</name>
-  <version>2.1.4</version>
+  <version>2.1.5</version>
   <description>Implementation of phase-sequence tasks for the Robotics Middleware Framework</description>
   <maintainer email="grey@openrobotics.org">Grey</maintainer>
   <maintainer email="marco@openrobotics.org">Marco A. Gutiérrez</maintainer>
