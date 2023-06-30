@@ -2,6 +2,12 @@
 Changelog for package rmf_task_sequence
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.3.1 (2023-06-30)
+------------------
+* Added ``rmf_task_sequence`` to workflows and fixed codestyle (`#91 <https://github.com/open-rmf/rmf_task/pull/91>`_)
+* Added ``requester`` and ``request_time`` fields to ``rmf_task::Task::Booking`` (`#81 <https://github.com/open-rmf/rmf_task/pull/81>`_)
+* Contributors: Aaron Chong
+
 2.3.0 (2023-06-08)
 ------------------
 
