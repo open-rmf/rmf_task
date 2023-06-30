@@ -2,6 +2,11 @@
 Changelog for package rmf_task_sequence
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Added ``requester`` and ``request_time`` fields to ``rmf_task::Task::Booking`` (`#90 <https://github.com/open-rmf/rmf_task/pull/90>`_)
+* Contributors: Aaron Chong
+
 2.2.0 (2023-06-06)
 ------------------
 * Switch to rst changelogs
