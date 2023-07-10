@@ -135,7 +135,11 @@ std::optional<Estimate> WaitFor::Model::estimate_finish(
   state.time(state.time().value() + _duration);
 
   if (constraints.drain_battery())
-    state.battery_soc(state.battery_soc().value() - _invariant_battery_drain);
+  {
+    state.battery_soc(
+      std::max(0.0, state.battery_soc().value() - _invariant_battery_drain)
+    );
+  }
 
   if (state.battery_soc().value() <= _invariant_battery_drain)
     return std::nullopt;

@@ -137,16 +137,20 @@ std::optional<Estimate> GoToPlace::Model::estimate_finish(
 
   const auto wait_until_time = arrival_time - travel->duration();
   finish.time(wait_until_time + travel->duration());
-  auto battery_soc = finish.battery_soc().value();
 
   if (constraints.drain_battery())
-    battery_soc = battery_soc - travel->change_in_charge();
+  {
+    finish.battery_soc(
+      std::max(
+        0.0,
+        finish.battery_soc().value() - travel->change_in_charge())
+    );
+  }
 
-  finish.battery_soc(battery_soc);
-
-  const auto battery_threshold = constraints.threshold_soc();
-  if (battery_soc <= battery_threshold)
+  if (finish.battery_soc().value() <= constraints.threshold_soc())
+  {
     return std::nullopt;
+  }
 
   return Estimate(finish, wait_until_time);
 }
