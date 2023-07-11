@@ -115,9 +115,13 @@ WaitFor::Model::Model(
 {
   if (parameters.ambient_sink())
   {
+    // Handle cases where duration is invalid.
+    const auto duration =
+      _duration.count() < 0 ? rmf_traffic::Duration(0) : _duration;
+
     _invariant_battery_drain =
       parameters.ambient_sink()->compute_change_in_charge(
-      rmf_traffic::time::to_seconds(_duration));
+      rmf_traffic::time::to_seconds(duration));
   }
   else
   {
@@ -136,12 +140,16 @@ std::optional<Estimate> WaitFor::Model::estimate_finish(
 
   if (constraints.drain_battery())
   {
-    state.battery_soc(
-      std::max(0.0, state.battery_soc().value() - _invariant_battery_drain)
-    );
+    const auto new_battery_soc =
+      state.battery_soc().value() - _invariant_battery_drain;
+    if (new_battery_soc < 0.0)
+    {
+      return std::nullopt;
+    }
+    state.battery_soc(new_battery_soc);
   }
 
-  if (state.battery_soc().value() <= _invariant_battery_drain)
+  if (state.battery_soc().value() <= constraints.threshold_soc())
     return std::nullopt;
 
   return Estimate(state, earliest_arrival_time);

@@ -140,11 +140,13 @@ std::optional<Estimate> GoToPlace::Model::estimate_finish(
 
   if (constraints.drain_battery())
   {
-    finish.battery_soc(
-      std::max(
-        0.0,
-        finish.battery_soc().value() - travel->change_in_charge())
-    );
+    const auto new_battery_soc =
+      finish.battery_soc().value() - travel->change_in_charge();
+    if (new_battery_soc < 0.0)
+    {
+      return std::nullopt;
+    }
+    finish.battery_soc(new_battery_soc);
   }
 
   if (finish.battery_soc().value() <= constraints.threshold_soc())
