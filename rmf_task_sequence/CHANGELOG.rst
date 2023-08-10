@@ -2,6 +2,11 @@
 Changelog for package rmf_task_sequence
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.3.2 (2023-08-10)
+------------------
+* Fix battery drain crash for GoToPlace (`#94 <https://github.com/open-rmf/rmf_task/pull/94>`_)
+* Contributors: Yadunund
+
 2.3.1 (2023-06-30)
 ------------------
 * Added ``rmf_task_sequence`` to workflows and fixed codestyle (`#91 <https://github.com/open-rmf/rmf_task/pull/91>`_)
