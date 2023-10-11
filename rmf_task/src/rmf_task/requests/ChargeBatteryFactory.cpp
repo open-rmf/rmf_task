@@ -27,6 +27,7 @@ class ChargeBatteryFactory::Implementation
 public:
   std::optional<std::string> requester;
   std::function<rmf_traffic::Time()> time_now_cb;
+  bool indefinite = false;
 };
 
 //==============================================================================
@@ -45,6 +46,18 @@ ChargeBatteryFactory::ChargeBatteryFactory(
       Implementation{requester, std::move(time_now_cb)}))
 {
   // Do nothing
+}
+
+//==============================================================================
+void ChargeBatteryFactory::set_indefinite(bool value)
+{
+  _pimpl->indefinite = value;
+}
+
+//==============================================================================
+bool ChargeBatteryFactory::indefinite() const
+{
+  return _pimpl->indefinite;
 }
 
 //==============================================================================
