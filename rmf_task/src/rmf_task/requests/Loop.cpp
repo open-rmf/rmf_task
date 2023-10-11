@@ -78,6 +78,7 @@ Loop::Model::Model(
     auto itinerary_start_time = _earliest_start_time;
     double forward_battery_drain = 0.0;
     rmf_traffic::Duration forward_duration(0);
+
     for (const auto& itinerary : forward_loop_plan->get_itinerary())
     {
       const auto& trajectory = itinerary.trajectory();

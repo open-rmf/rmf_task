@@ -63,6 +63,16 @@ public:
       const State& initial_state,
       const Parameters& parameters) const final;
 
+    /// Set the charging task to run indefinitely. This means it will never
+    /// declare itself as finished and must instead be canceled. This can be
+    /// used for idle tasks that are canceled automatically when a task request
+    /// comes in. If indefinite is false, the robot will charge up to its
+    /// designated recharge level.
+    void set_indefinite(bool value);
+
+    /// Should this recharge task run indefinitely?
+    bool indefinite() const;
+
     class Implementation;
   private:
     Description();
