@@ -46,6 +46,17 @@ public:
   /// Make a GoToPlace description using a goal.
   static DescriptionPtr make(Goal goal);
 
+  /// Make a GoToPlace description using a goal.
+  /// This constructor will pick the nearest unoccupied goal and
+  /// head for said goal.
+  static DescriptionPtr make_with_multiple(std::vector<Goal>& goal);
+
+  /// Get the current goal for this description.
+  const bool has_multiple_possible_destinations() const;
+
+   /// Get the current goal for this description.
+  const std::vector<Goal>& destinations() const;
+
   /// Get the current goal for this description.
   const Goal& destination() const;
 

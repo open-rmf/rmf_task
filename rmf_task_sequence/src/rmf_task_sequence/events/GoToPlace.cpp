@@ -186,12 +186,22 @@ class GoToPlace::Description::Implementation
 {
 public:
 
-  rmf_traffic::agv::Plan::Goal destination;
+  std::vector<rmf_traffic::agv::Plan::Goal> destination;
   std::vector<rmf_traffic::agv::Plan::Goal> expected_next_destinations;
 };
 
 //==============================================================================
 auto GoToPlace::Description::make(Goal goal) -> DescriptionPtr
+{
+  auto desc = std::shared_ptr<Description>(new Description);
+  desc->_pimpl = rmf_utils::make_impl<Implementation>(
+    Implementation{{std::move(goal)}, {}});
+
+  return desc;
+}
+
+//==============================================================================
+auto GoToPlace::Description::make_with_multiple(std::vector<Goal>& goal) -> DescriptionPtr
 {
   auto desc = std::shared_ptr<Description>(new Description);
   desc->_pimpl = rmf_utils::make_impl<Implementation>(
@@ -205,10 +215,11 @@ Activity::ConstModelPtr GoToPlace::Description::make_model(
   State invariant_initial_state,
   const Parameters& parameters) const
 {
+  // TODO(arjo) make invariant return farthest destination.
   return Model::make(
     std::move(invariant_initial_state),
     parameters,
-    _pimpl->destination);
+    _pimpl->destination[0]);
 }
 
 //==============================================================================
@@ -234,10 +245,10 @@ Header GoToPlace::Description::generate_header(
 
   const auto start_name = rmf_task::standard_waypoint_name(graph, start_wp);
 
-  if (graph.num_waypoints() <= _pimpl->destination.waypoint())
+  if (graph.num_waypoints() <= _pimpl->destination[0].waypoint())
   {
     utils::fail(fail_header, "Destination waypoint ["
-      + std::to_string(_pimpl->destination.waypoint())
+      + std::to_string(_pimpl->destination[0].waypoint())
       + "] is outside the graph [" + std::to_string(graph.num_waypoints())
       + "]");
   }
@@ -245,7 +256,7 @@ Header GoToPlace::Description::generate_header(
   const auto goal_name_ = destination_name(parameters);
 
   const auto estimate = estimate_duration(
-    parameters.planner(), initial_state, _pimpl->destination);
+    parameters.planner(), initial_state, _pimpl->destination[0]);
 
   if (!estimate.has_value())
   {
@@ -262,13 +273,26 @@ Header GoToPlace::Description::generate_header(
 //==============================================================================
 auto GoToPlace::Description::destination() const -> const Goal&
 {
+  return _pimpl->destination[0];
+}
+
+//==============================================================================
+auto GoToPlace::Description::has_multiple_possible_destinations() const -> const bool
+{
+  return _pimpl->destination.size() > 1;
+}
+
+//==============================================================================
+auto GoToPlace::Description::destinations() const -> const std::vector<Goal>&
+{
   return _pimpl->destination;
 }
+
 
 //==============================================================================
 auto GoToPlace::Description::destination(Goal new_goal) -> Description&
 {
-  _pimpl->destination = std::move(new_goal);
+  _pimpl->destination[0] = std::move(new_goal);
   return *this;
 }
 
@@ -278,7 +302,7 @@ std::string GoToPlace::Description::destination_name(
 {
   return rmf_task::standard_waypoint_name(
     parameters.planner()->get_configuration().graph(),
-    _pimpl->destination.waypoint());
+    _pimpl->destination[0].waypoint());
 }
 
 //==============================================================================
