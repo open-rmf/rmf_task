@@ -54,7 +54,7 @@ public:
   /// Get the current goal for this description.
   const bool has_multiple_possible_destinations() const;
 
-   /// Get the current goal for this description.
+  /// Get the possible destinations for this description.
   const std::vector<Goal>& destinations() const;
 
   /// Get the current goal for this description.

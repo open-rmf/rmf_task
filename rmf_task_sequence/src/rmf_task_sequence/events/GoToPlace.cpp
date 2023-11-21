@@ -201,8 +201,8 @@ auto GoToPlace::Description::make(Goal goal) -> DescriptionPtr
 }
 
 //==============================================================================
-auto GoToPlace::Description::make_with_multiple(std::vector<Goal>& goal) ->
-  DescriptionPtr
+auto GoToPlace::Description::make_with_multiple(std::vector<Goal>& goal)
+-> DescriptionPtr
 {
   auto desc = std::shared_ptr<Description>(new Description);
   desc->_pimpl = rmf_utils::make_impl<Implementation>(
@@ -278,8 +278,8 @@ auto GoToPlace::Description::destination() const -> const Goal&
 }
 
 //==============================================================================
-auto GoToPlace::Description::has_multiple_possible_destinations() const ->
-  const bool
+auto GoToPlace::Description::has_multiple_possible_destinations() const
+-> const bool
 {
   return _pimpl->destination.size() > 1;
 }
