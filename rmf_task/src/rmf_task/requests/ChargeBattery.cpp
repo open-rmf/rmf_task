@@ -176,6 +176,15 @@ Task::ConstDescriptionPtr ChargeBattery::Description::make()
 }
 
 //==============================================================================
+auto ChargeBattery::Description::make_indefinite()
+-> std::shared_ptr<Description>
+{
+  std::shared_ptr<Description> description(new Description);
+  description->set_indefinite(true);
+  return description;
+}
+
+//==============================================================================
 ChargeBattery::Description::Description()
 : _pimpl(rmf_utils::make_impl<Implementation>(Implementation()))
 {

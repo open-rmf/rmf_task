@@ -53,6 +53,9 @@ public:
     /// Generate the description for this request
     static Task::ConstDescriptionPtr make();
 
+    /// Make a charging task that will last indefinitely.
+    static std::shared_ptr<Description> make_indefinite();
+
     // Documentation inherited
     Task::ConstModelPtr make_model(
       rmf_traffic::Time earliest_start_time,
