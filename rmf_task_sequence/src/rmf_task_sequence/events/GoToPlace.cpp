@@ -90,25 +90,28 @@ Activity::ConstModelPtr GoToPlace::Model::make(
   std::optional<rmf_traffic::Duration> shortest_travel_time = std::nullopt;
   if (invariant_initial_state.waypoint().has_value())
   {
-    for (auto goal: goals){
+    for (auto goal: goals)
+    {
       const auto invariant_duration_opt = estimate_duration(
         parameters.planner(),
         invariant_initial_state,
         goal);
 
-      if (!shortest_travel_time.has_value()) {
+      if (!shortest_travel_time.has_value())
+      {
         shortest_travel_time = invariant_duration_opt;
         selected_goal = goal;
       }
-      else if (shortest_travel_time.value() > invariant_duration_opt.value()) {
+      else if (shortest_travel_time.value() > invariant_duration_opt.value())
+      {
         shortest_travel_time = invariant_duration_opt;
         selected_goal = goal;
       }
     }
-  }
 
-  if (!shortest_travel_time.has_value())
-    return nullptr;
+    if (!shortest_travel_time.has_value())
+      return nullptr;
+  }
 
   invariant_finish_state.waypoint(selected_goal.waypoint());
 
@@ -120,7 +123,7 @@ Activity::ConstModelPtr GoToPlace::Model::make(
   return std::shared_ptr<Model>(
     new Model(
       std::move(invariant_finish_state),
-      shortest_travel_time.value(),
+      shortest_travel_time.value_or(rmf_traffic::Duration(0)),
       std::move(selected_goal)));
 }
 
