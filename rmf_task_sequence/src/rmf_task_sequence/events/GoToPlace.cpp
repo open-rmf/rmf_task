@@ -199,7 +199,6 @@ GoToPlace::Model::Model(
 class GoToPlace::Description::Implementation
 {
 public:
-
   std::vector<rmf_traffic::agv::Plan::Goal> destination;
   std::vector<rmf_traffic::agv::Plan::Goal> expected_next_destinations;
 };
@@ -258,26 +257,65 @@ Header GoToPlace::Description::generate_header(
       + "]");
   }
 
-  const auto start_name = rmf_task::standard_waypoint_name(graph, start_wp);
-
-  if (graph.num_waypoints() <= _pimpl->destination[0].waypoint())
+  if (_pimpl->destination.size() == 0)
   {
-    utils::fail(fail_header, "Destination waypoint ["
-      + std::to_string(_pimpl->destination[0].waypoint())
-      + "] is outside the graph [" + std::to_string(graph.num_waypoints())
-      + "]");
+    utils::fail(fail_header, "No destination was specified");
   }
 
-  const auto goal_name_ = destination_name(parameters);
+  const auto start_name = rmf_task::standard_waypoint_name(graph, start_wp);
 
-  const auto estimate = estimate_duration(
-    parameters.planner(), initial_state, _pimpl->destination[0]);
+  std::optional<rmf_traffic::Duration> estimate = std::nullopt;
+  std::size_t selected_index = 0;
+  for (std::size_t i = 0; i < _pimpl->destination.size(); i ++)
+  {
+    auto dest = _pimpl->destination[i];
+
+    if (graph.num_waypoints() <= dest.waypoint())
+    {
+      utils::fail(fail_header, "Destination waypoint ["
+        + std::to_string(dest.waypoint())
+        + "] is outside the graph [" + std::to_string(graph.num_waypoints())
+        + "]");
+    }
+
+    if (estimate.has_value()) 
+    {
+      auto curr_est = estimate_duration(
+          parameters.planner(), initial_state, dest);
+      if (curr_est.has_value() && curr_est.value() < estimate)
+      {
+        estimate = curr_est;
+        selected_index = i;
+      }
+    }
+    else
+    {
+      estimate = estimate_duration(
+        parameters.planner(), initial_state, dest);
+      selected_index = i;
+    }
+  }
+
+  auto goal_name = [&](const rmf_traffic::agv::Plan::Goal& goal) { 
+    return rmf_task::standard_waypoint_name(
+    parameters.planner()->get_configuration().graph(),
+    goal.waypoint());
+  };
 
   if (!estimate.has_value())
   {
     utils::fail(fail_header, "Cannot find a path from ["
-      + start_name + "] to [" + goal_name_ + "]");
+      + start_name + "] to any of [" + std::accumulate(
+        std::next(_pimpl->destination.begin()),
+        _pimpl->destination.end(),
+        goal_name(_pimpl->destination[0]),
+        [&](std::string a, const rmf_traffic::agv::Plan::Goal& goal) {
+          return std::move(a) + " " + goal_name(goal);
+        }
+      ) + "]");
   }
+
+  const auto goal_name_ = goal_name(_pimpl->destination[selected_index]);
 
   return Header(
     "Go to " + goal_name_,
