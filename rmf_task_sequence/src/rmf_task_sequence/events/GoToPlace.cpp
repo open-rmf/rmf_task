@@ -51,7 +51,7 @@ public:
   static Activity::ConstModelPtr make(
     State invariant_initial_state,
     const Parameters& parameters,
-    Goal goal);
+    std::vector<Goal> goal);
 
   // Documentation inherited
   std::optional<Estimate> estimate_finish(
@@ -82,35 +82,46 @@ private:
 Activity::ConstModelPtr GoToPlace::Model::make(
   State invariant_initial_state,
   const Parameters& parameters,
-  Goal goal)
+  std::vector<Goal> goals)
 {
   auto invariant_finish_state = invariant_initial_state;
-  invariant_finish_state.waypoint(goal.waypoint());
-
-  if (goal.orientation())
-    invariant_finish_state.orientation(*goal.orientation());
-  else
-    invariant_finish_state.erase<State::CurrentOrientation>();
-
-  auto invariant_duration = rmf_traffic::Duration(0);
+  
+  auto selected_goal = goals[0];
+  std::optional<rmf_traffic::Duration> shortest_travel_time = std::nullopt;
   if (invariant_initial_state.waypoint().has_value())
   {
-    const auto invariant_duration_opt = estimate_duration(
-      parameters.planner(),
-      invariant_initial_state,
-      goal);
+    for (auto goal: goals){
+      const auto invariant_duration_opt = estimate_duration(
+        parameters.planner(),
+        invariant_initial_state,
+        goal);
 
-    if (!invariant_duration_opt.has_value())
-      return nullptr;
-
-    invariant_duration = *invariant_duration_opt;
+      if (!shortest_travel_time.has_value()) {
+        shortest_travel_time = invariant_duration_opt;
+        selected_goal = goal;
+      }
+      else if (shortest_travel_time.value() > invariant_duration_opt.value()) {
+        shortest_travel_time = invariant_duration_opt;
+        selected_goal = goal;
+      }
+    }
   }
+
+  if (!shortest_travel_time.has_value())
+    return nullptr;
+
+  invariant_finish_state.waypoint(selected_goal.waypoint());
+
+  if (selected_goal.orientation())
+    invariant_finish_state.orientation(*selected_goal.orientation());
+  else
+    invariant_finish_state.erase<State::CurrentOrientation>();
 
   return std::shared_ptr<Model>(
     new Model(
       std::move(invariant_finish_state),
-      invariant_duration,
-      std::move(goal)));
+      shortest_travel_time.value(),
+      std::move(selected_goal)));
 }
 
 //==============================================================================
@@ -220,7 +231,7 @@ Activity::ConstModelPtr GoToPlace::Description::make_model(
   return Model::make(
     std::move(invariant_initial_state),
     parameters,
-    _pimpl->destination[0]);
+    _pimpl->destination);
 }
 
 //==============================================================================
