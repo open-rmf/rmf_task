@@ -297,7 +297,7 @@ Header GoToPlace::Description::generate_header(
   }
 
   auto goal_name = [&](const rmf_traffic::agv::Plan::Goal& goal)
-    { 
+    {
       return rmf_task::standard_waypoint_name(
         parameters.planner()->get_configuration().graph(),
         goal.waypoint());
