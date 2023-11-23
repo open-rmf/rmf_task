@@ -278,10 +278,10 @@ Header GoToPlace::Description::generate_header(
         + "]");
     }
 
-    if (estimate.has_value()) 
+    if (estimate.has_value())
     {
       auto curr_est = estimate_duration(
-          parameters.planner(), initial_state, dest);
+        parameters.planner(), initial_state, dest);
       if (curr_est.has_value() && curr_est.value() < estimate)
       {
         estimate = curr_est;
@@ -296,7 +296,8 @@ Header GoToPlace::Description::generate_header(
     }
   }
 
-  auto goal_name = [&](const rmf_traffic::agv::Plan::Goal& goal) { 
+  auto goal_name = [&](const rmf_traffic::agv::Plan::Goal& goal)
+  { 
     return rmf_task::standard_waypoint_name(
     parameters.planner()->get_configuration().graph(),
     goal.waypoint());
@@ -309,7 +310,8 @@ Header GoToPlace::Description::generate_header(
         std::next(_pimpl->destination.begin()),
         _pimpl->destination.end(),
         goal_name(_pimpl->destination[0]),
-        [&](std::string a, const rmf_traffic::agv::Plan::Goal& goal) {
+        [&](std::string a, const rmf_traffic::agv::Plan::Goal& goal)
+        {
           return std::move(a) + " " + goal_name(goal);
         }
       ) + "]");
