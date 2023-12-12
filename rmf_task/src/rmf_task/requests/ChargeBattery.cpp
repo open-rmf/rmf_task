@@ -80,7 +80,8 @@ ChargeBattery::Model::Model(
 
 //==============================================================================
 std::optional<rmf_task::Estimate>
-ChargeBattery::Model::estimate_finish(const State& initial_state,
+ChargeBattery::Model::estimate_finish(
+  const State& initial_state,
   const Constraints& task_planning_constraints,
   const TravelEstimator& travel_estimator) const
 {
@@ -162,7 +163,8 @@ rmf_traffic::Duration ChargeBattery::Model::invariant_duration() const
 //==============================================================================
 class ChargeBattery::Description::Implementation
 {
-
+public:
+  bool indefinite = false;
 };
 
 //==============================================================================
@@ -170,6 +172,15 @@ Task::ConstDescriptionPtr ChargeBattery::Description::make()
 {
   std::shared_ptr<Description> description(
     new Description());
+  return description;
+}
+
+//==============================================================================
+auto ChargeBattery::Description::make_indefinite()
+-> std::shared_ptr<Description>
+{
+  std::shared_ptr<Description> description(new Description);
+  description->set_indefinite(true);
   return description;
 }
 
@@ -199,6 +210,18 @@ auto ChargeBattery::Description::generate_info(
     "Charge battery",
     ""
   };
+}
+
+//==============================================================================
+void ChargeBattery::Description::set_indefinite(bool value)
+{
+  _pimpl->indefinite = value;
+}
+
+//==============================================================================
+bool ChargeBattery::Description::indefinite() const
+{
+  return _pimpl->indefinite;
 }
 
 //==============================================================================

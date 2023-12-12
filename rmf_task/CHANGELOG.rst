@@ -2,6 +2,11 @@
 Changelog for package rmf_task
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.1.7 (2023-12-15)
+------------------
+* Fix race condition risk for task sequences (`#102 <https://github.com/open-rmf/rmf_task/pull/102>`_)
+* Allow charging tasks to run indefinitely (`#99 <https://github.com/open-rmf/rmf_task/pull/99>`_, `#100 <https://github.com/open-rmf/rmf_task/pull/100>`_)
+
 2.1.6 (2023-08-10)
 ------------------
 
