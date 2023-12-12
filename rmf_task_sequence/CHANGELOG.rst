@@ -2,6 +2,10 @@
 Changelog for package rmf_task_sequence
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.1.7 (2023-12-15)
+------------------
+* Fix race condition risk for task sequences (`#102 <https://github.com/open-rmf/rmf_task/pull/102>`_)
+
 2.1.6 (2023-08-10)
 ------------------
 * Fix battery drain crash for GoToPlace (`#96 <https://github.com/open-rmf/rmf_task/pull/96>`_)
