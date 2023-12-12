@@ -366,12 +366,6 @@ void Sequence::Active::next()
 
   BoolGuard lock(_inside_next);
 
-  const auto event_finished = [me = weak_from_this()]()
-    {
-      if (const auto self = me.lock())
-        self->next();
-    };
-
   do
   {
     if (_reverse_remaining.empty())
@@ -384,6 +378,19 @@ void Sequence::Active::next()
     ++_current_event_index_plus_one;
     const auto next_event = _reverse_remaining.back();
     _reverse_remaining.pop_back();
+
+    const auto event_finished = [
+      me = weak_from_this(),
+      event_index_plus_one = _current_event_index_plus_one
+      ]()
+      {
+        if (const auto self = me.lock())
+        {
+          if (event_index_plus_one == self->_current_event_index_plus_one)
+            self->next();
+        }
+      };
+
     _current = next_event->begin(_checkpoint, event_finished);
   } while (_current->state()->finished());
 
