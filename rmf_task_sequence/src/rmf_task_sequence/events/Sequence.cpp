@@ -380,8 +380,8 @@ void Sequence::Active::next()
     _reverse_remaining.pop_back();
 
     const auto event_finished = [
-        me = weak_from_this(),
-        event_index_plus_one = _current_event_index_plus_one
+      me = weak_from_this(),
+      event_index_plus_one = _current_event_index_plus_one
       ]()
       {
         if (const auto self = me.lock())
