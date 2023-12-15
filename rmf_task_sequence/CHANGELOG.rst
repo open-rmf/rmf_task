@@ -2,6 +2,10 @@
 Changelog for package rmf_task_sequence
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.2.3 (2023-12-15)
+------------------
+* Fix edge case for task sequences (`#102 <https://github.com/open-rmf/rmf_task/pull/102>`_)
+
 2.2.2 (2023-08-10)
 ------------------
 * Fix battery drain crash for GoToPlace (`#95 <https://github.com/open-rmf/rmf_task/pull/95>`_)
