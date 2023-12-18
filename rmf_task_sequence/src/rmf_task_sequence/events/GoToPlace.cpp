@@ -51,7 +51,7 @@ public:
   static Activity::ConstModelPtr make(
     State invariant_initial_state,
     const Parameters& parameters,
-    std::vector<Goal> goal);
+    const std::vector<Goal>& goal);
 
   // Documentation inherited
   std::optional<Estimate> estimate_finish(
@@ -82,7 +82,7 @@ private:
 Activity::ConstModelPtr GoToPlace::Model::make(
   State invariant_initial_state,
   const Parameters& parameters,
-  std::vector<Goal> goals)
+  const std::vector<Goal>& goals)
 {
   auto invariant_finish_state = invariant_initial_state;
 
@@ -199,8 +199,9 @@ GoToPlace::Model::Model(
 class GoToPlace::Description::Implementation
 {
 public:
-  std::vector<rmf_traffic::agv::Plan::Goal> destination;
+  std::vector<rmf_traffic::agv::Plan::Goal> one_of;
   std::vector<rmf_traffic::agv::Plan::Goal> expected_next_destinations;
+  bool prefer_same_map = false;
 };
 
 //==============================================================================
@@ -214,7 +215,7 @@ auto GoToPlace::Description::make(Goal goal) -> DescriptionPtr
 }
 
 //==============================================================================
-auto GoToPlace::Description::make_with_multiple(std::vector<Goal>& goal)
+auto GoToPlace::Description::make_for_one_of(std::vector<Goal> goal)
 -> DescriptionPtr
 {
   auto desc = std::shared_ptr<Description>(new Description);
@@ -229,11 +230,28 @@ Activity::ConstModelPtr GoToPlace::Description::make_model(
   State invariant_initial_state,
   const Parameters& parameters) const
 {
-  // TODO(arjo) make invariant return farthest destination.
+  if (_pimpl->prefer_same_map && invariant_initial_state.waypoint().has_value())
+  {
+    const std::size_t wp = invariant_initial_state.waypoint().value();
+    const auto& graph = parameters.planner()->get_configuration().graph();
+    const auto& map = graph.get_waypoint(wp).get_map_name();
+    std::vector<Goal> goals;
+    for (const auto& g : _pimpl->one_of)
+    {
+      const auto& goal_map = graph.get_waypoint(g.waypoint()).get_map_name();
+      if (goal_map == map)
+        goals.push_back(g);
+    }
+
+    const auto model = Model::make(invariant_initial_state, parameters, goals);
+    if (model)
+      return model;
+  }
+
   return Model::make(
     std::move(invariant_initial_state),
     parameters,
-    _pimpl->destination);
+    _pimpl->one_of);
 }
 
 //==============================================================================
@@ -257,7 +275,7 @@ Header GoToPlace::Description::generate_header(
       + "]");
   }
 
-  if (_pimpl->destination.size() == 0)
+  if (_pimpl->one_of.size() == 0)
   {
     utils::fail(fail_header, "No destination was specified");
   }
@@ -266,9 +284,9 @@ Header GoToPlace::Description::generate_header(
 
   std::optional<rmf_traffic::Duration> estimate = std::nullopt;
   std::size_t selected_index = 0;
-  for (std::size_t i = 0; i < _pimpl->destination.size(); i ++)
+  for (std::size_t i = 0; i < _pimpl->one_of.size(); i ++)
   {
-    auto dest = _pimpl->destination[i];
+    auto dest = _pimpl->one_of[i];
 
     if (graph.num_waypoints() <= dest.waypoint())
     {
@@ -296,6 +314,12 @@ Header GoToPlace::Description::generate_header(
     }
   }
 
+  if (!estimate.has_value())
+  {
+    utils::fail(fail_header, "Cannot find a path from ["
+      + start_name + "] to any of [" + destination_name(parameters) + "]");
+  }
+
   auto goal_name = [&](const rmf_traffic::agv::Plan::Goal& goal)
     {
       return rmf_task::standard_waypoint_name(
@@ -303,21 +327,7 @@ Header GoToPlace::Description::generate_header(
         goal.waypoint());
     };
 
-  if (!estimate.has_value())
-  {
-    utils::fail(fail_header, "Cannot find a path from ["
-      + start_name + "] to any of [" + std::accumulate(
-        std::next(_pimpl->destination.begin()),
-        _pimpl->destination.end(),
-        goal_name(_pimpl->destination[0]),
-        [&](std::string a, const rmf_traffic::agv::Plan::Goal& goal)
-        {
-          return std::move(a) + " " + goal_name(goal);
-        }
-      ) + "]");
-  }
-
-  const auto goal_name_ = goal_name(_pimpl->destination[selected_index]);
+  const auto goal_name_ = goal_name(_pimpl->one_of[selected_index]);
 
   return Header(
     "Go to " + goal_name_,
@@ -328,27 +338,20 @@ Header GoToPlace::Description::generate_header(
 //==============================================================================
 auto GoToPlace::Description::destination() const -> const Goal&
 {
-  return _pimpl->destination[0];
+  return _pimpl->one_of.front();
 }
 
 //==============================================================================
-auto GoToPlace::Description::has_multiple_possible_destinations() const
--> const bool
+auto GoToPlace::Description::one_of() const -> const std::vector<Goal>&
 {
-  return _pimpl->destination.size() > 1;
-}
-
-//==============================================================================
-auto GoToPlace::Description::destinations() const -> const std::vector<Goal>&
-{
-  return _pimpl->destination;
+  return _pimpl->one_of;
 }
 
 
 //==============================================================================
 auto GoToPlace::Description::destination(Goal new_goal) -> Description&
 {
-  _pimpl->destination[0] = std::move(new_goal);
+  _pimpl->one_of.resize(1, new_goal);
   return *this;
 }
 
@@ -356,9 +359,26 @@ auto GoToPlace::Description::destination(Goal new_goal) -> Description&
 std::string GoToPlace::Description::destination_name(
   const Parameters& parameters) const
 {
-  return rmf_task::standard_waypoint_name(
-    parameters.planner()->get_configuration().graph(),
-    _pimpl->destination[0].waypoint());
+  if (_pimpl->one_of.empty())
+    return "<none>";
+
+  auto goal_name = [&](const rmf_traffic::agv::Plan::Goal& goal)
+    {
+      return rmf_task::standard_waypoint_name(
+        parameters.planner()->get_configuration().graph(),
+        goal.waypoint());
+    };
+
+  return std::accumulate(
+    std::next(_pimpl->one_of.begin()),
+    _pimpl->one_of.end(),
+    goal_name(_pimpl->one_of.front()),
+    [&](std::string a, const rmf_traffic::agv::Plan::Goal& goal)
+    {
+      a += " | ";
+      a += goal_name(goal);
+      return a;
+    });
 }
 
 //==============================================================================
@@ -373,6 +393,19 @@ auto GoToPlace::Description::expected_next_destinations(std::vector<Goal> value)
 -> Description&
 {
   _pimpl->expected_next_destinations = std::move(value);
+  return *this;
+}
+
+//==============================================================================
+bool GoToPlace::Description::prefer_same_map() const
+{
+  return _pimpl->prefer_same_map;
+}
+
+//==============================================================================
+auto GoToPlace::Description::prefer_same_map(bool choice) -> Description&
+{
+  _pimpl->prefer_same_map = choice;
   return *this;
 }
 

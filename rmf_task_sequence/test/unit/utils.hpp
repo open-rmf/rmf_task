@@ -76,21 +76,34 @@ std::shared_ptr<rmf_task::Parameters> make_test_parameters(
   using SimpleMotionPowerSink = rmf_battery::agv::SimpleMotionPowerSink;
   using SimpleDevicePowerSink = rmf_battery::agv::SimpleDevicePowerSink;
 
-  const std::string test_map_name = "test_map";
+  const std::string L1 = "test_map_L1";
+  const std::string B1 = "test_map_B1";
   rmf_traffic::agv::Graph graph;
-  graph.add_waypoint(test_map_name, {-5, -5}).set_passthrough_point(true); // 0
-  graph.add_waypoint(test_map_name, { 0, -5}).set_passthrough_point(true); // 1
-  graph.add_waypoint(test_map_name, { 5, -5}).set_passthrough_point(true); // 2
-  graph.add_waypoint(test_map_name, {10, -5}).set_passthrough_point(true); // 3
-  graph.add_waypoint(test_map_name, {-5, 0}); // 4
-  graph.add_waypoint(test_map_name, { 0, 0}); // 5
-  graph.add_waypoint(test_map_name, { 5, 0}); // 6
-  graph.add_waypoint(test_map_name, {10, 0}).set_passthrough_point(true); // 7
-  graph.add_waypoint(test_map_name, {10, 4}).set_passthrough_point(true); // 8
-  graph.add_waypoint(test_map_name, { 0, 8}).set_passthrough_point(true); // 9
-  graph.add_waypoint(test_map_name, { 5, 8}).set_passthrough_point(true); // 10
-  graph.add_waypoint(test_map_name, {10, 12}).set_passthrough_point(true); // 11
-  graph.add_waypoint(test_map_name, {12, 12}).set_passthrough_point(true); // 12
+  /*
+  *
+  *               11--12
+  *              /
+  *      9---10-/
+  *      |    |    8
+  *      |    |    |
+  * 4----5    6    7
+  *      |         |
+  *      |         |
+  * 0----1----2----3
+  */
+  graph.add_waypoint(B1, {-5, -5}).set_passthrough_point(true); // 0
+  graph.add_waypoint(L1, { 0, -5}).set_passthrough_point(true); // 1
+  graph.add_waypoint(L1, { 5, -5}).set_passthrough_point(true); // 2
+  graph.add_waypoint(L1, {10, -5}).set_passthrough_point(true); // 3
+  graph.add_waypoint(L1, {-5, 0}); // 4
+  graph.add_waypoint(L1, { 0, 0}); // 5
+  graph.add_waypoint(L1, { 5, 0}); // 6
+  graph.add_waypoint(L1, {10, 0}).set_passthrough_point(true); // 7
+  graph.add_waypoint(L1, {10, 4}).set_passthrough_point(true); // 8
+  graph.add_waypoint(L1, { 0, 8}).set_passthrough_point(true); // 9
+  graph.add_waypoint(L1, { 5, 8}).set_passthrough_point(true); // 10
+  graph.add_waypoint(L1, {10, 12}).set_passthrough_point(true); // 11
+  graph.add_waypoint(L1, {12, 12}).set_passthrough_point(true); // 12
   REQUIRE(graph.num_waypoints() == 13);
 
   auto add_bidir_lane = [&](const std::size_t w0, const std::size_t w1)
@@ -107,8 +120,10 @@ std::shared_ptr<rmf_task::Parameters> make_test_parameters(
   add_bidir_lane(4, 5);
   add_bidir_lane(6, 10);
   add_bidir_lane(7, 8);
+  add_bidir_lane(5, 9);
   add_bidir_lane(9, 10);
   add_bidir_lane(10, 11);
+  add_bidir_lane(11, 12);
 
   const auto shape = rmf_traffic::geometry::make_final_convex<
     rmf_traffic::geometry::Circle>(1.0);
