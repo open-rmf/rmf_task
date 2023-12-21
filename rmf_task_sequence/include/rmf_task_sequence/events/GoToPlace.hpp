@@ -46,14 +46,26 @@ public:
   /// Make a GoToPlace description using a goal.
   static DescriptionPtr make(Goal goal);
 
+  /// Make a GoToPlace description using a goal.
+  /// This constructor will pick the nearest unoccupied goal and
+  /// head for said goal.
+  static DescriptionPtr make_for_one_of(std::vector<Goal> goal);
+
+  /// Get the possible destinations for this description.
+  const std::vector<Goal>& one_of() const;
+
   /// Get the current goal for this description.
+  [[deprecated("Use one_of() instead. Always assume that multiple destinations are possible.")]]
   const Goal& destination() const;
 
-  /// Set the current goal for this description.
+  /// Set a single goal for this description.
   Description& destination(Goal new_goal);
 
   /// Get the name of the goal. If the goal does not have an explicit name, it
   /// will be referred to as "#x" where "x" is the index number of the waypoint.
+  ///
+  /// If there are multiple goal options, this will be a ` | `-separated list of
+  /// destinations.
   std::string destination_name(const rmf_task::Parameters& parameters) const;
 
   /// Get the expected future destinations that may come after this one.
@@ -68,6 +80,15 @@ public:
   /// system might perform poorly if the robot does not have exclusive rights to
   /// be at its destination.
   Description& expected_next_destinations(std::vector<Goal> value);
+
+  /// Check whether a destination on the same map as the robot's initial
+  /// location should always be preferred over any other destinations. If there
+  /// is no destination on the same map then closest will be chosen.
+  bool prefer_same_map() const;
+
+  /// Specify whether or not a destination on the same map as the robot's
+  /// initial location should always be preferred over any other destinations.
+  Description& prefer_same_map(bool choice);
 
   // Documentation inherited
   Activity::ConstModelPtr make_model(
