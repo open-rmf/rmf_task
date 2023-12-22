@@ -2,6 +2,9 @@
 Changelog for package rmf_task
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 2.3.3 (2023-12-15)
 ------------------
 * Allow charging tasks to run indefinitely (`#99 <https://github.com/open-rmf/rmf_task/pull/99>`_, `#100 <https://github.com/open-rmf/rmf_task/pull/100>`_)
