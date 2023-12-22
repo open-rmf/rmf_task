@@ -2,6 +2,11 @@
 Changelog for package rmf_task_sequence
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.4.0 (2023-12-22)
+------------------
+* Add support for multiple destinations to choose from. (`#101 <https://github.com/open-rmf/rmf_task/pull/101>`_)
+* Contributors: Arjo Chakravartyi, Grey
+
 2.3.3 (2023-12-15)
 ------------------
 * Fix edge case for task sequences (`#102 <https://github.com/open-rmf/rmf_task/pull/102>`_)
