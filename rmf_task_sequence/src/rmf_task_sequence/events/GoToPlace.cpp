@@ -84,13 +84,18 @@ Activity::ConstModelPtr GoToPlace::Model::make(
   const Parameters& parameters,
   const std::vector<Goal>& goals)
 {
+  if (goals.empty())
+  {
+    return nullptr;
+  }
+
   auto invariant_finish_state = invariant_initial_state;
 
   auto selected_goal = goals[0];
   std::optional<rmf_traffic::Duration> shortest_travel_time = std::nullopt;
   if (invariant_initial_state.waypoint().has_value())
   {
-    for (auto goal: goals)
+    for (const auto& goal: goals)
     {
       const auto invariant_duration_opt = estimate_duration(
         parameters.planner(),
