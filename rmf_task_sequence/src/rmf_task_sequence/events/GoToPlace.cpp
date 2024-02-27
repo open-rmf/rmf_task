@@ -316,8 +316,10 @@ Header GoToPlace::Description::generate_header(
 
   if (!estimate.has_value())
   {
-    utils::fail(fail_header, "Cannot find a path from ["
-      + start_name + "] to any of [" + destination_name(parameters) + "]");
+    Header(
+      "Go to one of [" + destination_name(parameters) + "]",
+      "Waiting for path to open up",
+      rmf_traffic::Duration(0));
   }
 
   auto goal_name = [&](const rmf_traffic::agv::Plan::Goal& goal)

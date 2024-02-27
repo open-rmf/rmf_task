@@ -178,9 +178,9 @@ public:
       duration_estimate = adjust_estimate(
         duration_estimate, element_header.original_duration_estimate());
 
-      initial_state =
-        element->make_model(initial_state, parameters)
-        ->invariant_finish_state();
+      auto model = element->make_model(initial_state, parameters);
+      if (model)
+        initial_state = model->invariant_finish_state();
 
       if (detail_json.has_value())
       {
