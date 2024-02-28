@@ -102,6 +102,9 @@ public:
     const Constraints& task_planning_constraints,
     const TravelEstimator& travel_estimator) const final
   {
+    if (!_activity_model)
+      return std::nullopt;
+
     return _activity_model->estimate_finish(
       initial_state,
       _earliest_start_time,
@@ -111,6 +114,9 @@ public:
 
   rmf_traffic::Duration invariant_duration() const final
   {
+    if (!_activity_model)
+      return rmf_traffic::Duration(0);
+
     return _activity_model->invariant_duration();
   }
 
@@ -758,8 +764,9 @@ void Task::Active::_generate_pending_phases()
       )
     );
 
-    state = s->description->make_model(
-      state, *_parameters)->invariant_finish_state();
+    auto model = s->description->make_model(state, *_parameters);
+    if (model)
+      state = model->invariant_finish_state();
   }
 }
 

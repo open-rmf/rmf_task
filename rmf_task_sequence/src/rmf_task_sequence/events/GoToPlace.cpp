@@ -84,13 +84,18 @@ Activity::ConstModelPtr GoToPlace::Model::make(
   const Parameters& parameters,
   const std::vector<Goal>& goals)
 {
+  if (goals.empty())
+  {
+    return nullptr;
+  }
+
   auto invariant_finish_state = invariant_initial_state;
 
   auto selected_goal = goals[0];
   std::optional<rmf_traffic::Duration> shortest_travel_time = std::nullopt;
   if (invariant_initial_state.waypoint().has_value())
   {
-    for (auto goal: goals)
+    for (const auto& goal: goals)
     {
       const auto invariant_duration_opt = estimate_duration(
         parameters.planner(),
@@ -316,8 +321,10 @@ Header GoToPlace::Description::generate_header(
 
   if (!estimate.has_value())
   {
-    utils::fail(fail_header, "Cannot find a path from ["
-      + start_name + "] to any of [" + destination_name(parameters) + "]");
+    Header(
+      "Go to one of [" + destination_name(parameters) + "]",
+      "Waiting for path to open up",
+      rmf_traffic::Duration(0));
   }
 
   auto goal_name = [&](const rmf_traffic::agv::Plan::Goal& goal)

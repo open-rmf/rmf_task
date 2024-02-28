@@ -25,7 +25,6 @@ SCENARIO("Test GoToPlace")
 {
   using GoToPlace = rmf_task_sequence::events::GoToPlace;
 
-  auto description = GoToPlace::Description::make_for_one_of({0, 8, 12});
   const auto parameters = make_test_parameters();
   const auto constraints = make_test_constraints();
   const auto now = std::chrono::steady_clock::now();
@@ -38,8 +37,19 @@ SCENARIO("Test GoToPlace")
 
   const auto travel_estimator = rmf_task::TravelEstimator(*parameters);
 
+  WHEN("Goal set is empty")
+  {
+    auto description = GoToPlace::Description::make_for_one_of({});
+    THEN("make_model should return nullptr")
+    {
+      const auto model = description->make_model(initial_state, *parameters);
+      CHECK(model == nullptr);
+    }
+  }
+
   WHEN("Not constrained to any map")
   {
+    auto description = GoToPlace::Description::make_for_one_of({0, 8, 12});
     const auto model = description->make_model(initial_state, *parameters);
     const auto finish = model->estimate_finish(
       initial_state, now, *constraints, travel_estimator);
@@ -50,6 +60,7 @@ SCENARIO("Test GoToPlace")
 
   WHEN("Constrained to the same map")
   {
+    auto description = GoToPlace::Description::make_for_one_of({0, 8, 12});
     description->prefer_same_map(true);
     const auto model = description->make_model(initial_state, *parameters);
     const auto finish = model->estimate_finish(
