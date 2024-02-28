@@ -33,8 +33,10 @@ public:
     const State& initial_state,
     const Parameters& parameters) const
   {
-    const auto duration =
-      final_event->make_model(initial_state, parameters)->invariant_duration();
+    auto duration = rmf_traffic::Duration(0);
+    const auto model = final_event->make_model(initial_state, parameters);
+    if (model)
+      duration = model->invariant_duration();
 
     if (category.has_value() && detail.has_value())
       return Header(*category, *detail, duration);
