@@ -79,11 +79,15 @@ public:
   ///
   /// \param[in] automatic
   ///   Whether this booking was automatically generated
+  ///
+  /// \param[in] labels
+  ///   Labels to describe the purpose of the task dispatch request.
   Booking(
     std::string id,
     rmf_traffic::Time earliest_start_time,
     ConstPriorityPtr priority,
-    bool automatic = false);
+    bool automatic = false,
+    const std::vector<std::string>& labels = {});
 
   /// Constructor
   ///
@@ -105,13 +109,17 @@ public:
   /// \param[in] automatic
   ///   Whether this booking was automatically generated, default value as
   ///   false.
+  ///
+  /// \param[in] labels
+  ///   Labels to describe the purpose of the task dispatch request.
   Booking(
     std::string id,
     rmf_traffic::Time earliest_start_time,
     ConstPriorityPtr priority,
     const std::string& requester,
     rmf_traffic::Time request_time,
-    bool automatic = false);
+    bool automatic = false,
+    const std::vector<std::string>& labels = {});
 
   /// The unique id for this booking.
   const std::string& id() const;
@@ -132,6 +140,9 @@ public:
 
   // Returns true if this booking was automatically generated.
   bool automatic() const;
+
+  /// Get the labels that describe the purpose of the task dispatch request.
+  std::vector<std::string> labels() const;
 
   class Implementation;
 private:
