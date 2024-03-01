@@ -15,6 +15,8 @@
  *
 */
 
+#include "phases/internal_CancellationPhase.hpp"
+
 #include <list>
 
 #include <rmf_task/phases/RestoreBackup.hpp>
@@ -998,28 +1000,63 @@ void Task::Active::_begin_next_stage(std::optional<nlohmann::json> restore)
 
     const auto phase_id = tag->id();
     _current_phase_start_time = _clock();
-    _active_phase = _phase_activator->activate(
-      _get_state,
-      _parameters,
-      std::move(tag),
-      *_active_stage->description,
-      std::move(restore),
-      [me = weak_from_this()](Phase::ConstSnapshotPtr snapshot)
-      {
-        if (const auto self = me.lock())
-          self->_update(snapshot);
-      },
-      [me = weak_from_this(), id = phase_id](
-        Phase::Active::Backup backup)
-      {
-        if (const auto self = me.lock())
-          self->_issue_backup(id, std::move(backup));
-      },
-      [me = weak_from_this(), id = phase_id]()
-      {
-        if (const auto self = me.lock())
-          self->_finish_phase(id);
-      });
+
+    if (_cancelled_on_phase.has_value())
+    {
+      auto inner_phase = _phase_activator->activate(
+        _get_state,
+        _parameters,
+        tag,
+        *_active_stage->description,
+        std::move(restore),
+        [me = weak_from_this()](Phase::ConstSnapshotPtr snapshot)
+        {
+          if (const auto self = me.lock())
+          {
+            const auto active_phase = self->_active_phase;
+            if (active_phase)
+              self->_update(Phase::Snapshot::make(*active_phase));
+          }
+        },
+        [me = weak_from_this(), id = phase_id](
+          Phase::Active::Backup backup)
+        {
+          if (const auto self = me.lock())
+            self->_issue_backup(id, std::move(backup));
+        },
+        [me = weak_from_this(), id = phase_id]()
+        {
+          if (const auto self = me.lock())
+            self->_finish_phase(id);
+        });
+
+      _active_phase = phases::CancellationPhase::make(tag, inner_phase);
+    }
+    else
+    {
+      _active_phase = _phase_activator->activate(
+        _get_state,
+        _parameters,
+        std::move(tag),
+        *_active_stage->description,
+        std::move(restore),
+        [me = weak_from_this()](Phase::ConstSnapshotPtr snapshot)
+        {
+          if (const auto self = me.lock())
+            self->_update(snapshot);
+        },
+        [me = weak_from_this(), id = phase_id](
+          Phase::Active::Backup backup)
+        {
+          if (const auto self = me.lock())
+            self->_issue_backup(id, std::move(backup));
+        },
+        [me = weak_from_this(), id = phase_id]()
+        {
+          if (const auto self = me.lock())
+            self->_finish_phase(id);
+        });
+    }
 
     _update(Phase::Snapshot::make(*_active_phase));
     _issue_backup(phase_id, _active_phase->backup());
