@@ -28,6 +28,7 @@
 #include <rmf_utils/Modular.hpp>
 
 #include <iostream>
+#include <mutex>
 
 namespace rmf_task_sequence {
 
@@ -225,7 +226,7 @@ private:
   void _load_backup(std::string backup_state);
   void _generate_pending_phases();
 
-  void _finish_phase();
+  void _finish_phase(Phase::Tag::Id id);
   void _begin_next_stage(std::optional<nlohmann::json> restore = std::nullopt);
   void _finish_task();
 
@@ -293,6 +294,7 @@ private:
 
   std::list<ConstStagePtr> _completed_stages;
   std::vector<Phase::ConstCompletedPtr> _completed_phases;
+  std::recursive_mutex _next_phase_mutex;
 
   std::optional<Resume> _resume_interrupted_phase;
   std::optional<Phase::Tag::Id> _cancelled_on_phase = std::nullopt;
@@ -747,6 +749,7 @@ void Task::Active::_load_backup(std::string backup_state_str)
     }
   }
 
+  _generate_pending_phases();
   _begin_next_stage(std::optional<nlohmann::json>(current_phase_json["state"]));
 }
 
@@ -754,6 +757,7 @@ void Task::Active::_load_backup(std::string backup_state_str)
 void Task::Active::_generate_pending_phases()
 {
   auto state = _get_state();
+  _pending_phases.clear();
   _pending_phases.reserve(_pending_stages.size());
   for (const auto& s : _pending_stages)
   {
@@ -771,8 +775,15 @@ void Task::Active::_generate_pending_phases()
 }
 
 //==============================================================================
-void Task::Active::_finish_phase()
+void Task::Active::_finish_phase(Phase::Tag::Id id)
 {
+  std::lock_guard<std::recursive_mutex> lock(_next_phase_mutex);
+  if (!_active_stage)
+    return;
+
+  if (_active_stage->id != id)
+    return;
+
   _completed_stages.push_back(_active_stage);
   _active_stage = nullptr;
 
@@ -818,8 +829,151 @@ void Task::Active::_begin_next_stage(std::optional<nlohmann::json> restore)
     if (_pending_stages.empty())
       return _finish_task();
 
+    bool stage_and_phase_consistency = true;
+    if (_pending_stages.size() != _pending_phases.size())
+    {
+      stage_and_phase_consistency = false;
+    }
+    else
+    {
+      auto stage_it = _pending_stages.begin();
+      auto phase_it = _pending_phases.begin();
+      for (; stage_it == _pending_stages.end(); ++stage_it, ++phase_it)
+      {
+        if (!*stage_it)
+        {
+          stage_and_phase_consistency = false;
+          break;
+        }
+
+        auto phase_tag = phase_it->tag();
+        if (!phase_tag)
+        {
+          stage_and_phase_consistency = false;
+          break;
+        }
+
+        if ((*stage_it)->id != phase_tag->id())
+        {
+          stage_and_phase_consistency = false;
+          break;
+        }
+      }
+    }
+
+    if (!stage_and_phase_consistency)
+    {
+      // These containers are always supposed to have the same size, so this
+      // indicates a serious logic error or race condition has taken place.
+      std::stringstream ss;
+      ss << "Mismatch between _pending_stages [";
+      for (const auto& p : _pending_stages)
+      {
+        if (p)
+        {
+          ss << " " << p->id;
+        }
+        else
+        {
+          ss << " nullptr";
+        }
+      }
+
+      ss << " ] and _pending_phases [";
+      for (const auto& p : _pending_phases)
+      {
+        if (const auto tag = p.tag())
+        {
+          ss << " " << tag->id();
+        }
+        else
+        {
+          ss << " nullptr";
+        }
+      }
+      ss << " ].";
+
+      if (_cancelled_on_phase.has_value())
+      {
+        ss << " Task was cancelled on phase [" << *_cancelled_on_phase << "].";
+        ss << " Initial cancel sequence ID: " << _cancel_sequence_initial_id
+          << ".";
+      }
+
+      if (_killed)
+      {
+        ss << " Task was killed.";
+      }
+
+      if (_finished)
+      {
+        ss << " Task was finished.";
+      }
+
+      if (_active_stage)
+      {
+        ss << " Active stage: " << _active_stage->id << ".";
+      }
+      else
+      {
+        ss << " Active stage: nullptr.";
+      }
+
+      if (_active_phase)
+      {
+        ss << " Active phase: " << _active_phase->tag()->id();
+      }
+      else
+      {
+        ss << " Active phase: nullptr.";
+      }
+
+      ss << " Completed stages: [";
+      for (const auto& c : _completed_stages)
+      {
+        if (c)
+        {
+          ss << " " << c->id;
+        }
+        else
+        {
+          ss << " nullptr";
+        }
+      }
+      ss << " ].";
+
+      ss << " Completed phases: [";
+      for (const auto& c : _completed_phases)
+      {
+        if (c)
+        {
+          if (auto s = c->snapshot())
+          {
+            if (auto t = s->tag())
+            {
+              ss << " " << t->id();
+            }
+            else
+            {
+              ss << " tag:nullptr";
+            }
+          }
+          else
+          {
+            ss << " snapshot:nullptr";
+          }
+        }
+        else
+        {
+          ss << " nullptr";
+        }
+      }
+      ss << " ].";
+
+      throw std::runtime_error(ss.str());
+    }
+
     _active_stage = _pending_stages.front();
-    assert(_active_stage->id == _pending_phases.front().tag()->id());
     const auto skip_phase = _pending_phases.front().will_be_skipped();
 
     _pending_stages.pop_front();
@@ -855,10 +1009,10 @@ void Task::Active::_begin_next_stage(std::optional<nlohmann::json> restore)
         if (const auto self = me.lock())
           self->_issue_backup(id, std::move(backup));
       },
-      [me = weak_from_this()]()
+      [me = weak_from_this(), id = phase_id]()
       {
         if (const auto self = me.lock())
-          self->_finish_phase();
+          self->_finish_phase(id);
       });
 
     _update(Phase::Snapshot::make(*_active_phase));
