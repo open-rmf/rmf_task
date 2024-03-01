@@ -31,6 +31,7 @@ public:
   std::optional<std::string> requester;
   std::optional<rmf_traffic::Time> request_time;
   bool automatic;
+  std::vector<std::string> labels;
 };
 
 //==============================================================================
@@ -38,7 +39,8 @@ Task::Booking::Booking(
   std::string id,
   rmf_traffic::Time earliest_start_time,
   ConstPriorityPtr priority,
-  bool automatic)
+  bool automatic,
+  const std::vector<std::string>& labels)
 : _pimpl(rmf_utils::make_impl<Implementation>(
       Implementation{
         std::move(id),
@@ -47,6 +49,7 @@ Task::Booking::Booking(
         std::nullopt,
         std::nullopt,
         automatic,
+        labels,
       }))
 {
   // Do nothing
@@ -59,7 +62,8 @@ Task::Booking::Booking(
   ConstPriorityPtr priority,
   const std::string& requester,
   rmf_traffic::Time request_time,
-  bool automatic)
+  bool automatic,
+  const std::vector<std::string>& labels)
 : _pimpl(rmf_utils::make_impl<Implementation>(
       Implementation{
         std::move(id),
@@ -68,6 +72,7 @@ Task::Booking::Booking(
         requester,
         std::move(request_time),
         automatic,
+        labels,
       }))
 {
   // Do nothing
@@ -107,6 +112,12 @@ std::optional<rmf_traffic::Time> Task::Booking::request_time() const
 bool Task::Booking::automatic() const
 {
   return _pimpl->automatic;
+}
+
+//==============================================================================
+std::vector<std::string> Task::Booking::labels() const
+{
+  return _pimpl->labels;
 }
 
 //==============================================================================
