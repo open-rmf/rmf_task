@@ -64,6 +64,13 @@ uint64_t SimpleEventState::id() const
 }
 
 //==============================================================================
+SimpleEventState& SimpleEventState::modify_id(uint64_t new_id)
+{
+  _pimpl->id = new_id;
+  return *this;
+}
+
+//==============================================================================
 Event::Status SimpleEventState::status() const
 {
   return _pimpl->status;
