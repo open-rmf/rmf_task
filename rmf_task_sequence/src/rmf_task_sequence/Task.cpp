@@ -520,6 +520,7 @@ auto Task::Active::backup() const -> Backup
 auto Task::Active::interrupt(std::function<void()> task_is_interrupted)
 -> Resume
 {
+  std::lock_guard lock(_next_phase_mutex);
   _task_is_interrupted = std::move(task_is_interrupted);
   _resume_phase = _active_phase->interrupt(_task_is_interrupted);
 
@@ -541,6 +542,7 @@ auto Task::Active::interrupt(std::function<void()> task_is_interrupted)
 //==============================================================================
 void Task::Active::cancel()
 {
+  std::lock_guard lock(_next_phase_mutex);
   if (_cancelled_on_phase.has_value())
   {
     // If this already has a value, then the task is already running through
@@ -563,6 +565,7 @@ void Task::Active::cancel()
 //==============================================================================
 void Task::Active::kill()
 {
+  std::lock_guard lock(_next_phase_mutex);
   _killed = true;
   _active_phase->kill();
 }
@@ -570,6 +573,7 @@ void Task::Active::kill()
 //==============================================================================
 void Task::Active::skip(uint64_t phase_id, bool value)
 {
+  std::lock_guard lock(_next_phase_mutex);
   if (value && _active_phase->tag()->id() == phase_id)
   {
     // If we are being told to skip the active phase then we will simply tell
@@ -591,6 +595,7 @@ void Task::Active::skip(uint64_t phase_id, bool value)
 //==============================================================================
 void Task::Active::rewind(uint64_t phase_id)
 {
+  std::lock_guard lock(_next_phase_mutex);
   assert(_completed_phases.size() == _completed_stages.size());
   std::size_t completed_index = 0;
   auto stage_it = _completed_stages.begin();
@@ -626,6 +631,7 @@ void Task::Active::rewind(uint64_t phase_id)
 //==============================================================================
 void Task::Active::_load_backup(std::string backup_state_str)
 {
+  std::lock_guard lock(_next_phase_mutex);
   const auto restore_phase = rmf_task::phases::RestoreBackup::Active::make(
     backup_state_str, rmf_traffic::Duration(0));
 
