@@ -905,7 +905,7 @@ void Task::Active::_begin_next_stage(std::optional<nlohmann::json> restore)
       {
         ss << " Task was cancelled on phase [" << *_cancelled_on_phase << "].";
         ss << " Initial cancel sequence ID: " << _cancel_sequence_initial_id
-          << ".";
+           << ".";
       }
 
       if (_killed)
