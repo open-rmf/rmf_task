@@ -42,10 +42,16 @@ public:
   /// \param[in] drain_battery
   ///   If true, battery drain will be considered during task allocation and
   ///   ChargeBattery tasks will automatically be included if necessary.
+  ///
+  /// \param[in] retreat_to_charger
+  ///   If true, a Charge task will automatically be added for the robot if it
+  ///   is estimated to have its battery soc fall below its recharge_soc before
+  ///   reaching a charger
   Constraints(
     double threshold_soc,
     double recharge_soc = 1.0,
-    bool drain_battery = true);
+    bool drain_battery = true,
+    bool retreat_to_charger = true);
 
   /// Gets the vehicle's state of charge threshold value.
   double threshold_soc() const;
@@ -66,6 +72,12 @@ public:
 
   /// Set the value of drain_battery
   Constraints& drain_battery(bool drain_battery);
+
+  /// Get the value of retreat_to_charger
+  bool retreat_to_charger() const;
+
+  /// Set the value of retreat_to_charger
+  Constraints& retreat_to_charger(bool retreat_to_charger);
 
   class Implementation;
 private:
