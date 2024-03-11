@@ -804,29 +804,18 @@ void Task::Active::_generate_pending_phases()
 //==============================================================================
 void Task::Active::_finish_phase(Phase::Tag::Id id)
 {
-  std::cout << "Triggering finish for phase " << id
-    << " of task [" << _task_id() << "]" << std::endl;
   std::lock_guard<std::recursive_mutex> lock(_next_phase_mutex);
   if (!_active_stage)
   {
-    std::cerr << "[rmf_task_sequence::Task::Active::_finish_phase] "
-      << "No active stage is present for task [" << _task_id()
-      << "]." << std::endl;
     return;
   }
 
   if (_active_stage->id != id)
   {
-    std::cerr << "[rmf_task_sequence::Task::Active::_finish_phase] "
-      << "Mismatch in phase ID of task [" << _task_id() << "]. Expected: " << id
-      << ". Current: " << _active_stage->id << std::endl;
     return;
   }
 
-  std::cout << "Beginning next phase of task [" << _task_id() << "] after "
-    << id << std::endl;
   _completed_stages.push_back(_active_stage);
-  // _active_stage = nullptr;
 
   const auto phase_finish_time = _clock();
   const auto completed_phase = std::make_shared<Phase::Completed>(
@@ -870,18 +859,6 @@ void Task::Active::_begin_next_stage(std::optional<nlohmann::json> restore)
   {
     if (_pending_stages.empty())
     {
-      std::stringstream ss;
-      ss << "Finishing task [" << _task_id() << "]";
-      if (_active_stage)
-      {
-        ss << " at stage " << _active_stage->id;
-      }
-      else
-      {
-        ss << " with no active stage";
-      }
-
-      std::cout << ss.str() << std::endl;
       return _finish_task();
     }
 

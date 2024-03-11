@@ -366,24 +366,14 @@ void Sequence::Active::next()
 
   BoolGuard lock(_inside_next);
 
-
-  rmf_task::VersionedString::Reader reader;
   do
   {
     if (_reverse_remaining.empty())
     {
       Sequence::Standby::update_status(*_state);
-      std::cout << "Finishing sequence [" << *reader.read(_state->name())
-        << "] at index "
-        << _current_event_index_plus_one - 1
-        << std::endl;
       _sequence_finished();
       return;
     }
-
-    std::cout << "Beginning next activity in sequence ["
-      << *reader.read(_state->name()) << "]. "
-      << _reverse_remaining.size() << " activities remaining." << std::endl;
 
     ++_current_event_index_plus_one;
     const auto next_event = _reverse_remaining.back();
