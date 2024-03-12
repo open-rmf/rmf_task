@@ -50,6 +50,7 @@ public:
   std::optional<std::string> requester;
   std::function<rmf_traffic::Time()> time_now_cb;
   bool indefinite = false;
+  std::string request_type = "Charge";
 };
 
 //==============================================================================
@@ -85,7 +86,7 @@ bool ChargeBatteryFactory::indefinite() const
 //==============================================================================
 ConstRequestPtr ChargeBatteryFactory::make_request(const State& state) const
 {
-  const std::string id = "Charge" + generate_uuid();
+  const std::string id = _pimpl->request_type + generate_uuid();
   Task::ConstBookingPtr booking;
   if (_pimpl->requester.has_value() && _pimpl->time_now_cb)
   {
@@ -112,6 +113,12 @@ ConstRequestPtr ChargeBatteryFactory::make_request(const State& state) const
   description->set_indefinite(_pimpl->indefinite);
 
   return std::make_shared<Request>(std::move(booking), std::move(description));
+}
+
+//==============================================================================
+const std::string& ChargeBatteryFactory::request_type() const
+{
+  return _pimpl->request_type;
 }
 
 } // namespace requests

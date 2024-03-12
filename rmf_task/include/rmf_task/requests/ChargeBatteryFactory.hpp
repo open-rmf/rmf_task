@@ -69,6 +69,9 @@ public:
   /// Documentation inherited
   ConstRequestPtr make_request(const State& state) const final;
 
+  /// Documentation inherited
+  const std::string& request_type() const final;
+
   class Implementation;
 
 private:
