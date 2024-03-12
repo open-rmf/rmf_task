@@ -36,6 +36,9 @@ public:
   ///   request.
   virtual ConstRequestPtr make_request(const State& state) const = 0;
 
+  /// Returns an identifier representing the request type.
+  virtual const std::string& request_type() const = 0;
+
   virtual ~RequestFactory() = default;
 };
 
