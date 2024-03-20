@@ -17,6 +17,7 @@
 
 #include <rmf_task_sequence/phases/SimplePhase.hpp>
 #include <iostream>
+
 namespace rmf_task_sequence {
 namespace phases {
 
@@ -38,7 +39,7 @@ public:
     if (model)
       duration = model->invariant_duration();
     else
-      std::cout << " -- -- Model can't me made!" << std::endl;
+      std::cout << " -- -- Model can't be made!" << std::endl;
 
     if (category.has_value() && detail.has_value())
       return Header(*category, *detail, duration);
