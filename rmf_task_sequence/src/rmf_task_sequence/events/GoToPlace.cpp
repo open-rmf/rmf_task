@@ -84,8 +84,10 @@ Activity::ConstModelPtr GoToPlace::Model::make(
   const Parameters& parameters,
   const std::vector<Goal>& goals)
 {
+  std::cout << " -- -- -- -- Inside GoToPlace::Model::make()" << std::endl;
   if (goals.empty())
   {
+    std::cout << " -- -- -- Goals are empty!!" << std::endl;
     return nullptr;
   }
 
@@ -212,6 +214,7 @@ public:
 //==============================================================================
 auto GoToPlace::Description::make(Goal goal) -> DescriptionPtr
 {
+  std::cout << " -- -- GoToPlace::Description::make()" << std::endl;
   auto desc = std::shared_ptr<Description>(new Description);
   desc->_pimpl = rmf_utils::make_impl<Implementation>(
     Implementation{{std::move(goal)}, {}});
@@ -223,6 +226,7 @@ auto GoToPlace::Description::make(Goal goal) -> DescriptionPtr
 auto GoToPlace::Description::make_for_one_of(std::vector<Goal> goal)
 -> DescriptionPtr
 {
+  std::cout << " -- -- GoToPlace::Description::make_for_one_of()" << std::endl;
   auto desc = std::shared_ptr<Description>(new Description);
   desc->_pimpl = rmf_utils::make_impl<Implementation>(
     Implementation{std::move(goal), {}});
@@ -235,23 +239,38 @@ Activity::ConstModelPtr GoToPlace::Description::make_model(
   State invariant_initial_state,
   const Parameters& parameters) const
 {
+  std::cout << " -- -- Inside GoToPlace::Description::make_model" << std::endl;
   if (_pimpl->prefer_same_map && invariant_initial_state.waypoint().has_value())
   {
     const std::size_t wp = invariant_initial_state.waypoint().value();
     const auto& graph = parameters.planner()->get_configuration().graph();
     const auto& map = graph.get_waypoint(wp).get_map_name();
     std::vector<Goal> goals;
+    std::cout << " -- -- one_of size: "
+              << _pimpl->one_of.size() << std::endl;
     for (const auto& g : _pimpl->one_of)
     {
+      const auto name = graph.get_waypoint(g.waypoint()).name();
       const auto& goal_map = graph.get_waypoint(g.waypoint()).get_map_name();
+      std::cout << " -- -- -- > one_of waypoint: [" << *name
+                << "] on map [" << goal_map << "]" << std::endl;
       if (goal_map == map)
+      {
         goals.push_back(g);
+      }
     }
 
+    std::cout << " -- -- Calling Model::make() with goals" << std::endl;
     const auto model = Model::make(invariant_initial_state, parameters, goals);
     if (model)
+    {
+      std::cout << " -- -- Successfully made Model with goals, returning..." << std::endl;
       return model;
+    }
   }
+
+  std::cout << " -- -- Model::make() failed with goals, Calling Model::make() with one_of..."
+            << std::endl;
 
   return Model::make(
     std::move(invariant_initial_state),
