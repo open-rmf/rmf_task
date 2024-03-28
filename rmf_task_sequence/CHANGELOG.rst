@@ -2,6 +2,9 @@
 Changelog for package rmf_task_sequence
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 2.2.4 (2023-12-22)
 ------------------
 * Add support for multiple destinations to choose from. (`#101 <https://github.com/open-rmf/rmf_task/pull/101>`_)
