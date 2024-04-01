@@ -86,6 +86,22 @@ State& State::dedicated_charging_waypoint(std::size_t new_charging_waypoint)
 }
 
 //==============================================================================
+std::optional<std::size_t> State::dedicated_parking_waypoint() const
+{
+  if (const auto* p = get<DedicatedParkingPoint>())
+    return p->value;
+
+  return std::nullopt;
+}
+
+//==============================================================================
+State& State::dedicated_parking_waypoint(std::size_t new_parking_waypoint)
+{
+  with<DedicatedParkingPoint>(new_parking_waypoint);
+  return *this;
+}
+
+//==============================================================================
 std::optional<double> State::battery_soc() const
 {
   if (const auto* b = get<CurrentBatterySoC>())
@@ -118,6 +134,13 @@ State& State::load_basic(
   load(input_location);
   dedicated_charging_waypoint(input_charging_point);
   battery_soc(input_battery_soc);
+  return *this;
+}
+
+//==============================================================================
+State& State::load_parking_waypoint(std::size_t input_parking_point)
+{
+  dedicated_parking_waypoint(input_parking_point);
   return *this;
 }
 

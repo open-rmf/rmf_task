@@ -77,10 +77,12 @@ ParkRobotFactory::ParkRobotFactory(
 ConstRequestPtr ParkRobotFactory::make_request(const State& state) const
 {
   std::string id = "ParkRobot" + generate_uuid();
-  const auto start_waypoint = state.waypoint().value();
-  const auto finish_waypoint = _pimpl->parking_waypoint.has_value() ?
-    _pimpl->parking_waypoint.value() :
-    state.dedicated_charging_waypoint().value();
+  const auto start_waypoint = state.waypoint().value_or(0);
+
+  const std::size_t finish_waypoint = 
+    _pimpl->parking_waypoint.has_value()? 
+    _pimpl->parking_waypoint.value() : 
+    state.dedicated_parking_waypoint().value_or(start_waypoint);
 
   if (_pimpl->requester.has_value() && _pimpl->time_now_cb)
   {

@@ -109,6 +109,9 @@ ChargeBattery::Model::estimate_finish(
     std::move(final_plan_start),
     initial_state.dedicated_charging_waypoint().value(),
     initial_state.battery_soc().value());
+  if (initial_state.dedicated_parking_waypoint()) {
+    state.load_parking_waypoint(initial_state.dedicated_parking_waypoint().value());
+  }
 
   double battery_soc = initial_state.battery_soc().value();
   rmf_traffic::Duration variant_duration(0);
