@@ -57,6 +57,11 @@ public:
   std::optional<std::size_t> dedicated_charging_waypoint() const;
   State& dedicated_charging_waypoint(std::size_t new_charging_waypoint);
 
+  /// The dedicated parking spot for this robot
+  RMF_TASK_DEFINE_COMPONENT(std::size_t, DedicatedParkingPoint);
+  std::optional<std::size_t> dedicated_parking_waypoint() const;
+  State& dedicated_parking_waypoint(std::size_t new_parking_waypoint);
+
   /// The current battery state of charge of the robot. This value is between
   /// 0.0 and 1.0.
   RMF_TASK_DEFINE_COMPONENT(double, CurrentBatterySoC);
@@ -77,6 +82,12 @@ public:
     const rmf_traffic::agv::Plan::Start& location,
     std::size_t charging_point,
     double battery_soc);
+
+  /// load the dedicated parking waypoint to the robot's State
+  ///
+  /// \param[in] parking_point
+  ///   The robot's dedicated parking point.
+  State& load_parking_waypoint(std::size_t parking_point);
 
   /// Load the plan start into the State. The location info will be split into
   /// CurrentWaypoint, CurrentOrientation, and CurrentTime data.

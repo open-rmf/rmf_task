@@ -178,6 +178,9 @@ std::optional<rmf_task::Estimate> Loop::Model::estimate_finish(
     std::move(location),
     initial_state.dedicated_charging_waypoint().value(),
     battery_soc);
+  if (initial_state.dedicated_parking_waypoint()) {
+    finish_state.load_parking_waypoint(initial_state.dedicated_parking_waypoint().value());
+  }
 
   // Check if robot can return to its charger
   if (drain_battery)
