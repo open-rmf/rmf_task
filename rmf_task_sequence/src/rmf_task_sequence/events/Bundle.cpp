@@ -310,9 +310,9 @@ void Bundle::add(const Event::InitializerPtr& initializer)
       if (!initialize_from)
       {
         throw std::runtime_error(
-          "[rmf_task_sequence::Bundle::add] Use-after-free error: Event "
-          "initializer has already destructed, but is still being used to "
-          "initialize an event.");
+                "[rmf_task_sequence::Bundle::add] Use-after-free error: Event "
+                "initializer has already destructed, but is still being used to "
+                "initialize an event.");
       }
 
       return initiate(
@@ -337,9 +337,9 @@ void Bundle::add(const Event::InitializerPtr& initializer)
       if (!initialize_from)
       {
         throw std::runtime_error(
-          "[rmf_task_sequence::Bundle::add] Use-after-free error: Event "
-          "initializer has already destructed, but is still being used to "
-          "initialize an event.");
+                "[rmf_task_sequence::Bundle::add] Use-after-free error: Event "
+                "initializer has already destructed, but is still being used to "
+                "initialize an event.");
       }
 
       return restore(

@@ -662,16 +662,16 @@ public:
     initial_node->sort_invariants();
 
     initial_node->latest_time = [&]() -> rmf_traffic::Time
+    {
+      rmf_traffic::Time latest = rmf_traffic::Time::min();
+      for (const auto& s : initial_states)
       {
-        rmf_traffic::Time latest = rmf_traffic::Time::min();
-        for (const auto& s : initial_states)
-        {
-          if (latest < s.time().value())
-            latest = s.time().value();
-        }
+        if (latest < s.time().value())
+          latest = s.time().value();
+      }
 
-        return latest;
-      } ();
+      return latest;
+    } ();
 
     rmf_traffic::Time wait_until = rmf_traffic::Time::max();
 

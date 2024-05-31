@@ -107,10 +107,10 @@ std::shared_ptr<rmf_task::Parameters> make_test_parameters(
   REQUIRE(graph.num_waypoints() == 13);
 
   auto add_bidir_lane = [&](const std::size_t w0, const std::size_t w1)
-    {
-      graph.add_lane(w0, w1);
-      graph.add_lane(w1, w0);
-    };
+  {
+    graph.add_lane(w0, w1);
+    graph.add_lane(w1, w0);
+  };
 
   add_bidir_lane(0, 1);
   add_bidir_lane(1, 2);

@@ -149,10 +149,10 @@ SCENARIO("Grid World")
 
   rmf_traffic::agv::Graph graph;
   auto add_bidir_lane = [&](const std::size_t w0, const std::size_t w1)
-    {
-      graph.add_lane(w0, w1);
-      graph.add_lane(w1, w0);
-    };
+  {
+    graph.add_lane(w0, w1);
+    graph.add_lane(w1, w0);
+  };
 
   const std::string map_name = "test_map";
 

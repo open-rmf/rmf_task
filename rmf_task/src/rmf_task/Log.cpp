@@ -41,11 +41,11 @@ public:
     if (!clock)
     {
       clock = []()
-        {
-          return rmf_traffic::Time(
-            rmf_traffic::Duration(
-              std::chrono::system_clock::now().time_since_epoch()));
-        };
+      {
+        return rmf_traffic::Time(
+          rmf_traffic::Duration(
+            std::chrono::system_clock::now().time_since_epoch()));
+      };
     }
   }
 

@@ -659,16 +659,16 @@ void Task::Active::_load_backup(std::string backup_state_str)
   const auto start_time = _clock();
 
   const auto failed_to_restore = [&]() -> void
-    {
-      _pending_stages.clear();
-      _phase_finished(
-        std::make_shared<rmf_task::Phase::Completed>(
-          rmf_task::Phase::Snapshot::make(*restore_phase),
-          start_time,
-          _clock()));
+  {
+    _pending_stages.clear();
+    _phase_finished(
+      std::make_shared<rmf_task::Phase::Completed>(
+        rmf_task::Phase::Snapshot::make(*restore_phase),
+        start_time,
+        _clock()));
 
-      _finish_task();
-    };
+    _finish_task();
+  };
 
   const auto backup_state = nlohmann::json::parse(backup_state_str);
   if (const auto result =

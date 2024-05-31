@@ -53,7 +53,8 @@ void Candidates::update_candidate(
   _candidate_map[candidate] = _value_map.insert(
     {
       state.time().value(),
-      Entry{candidate, state, wait_until, previous_state, require_charge_battery}
+      Entry{candidate, state, wait_until, previous_state,
+        require_charge_battery}
     });
 }
 

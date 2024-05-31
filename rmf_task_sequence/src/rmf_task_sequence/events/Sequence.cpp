@@ -32,10 +32,10 @@ Event::StandbyPtr Sequence::Standby::initiate(
 {
   auto state = make_state(id, description);
   const auto update = [parent_update, state]()
-    {
-      update_status(*state);
-      parent_update();
-    };
+  {
+    update_status(*state);
+    parent_update();
+  };
 
   std::vector<Event::StandbyPtr> dependencies;
   dependencies.reserve(description.dependencies().size());
@@ -62,10 +62,10 @@ Event::StandbyPtr Sequence::Standby::initiate(
   std::function<void()> parent_update)
 {
   const auto update = [parent_update, state]()
-    {
-      update_status(*state);
-      parent_update();
-    };
+  {
+    update_status(*state);
+    parent_update();
+  };
 
   std::vector<Event::StandbyPtr> dependencies;
   dependencies.reserve(dependencies_fn.size());
@@ -173,10 +173,10 @@ Event::ActivePtr Sequence::Active::restore(
 {
   auto state = Sequence::Standby::make_state(id, description);
   const auto update = [parent_update = std::move(parent_update), state]()
-    {
-      Sequence::Standby::update_status(*state);
-      parent_update();
-    };
+  {
+    Sequence::Standby::update_status(*state);
+    parent_update();
+  };
 
   std::vector<Event::StandbyPtr> dependencies;
 
@@ -217,10 +217,10 @@ Event::ActivePtr Sequence::Active::restore(
     std::move(finished));
 
   const auto event_finished = [me = active->weak_from_this()]()
-    {
-      if (const auto self = me.lock())
-        self->next();
-    };
+  {
+    if (const auto self = me.lock())
+      self->next();
+  };
 
   const auto& current_event_state = current_event_json["state"];
   active->_current = initializer.restore(
@@ -383,13 +383,13 @@ void Sequence::Active::next()
       me = weak_from_this(),
       event_index_plus_one = _current_event_index_plus_one
       ]()
+    {
+      if (const auto self = me.lock())
       {
-        if (const auto self = me.lock())
-        {
-          if (event_index_plus_one == self->_current_event_index_plus_one)
-            self->next();
-        }
-      };
+        if (event_index_plus_one == self->_current_event_index_plus_one)
+          self->next();
+      }
+    };
 
     _current = next_event->begin(_checkpoint, event_finished);
   } while (_current->state()->finished());
