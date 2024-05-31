@@ -2,6 +2,12 @@
 Changelog for package rmf_task
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add labels to booking (`#110 <https://github.com/open-rmf/rmf_task/pull/110>`_)
+* Cancellation phase (`#107 <https://github.com/open-rmf/rmf_task/pull/107>`_)
+* Contributors: Aaron Chong, Grey
+
 2.4.0 (2023-12-22)
 ------------------
 

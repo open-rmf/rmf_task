@@ -2,6 +2,14 @@
 Changelog for package rmf_task_sequence
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Protect phase switch from race conditions (`#111 <https://github.com/open-rmf/rmf_task/pull/111>`_)
+* Cancellation phase (`#107 <https://github.com/open-rmf/rmf_task/pull/107>`_)
+* Do not segfault when models cannot be generated (`#109 <https://github.com/open-rmf/rmf_task/pull/109>`_)
+* Return nullptr is goal set is empty (`#108 <https://github.com/open-rmf/rmf_task/pull/108>`_)
+* Contributors: Grey, Yadunund
+
 2.4.0 (2023-12-22)
 ------------------
 * Add support for multiple destinations to choose from. (`#101 <https://github.com/open-rmf/rmf_task/pull/101>`_)
