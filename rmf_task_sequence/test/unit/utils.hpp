@@ -106,7 +106,8 @@ std::shared_ptr<rmf_task::Parameters> make_test_parameters(
   graph.add_waypoint(L1, {12, 12}).set_passthrough_point(true); // 12
   REQUIRE(graph.num_waypoints() == 13);
 
-  auto add_bidir_lane = [&](const std::size_t w0, const std::size_t w1)
+  auto add_bidir_lane =
+    [&](const std::size_t w0, const std::size_t w1)
     {
       graph.add_lane(w0, w1);
       graph.add_lane(w1, w0);

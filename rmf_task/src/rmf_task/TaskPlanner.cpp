@@ -661,7 +661,8 @@ public:
 
     initial_node->sort_invariants();
 
-    initial_node->latest_time = [&]() -> rmf_traffic::Time
+    initial_node->latest_time =
+      [&]() -> rmf_traffic::Time
       {
         rmf_traffic::Time latest = rmf_traffic::Time::min();
         for (const auto& s : initial_states)

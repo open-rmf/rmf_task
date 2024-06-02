@@ -40,7 +40,8 @@ public:
   {
     if (!clock)
     {
-      clock = []()
+      clock =
+        []()
         {
           return rmf_traffic::Time(
             rmf_traffic::Duration(

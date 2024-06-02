@@ -309,10 +309,12 @@ void Bundle::add(const Event::InitializerPtr& initializer)
       const auto& initialize_from = w.lock();
       if (!initialize_from)
       {
+        // *INDENT-OFF*
         throw std::runtime_error(
           "[rmf_task_sequence::Bundle::add] Use-after-free error: Event "
           "initializer has already destructed, but is still being used to "
           "initialize an event.");
+        // *INDENT-ON*
       }
 
       return initiate(
@@ -336,10 +338,12 @@ void Bundle::add(const Event::InitializerPtr& initializer)
       const auto& initialize_from = w.lock();
       if (!initialize_from)
       {
+        // *INDENT-OFF*
         throw std::runtime_error(
           "[rmf_task_sequence::Bundle::add] Use-after-free error: Event "
           "initializer has already destructed, but is still being used to "
           "initialize an event.");
+        // *INDENT-ON*
       }
 
       return restore(
