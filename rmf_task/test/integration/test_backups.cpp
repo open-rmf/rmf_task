@@ -26,7 +26,8 @@
 const std::filesystem::path backup_root_dir = "/tmp/rmf_task/test_backups";
 void cleanup()
 {
-  std::filesystem::remove_all(std::filesystem::weakly_canonical(backup_root_dir));
+  std::filesystem::remove_all(
+    std::filesystem::weakly_canonical(backup_root_dir));
 }
 
 SCENARIO("Backup file creation and clearing tests")

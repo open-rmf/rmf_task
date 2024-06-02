@@ -658,7 +658,8 @@ void Task::Active::_load_backup(std::string backup_state_str)
 
   const auto start_time = _clock();
 
-  const auto failed_to_restore = [&]() -> void
+  const auto failed_to_restore =
+    [&]() -> void
     {
       _pending_stages.clear();
       _phase_finished(

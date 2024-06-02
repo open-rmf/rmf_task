@@ -67,9 +67,12 @@ public:
         const uint64_t max_phase_id = pending_phases().size();
         if (phase_id < min_phase_id && phase_id > max_phase_id)
         {
-          throw std::runtime_error("[MockDelivery::Active] phase_id given was " + std::to_string(
-                    phase_id) + " not in range of " + std::to_string(
-                    min_phase_id) + "," + std::to_string(max_phase_id) + ".");
+          // *INDENT-OFF*
+          throw std::runtime_error(
+            "[MockDelivery::Active] phase_id given was " + std::to_string(phase_id) +
+            " not in range of " + std::to_string(min_phase_id) + "," +
+            std::to_string(max_phase_id) + ".");
+          // *INDENT-ON*
         }
         _pending_phases.erase(_pending_phases.begin(),
           _pending_phases.begin()+phase_id);

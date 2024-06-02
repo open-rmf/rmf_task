@@ -288,8 +288,11 @@ std::optional<std::string> BackupFileManager::Robot::read() const
     if (filename.compare(_pimpl->backup_file_name) != 0 &&
       filename.compare(_pimpl->pre_backup_file_name) != 0)
     {
-      throw std::runtime_error("[BackupFileManager::Robot::read] Foreign file " +
-              filename + " found. This should be removed.");
+      // *INDENT-OFF*
+      throw std::runtime_error(
+        "[BackupFileManager::Robot::read] Foreign file " +
+        filename + " found. This should be removed.");
+      // *INDENT-ON*
     }
   }
 
