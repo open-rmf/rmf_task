@@ -31,7 +31,8 @@ Event::StandbyPtr Sequence::Standby::initiate(
   std::function<void()> parent_update)
 {
   auto state = make_state(id, description);
-  const auto update = [parent_update, state]()
+  const auto update =
+    [parent_update, state]()
     {
       update_status(*state);
       parent_update();
@@ -61,7 +62,8 @@ Event::StandbyPtr Sequence::Standby::initiate(
   rmf_task::events::SimpleEventStatePtr state,
   std::function<void()> parent_update)
 {
-  const auto update = [parent_update, state]()
+  const auto update =
+    [parent_update, state]()
     {
       update_status(*state);
       parent_update();
@@ -172,7 +174,8 @@ Event::ActivePtr Sequence::Active::restore(
   std::function<void()> finished)
 {
   auto state = Sequence::Standby::make_state(id, description);
-  const auto update = [parent_update = std::move(parent_update), state]()
+  const auto update =
+    [parent_update = std::move(parent_update), state]()
     {
       Sequence::Standby::update_status(*state);
       parent_update();
@@ -216,7 +219,8 @@ Event::ActivePtr Sequence::Active::restore(
     std::move(checkpoint),
     std::move(finished));
 
-  const auto event_finished = [me = active->weak_from_this()]()
+  const auto event_finished =
+    [me = active->weak_from_this()]()
     {
       if (const auto self = me.lock())
         self->next();
@@ -379,10 +383,9 @@ void Sequence::Active::next()
     const auto next_event = _reverse_remaining.back();
     _reverse_remaining.pop_back();
 
-    const auto event_finished = [
-      me = weak_from_this(),
-      event_index_plus_one = _current_event_index_plus_one
-      ]()
+    const auto event_finished =
+      [me = weak_from_this(),
+        event_index_plus_one = _current_event_index_plus_one]()
       {
         if (const auto self = me.lock())
         {

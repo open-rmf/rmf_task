@@ -327,7 +327,8 @@ Header GoToPlace::Description::generate_header(
       rmf_traffic::Duration(0));
   }
 
-  auto goal_name = [&](const rmf_traffic::agv::Plan::Goal& goal)
+  auto goal_name =
+    [&](const rmf_traffic::agv::Plan::Goal& goal)
     {
       return rmf_task::standard_waypoint_name(
         parameters.planner()->get_configuration().graph(),
@@ -369,7 +370,8 @@ std::string GoToPlace::Description::destination_name(
   if (_pimpl->one_of.empty())
     return "<none>";
 
-  auto goal_name = [&](const rmf_traffic::agv::Plan::Goal& goal)
+  auto goal_name =
+    [&](const rmf_traffic::agv::Plan::Goal& goal)
     {
       return rmf_task::standard_waypoint_name(
         parameters.planner()->get_configuration().graph(),

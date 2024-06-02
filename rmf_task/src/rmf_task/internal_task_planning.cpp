@@ -50,10 +50,16 @@ void Candidates::update_candidate(
 {
   const auto it = _candidate_map.at(candidate);
   _value_map.erase(it);
-  _candidate_map[candidate] = _value_map.insert(
+  _candidate_map[candidate] =
+    _value_map.insert(
     {
       state.time().value(),
-      Entry{candidate, state, wait_until, previous_state, require_charge_battery}
+      Entry{
+        candidate,
+        state,
+        wait_until,
+        previous_state,
+        require_charge_battery}
     });
 }
 
