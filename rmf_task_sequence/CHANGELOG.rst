@@ -2,6 +2,9 @@
 Changelog for package rmf_task_sequence
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.6.0 (2024-06-12)
+------------------
+
 2.5.0 (2024-06-01)
 ------------------
 * Reformat with uncrustify available in noble (`#119 <https://github.com/open-rmf/rmf_task/pull/119>`_)
