@@ -51,6 +51,7 @@ public:
   std::optional<std::string> requester;
   std::function<rmf_traffic::Time()> time_now_cb;
   std::optional<std::size_t> parking_waypoint;
+  const std::string request_type = "ParkRobot";
 };
 
 //==============================================================================
@@ -76,7 +77,7 @@ ParkRobotFactory::ParkRobotFactory(
 //==============================================================================
 ConstRequestPtr ParkRobotFactory::make_request(const State& state) const
 {
-  std::string id = "ParkRobot" + generate_uuid();
+  std::string id = _pimpl->request_type + generate_uuid();
   const auto start_waypoint = state.waypoint().value();
   const auto finish_waypoint = _pimpl->parking_waypoint.has_value() ?
     _pimpl->parking_waypoint.value() :
@@ -103,6 +104,12 @@ ConstRequestPtr ParkRobotFactory::make_request(const State& state) const
     state.time().value(),
     nullptr,
     true);
+}
+
+//==============================================================================
+const std::string& ParkRobotFactory::request_type() const
+{
+  return _pimpl->request_type;
 }
 
 } // namespace requests

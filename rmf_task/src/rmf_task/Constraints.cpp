@@ -28,19 +28,22 @@ public:
   double threshold_soc;
   double recharge_soc;
   bool drain_battery;
+  bool retreat_to_charger;
 };
 
 //==============================================================================
 Constraints::Constraints(
   double threshold_soc,
   double recharge_soc,
-  bool drain_battery)
+  bool drain_battery,
+  bool retreat_to_charger)
 : _pimpl(rmf_utils::make_impl<Implementation>(
       Implementation
       {
         threshold_soc,
         recharge_soc,
-        drain_battery
+        drain_battery,
+        retreat_to_charger
       }))
 {
   if (threshold_soc < 0.0 || threshold_soc > 1.0)
@@ -113,6 +116,20 @@ auto Constraints::drain_battery(
   bool drain_battery) -> Constraints&
 {
   _pimpl->drain_battery = drain_battery;
+  return *this;
+}
+
+//==============================================================================
+bool Constraints::retreat_to_charger() const
+{
+  return _pimpl->retreat_to_charger;
+}
+
+//==============================================================================
+auto Constraints::retreat_to_charger(
+  bool retreat_to_charger) -> Constraints&
+{
+  _pimpl->retreat_to_charger = retreat_to_charger;
   return *this;
 }
 
