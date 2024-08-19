@@ -23,6 +23,7 @@ include(GNUInstallDirs)
 find_package(rmf_utils REQUIRED)
 find_package(rmf_traffic REQUIRED)
 find_package(rmf_battery REQUIRED)
+find_package(nlohmann_json REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(Threads)
 
@@ -41,6 +42,7 @@ add_library(rmf_task SHARED
 target_link_libraries(rmf_task
   PUBLIC
     rmf_battery::rmf_battery
+    nlohmann_json::nlohmann_json
     Threads::Threads
     $<$<CXX_COMPILER_ID:GNU>:stdc++fs>
 )

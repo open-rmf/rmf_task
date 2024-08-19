@@ -19,13 +19,20 @@
 #define RMF_TASK__PRIORITY_HPP
 
 #include <memory>
+#include <nlohmann/json.hpp>
 
 namespace rmf_task {
 
 //==============================================================================
-// Forward declare abstract interface. The definition will remain as internal detail.
-/// A class to specify the priority for a request
-class Priority;
+/// Abstract interface to specify the priority for a request
+class Priority
+{
+public:
+
+  /// Serialize the priority as a json
+  virtual nlohmann::json serialize() const = 0;
+};
+
 using PriorityPtr = std::shared_ptr<Priority>;
 using ConstPriorityPtr = std::shared_ptr<const Priority>;
 
