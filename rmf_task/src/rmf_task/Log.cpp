@@ -285,6 +285,7 @@ void Log::error(std::string text)
 //==============================================================================
 void Log::push(Tier tier, std::string text)
 {
+  return;
   if (Tier::Uninitialized == tier)
   {
     // *INDENT-OFF*
@@ -302,6 +303,7 @@ void Log::push(Tier tier, std::string text)
 //==============================================================================
 void Log::insert(Log::Entry entry)
 {
+  return;
   _pimpl->entries->emplace_back(std::move(entry));
 }
 
