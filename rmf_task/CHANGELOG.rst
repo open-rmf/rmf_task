@@ -2,6 +2,9 @@
 Changelog for package rmf_task
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 2.7.0 (2024-11-27)
 ------------------
 * Create abstract interface for Priority to be serialized into json (`#122 <https://github.com/open-rmf/rmf_task/issues/122>`_)

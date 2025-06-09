@@ -2,6 +2,9 @@
 Changelog for package rmf_task_sequence
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 2.7.0 (2024-11-27)
 ------------------
 
