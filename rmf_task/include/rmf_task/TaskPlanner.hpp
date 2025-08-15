@@ -104,10 +104,21 @@ public:
     /// \param[in] finishing_request
     ///   A request factory that generates a tailored task for each agent/AGV
     ///   to perform at the end of their assignments
+    
+    /// \param[in] idle_robot_preferred
+    ///   If true, the planner will prioritize assigning tasks to idle robots
+    ///   when expanding search nodes, rather than selecting solely based on the
+    ///   shortest estimated finish time.
+    ///   This helps fleets with many idle robots avoid overloading a single robot
+    ///   simply because it can finish tasks sooner.
+    ///   If all robots are idle or all are busy, the planner falls back to the
+    ///   default behavior of selecting the shortest finish time.
+    ///
     Options(
       bool greedy,
       std::function<bool()> interrupter = nullptr,
-      ConstRequestFactoryPtr finishing_request = nullptr);
+      ConstRequestFactoryPtr finishing_request = nullptr,
+      bool idle_robot_preferred = false);
 
     /// Set whether a greedy approach should be used
     Options& greedy(bool value);
@@ -127,6 +138,12 @@ public:
 
     /// Get the request factory that will generate a finishing task
     ConstRequestFactoryPtr finishing_request() const;
+
+    /// Set whether idle robots are preferred for task assignments
+    Options& idle_robot_preferred(bool value);
+
+    /// Get whether idle robots are preferred for task assignments
+    bool idle_robot_preferred() const;
 
     class Implementation;
   private:

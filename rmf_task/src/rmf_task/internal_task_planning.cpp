@@ -86,6 +86,17 @@ Candidates::Range Candidates::best_candidates() const
 }
 
 // ============================================================================
+Candidates::Range Candidates::all_candidates() const
+{
+  assert(!_value_map.empty());
+
+  Range range;
+  range.begin = _value_map.begin();
+  range.end = _value_map.end();
+  return range;
+}
+
+// ============================================================================
 Candidates& Candidates::operator=(const Candidates& other)
 {
   _value_map = other._value_map;

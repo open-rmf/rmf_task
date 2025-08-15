@@ -106,18 +106,21 @@ public:
   bool greedy;
   std::function<bool()> interrupter;
   ConstRequestFactoryPtr finishing_request;
+  bool idle_robot_preferred;
 };
 
 //==============================================================================
 TaskPlanner::Options::Options(
   bool greedy,
   std::function<bool()> interrupter,
-  ConstRequestFactoryPtr finishing_request)
+  ConstRequestFactoryPtr finishing_request,
+  bool idle_robot_preferred)
 : _pimpl(rmf_utils::make_impl<Implementation>(
       Implementation{
         std::move(greedy),
         std::move(interrupter),
-        std::move(finishing_request)
+        std::move(finishing_request),
+        std::move(idle_robot_preferred)
       }))
 {
   // Do nothing
@@ -162,6 +165,19 @@ auto TaskPlanner::Options::finishing_request(
 ConstRequestFactoryPtr TaskPlanner::Options::finishing_request() const
 {
   return _pimpl->finishing_request;
+}
+
+//==============================================================================
+auto TaskPlanner::Options::idle_robot_preferred(bool value) -> Options&
+{
+  _pimpl->idle_robot_preferred = value;
+  return *this;
+}
+
+//==============================================================================
+bool TaskPlanner::Options::idle_robot_preferred() const
+{
+  return _pimpl->idle_robot_preferred;
 }
 
 //==============================================================================
@@ -508,13 +524,26 @@ public:
     }
   }
 
+  static bool has_non_charging(const std::vector<Node::AssignmentWrapper>& assignments)
+  {
+    for (const auto& a : assignments)
+    {
+      if (!std::dynamic_pointer_cast<
+            const rmf_task::requests::ChargeBattery::Description>(
+              a.assignment.request()->description()))
+        return true;
+    }
+    return false;
+  }
+
   Result complete_solve(
     rmf_traffic::Time time_now,
     std::vector<State>& initial_states,
     const std::vector<ConstRequestPtr>& requests,
     const std::function<bool()> interrupter,
     ConstRequestFactoryPtr finishing_request,
-    bool greedy)
+    bool greedy,
+    bool idle_robot_preferred)
   {
 
     cost_calculator = config.cost_calculator() ? config.cost_calculator() :
@@ -546,7 +575,7 @@ public:
         node = greedy_solve(node, initial_states, time_now);
       else
         node = solve(node, initial_states,
-            requests.size(), time_now, interrupter);
+            requests.size(), time_now, interrupter, idle_robot_preferred);
 
       if (!node)
       {
@@ -1016,19 +1045,127 @@ public:
     ConstNodePtr parent,
     Filter& filter,
     const std::vector<State>& initial_states,
-    rmf_traffic::Time time_now)
+    rmf_traffic::Time time_now,
+    bool idle_robot_preferred)
   {
     std::vector<ConstNodePtr> new_nodes;
     new_nodes.reserve(
-      parent->unassigned_tasks.size() + parent->assigned_tasks.size());
-    for (const auto& u : parent->unassigned_tasks)
+        parent->unassigned_tasks.size() + parent->assigned_tasks.size());
+    
+    if (!idle_robot_preferred) // default best candidates strategy (shortest finish time)
     {
-      const auto& range = u.second.candidates.best_candidates();
-      for (auto it = range.begin; it != range.end; it++)
+      for (const auto& u : parent->unassigned_tasks)
       {
-        if (auto new_node = expand_candidate(
-            it, u, parent, &filter, time_now))
-          new_nodes.push_back(std::move(new_node));
+        const auto& range = u.second.candidates.best_candidates();
+        for (auto it = range.begin; it != range.end; it++)
+        {
+          if (auto new_node = expand_candidate(
+              it, u, parent, &filter, time_now))
+            new_nodes.push_back(std::move(new_node));
+        }
+      }
+    }
+
+    else  // idle_robot_preferred style of node expansion
+    {
+      // is this index an initially-idle robot and now still has no non-charging assignment?
+      std::vector<bool> idle_and_unassigned(initial_states.size(), false);
+      for (std::size_t i = 0; i < initial_states.size(); ++i)
+        idle_and_unassigned[i] = initial_states[i].is_idle() && !has_non_charging(parent->assigned_tasks[i]);
+
+      // is there any idle-and-still-unassigned candidate?
+      const bool any_idle_still_unassigned = std::any_of(
+        idle_and_unassigned.begin(),
+        idle_and_unassigned.end(),
+        [](bool v) { return v; }
+      );
+
+      // Start to expand each unassigned task
+      for (const auto& u : parent->unassigned_tasks)
+      {
+        const auto& range = u.second.candidates.best_candidates();
+
+        // 1) Check if there is any idle-and-still-unassigned candidate inside best_candidates list
+
+        // is there any idle candidate in the best candidates list?
+        bool has_idle_in_best_candidates_range = false;
+        if (any_idle_still_unassigned)
+        {
+          for (auto it = range.begin; it != range.end; ++it)
+          {
+            const std::size_t c = it->second.candidate;
+            if (idle_and_unassigned[c])
+            { 
+              has_idle_in_best_candidates_range = true; 
+              break; 
+            }
+          }
+        }
+
+        // 2) If present in best_candidates list, 
+        //    prune everyone else and expand only those idle-unassigned candidates
+
+        if (any_idle_still_unassigned && has_idle_in_best_candidates_range)
+        {
+          for (auto it = range.begin; it != range.end; ++it)
+          {
+            const std::size_t c = it->second.candidate;
+            if (!idle_and_unassigned[c])
+              continue;
+          
+            if (auto new_node = expand_candidate(it, u, parent, &filter, time_now))
+              new_nodes.push_back(std::move(new_node));
+          }
+        }
+        else
+        {
+          // 3) No idle candidate exists in best_candidates.
+          //    Next we try all other idle-and-still-unassigned agents directly
+
+          bool added_idle_child = false;
+          if (any_idle_still_unassigned)
+          {
+            auto all_candidates = u.second.candidates.all_candidates();
+            for (auto it = all_candidates.begin; it != all_candidates.end; ++it)
+            {
+              // Check if 'it' is best_candidates(), then exclude it
+              bool is_in_best_candidates = false;
+              for (auto best_it = range.begin; best_it != range.end; ++best_it)
+              {
+                if (best_it->second.candidate == it->second.candidate)
+                {
+                  is_in_best_candidates = true;
+                  break;
+                }
+              }
+
+              if (is_in_best_candidates)
+                continue;
+
+              if (!idle_and_unassigned[it->second.candidate])
+                continue;
+
+              if (auto new_node = expand_candidate(it, u, parent, &filter, time_now))
+              {
+                new_nodes.push_back(std::move(new_node));
+                added_idle_child = true;
+              }
+            }
+          }
+
+          // 4) If none of the idle agents node added (no idle robots or
+          //    all initially idle robots already assigned),
+          //    we fall back to default Best Candidates expansion method
+
+          if (!added_idle_child)
+          {
+            for (auto it = range.begin; it != range.end; ++it)
+            {
+              if (auto new_node = expand_candidate(it, u, parent, &filter, time_now))
+                new_nodes.push_back(std::move(new_node));
+            }
+          }
+        }
       }
     }
 
@@ -1064,7 +1201,8 @@ public:
     const std::vector<State>& initial_states,
     const std::size_t num_tasks,
     rmf_traffic::Time time_now,
-    std::function<bool()> interrupter)
+    std::function<bool()> interrupter,
+    bool idle_robot_preferred)
   {
     using PriorityQueue = std::priority_queue<
       ConstNodePtr,
@@ -1092,7 +1230,7 @@ public:
 
       // Apply possible actions to expand the node
       const auto new_nodes = expand(
-        top, filter, initial_states, time_now);
+        top, filter, initial_states, time_now, idle_robot_preferred);
 
       // Add copies and with a newly assigned task to queue
       for (const auto& n : new_nodes)
@@ -1147,7 +1285,8 @@ auto TaskPlanner::plan(
     requests,
     _pimpl->default_options.interrupter(),
     _pimpl->default_options.finishing_request(),
-    _pimpl->default_options.greedy());
+    _pimpl->default_options.greedy(),
+    _pimpl->default_options.idle_robot_preferred());
 }
 
 // ============================================================================
@@ -1163,7 +1302,8 @@ auto TaskPlanner::plan(
     requests,
     options.interrupter(),
     options.finishing_request(),
-    options.greedy());
+    options.greedy(),
+    options.idle_robot_preferred());
 }
 
 // ============================================================================
