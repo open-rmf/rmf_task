@@ -524,13 +524,14 @@ public:
     }
   }
 
-  static bool has_non_charging(const std::vector<Node::AssignmentWrapper>& assignments)
+  static bool has_non_charging(
+    const std::vector<Node::AssignmentWrapper>& assignments)
   {
     for (const auto& a : assignments)
     {
       if (!std::dynamic_pointer_cast<
-            const rmf_task::requests::ChargeBattery::Description>(
-              a.assignment.request()->description()))
+          const rmf_task::requests::ChargeBattery::Description>(
+          a.assignment.request()->description()))
         return true;
     }
     return false;
@@ -1050,8 +1051,7 @@ public:
   {
     std::vector<ConstNodePtr> new_nodes;
     new_nodes.reserve(
-        parent->unassigned_tasks.size() + parent->assigned_tasks.size());
-    
+      parent->unassigned_tasks.size() + parent->assigned_tasks.size());
     if (!idle_robot_preferred) // default best candidates strategy (shortest finish time)
     {
       for (const auto& u : parent->unassigned_tasks)
@@ -1071,7 +1071,8 @@ public:
       // is this index an initially-idle robot and now still has no non-charging assignment?
       std::vector<bool> idle_and_unassigned(initial_states.size(), false);
       for (std::size_t i = 0; i < initial_states.size(); ++i)
-        idle_and_unassigned[i] = initial_states[i].is_idle() && !has_non_charging(parent->assigned_tasks[i]);
+        idle_and_unassigned[i] = initial_states[i].is_idle() &&
+          !has_non_charging(parent->assigned_tasks[i]);
 
       // is there any idle-and-still-unassigned candidate?
       const bool any_idle_still_unassigned = std::any_of(
@@ -1095,14 +1096,14 @@ public:
           {
             const std::size_t c = it->second.candidate;
             if (idle_and_unassigned[c])
-            { 
-              has_idle_in_best_candidates_range = true; 
-              break; 
+            {
+              has_idle_in_best_candidates_range = true;
+              break;
             }
           }
         }
 
-        // 2) If present in best_candidates list, 
+        // 2) If present in best_candidates list,
         //    prune everyone else and expand only those idle-unassigned candidates
 
         if (any_idle_still_unassigned && has_idle_in_best_candidates_range)
@@ -1112,8 +1113,8 @@ public:
             const std::size_t c = it->second.candidate;
             if (!idle_and_unassigned[c])
               continue;
-          
-            if (auto new_node = expand_candidate(it, u, parent, &filter, time_now))
+            if (auto new_node = expand_candidate(
+                it, u, parent, &filter, time_now))
               new_nodes.push_back(std::move(new_node));
           }
         }
@@ -1145,7 +1146,8 @@ public:
               if (!idle_and_unassigned[it->second.candidate])
                 continue;
 
-              if (auto new_node = expand_candidate(it, u, parent, &filter, time_now))
+              if (auto new_node = expand_candidate(
+                  it, u, parent, &filter, time_now))
               {
                 new_nodes.push_back(std::move(new_node));
                 added_idle_child = true;
@@ -1161,7 +1163,8 @@ public:
           {
             for (auto it = range.begin; it != range.end; ++it)
             {
-              if (auto new_node = expand_candidate(it, u, parent, &filter, time_now))
+              if (auto new_node = expand_candidate(
+                  it, u, parent, &filter, time_now))
                 new_nodes.push_back(std::move(new_node));
             }
           }

@@ -104,7 +104,7 @@ public:
     /// \param[in] finishing_request
     ///   A request factory that generates a tailored task for each agent/AGV
     ///   to perform at the end of their assignments
-    
+    ///
     /// \param[in] idle_robot_preferred
     ///   If true, the planner will prioritize assigning tasks to idle robots
     ///   when expanding search nodes, rather than selecting solely based on the
