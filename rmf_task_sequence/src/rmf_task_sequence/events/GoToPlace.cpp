@@ -56,7 +56,7 @@ public:
   // Documentation inherited
   std::optional<Estimate> estimate_finish(
     State initial_state,
-    rmf_traffic::Time earliest_arrival_time,
+    rmf_traffic::Time earliest_start_time,
     const Constraints& constraints,
     const TravelEstimator& estimator) const final;
 
@@ -135,7 +135,7 @@ Activity::ConstModelPtr GoToPlace::Model::make(
 //==============================================================================
 std::optional<Estimate> GoToPlace::Model::estimate_finish(
   State initial_state,
-  rmf_traffic::Time earliest_arrival_time,
+  rmf_traffic::Time earliest_start_time,
   const Constraints& constraints,
   const TravelEstimator& travel_estimator) const
 {
@@ -149,12 +149,12 @@ std::optional<Estimate> GoToPlace::Model::estimate_finish(
   if (!travel.has_value())
     return std::nullopt;
 
-  const auto arrival_time =
+  const auto start_time =
     std::max(
-    initial_state.time().value() + travel->duration(),
-    earliest_arrival_time);
+    initial_state.time().value(),
+    earliest_start_time);
 
-  const auto wait_until_time = arrival_time - travel->duration();
+  const auto wait_until_time = start_time;
   finish.time(wait_until_time + travel->duration());
 
   if (constraints.drain_battery())
