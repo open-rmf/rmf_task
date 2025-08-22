@@ -39,6 +39,24 @@ class TaskPlanner
 {
 public:
 
+  /// The ExpansionPolicy enum defines how the planner expands search nodes
+  /// during the task assignment search.
+  ///
+  /// 0: ShortestFinishTime: The planner expands the search nodes based on the
+  ///   shortest estimated finish time of the tasks, get from best_candidates().
+  ///
+  /// 1: IdlePreferred: The planner expands the search nodes by prioritizing
+  ///   idle robots, which means that if there are idle robots available, they
+  ///   will be preferred for task assignments over busy robots, even if the
+  ///   busy robots can finish tasks sooner. Only the shortest finish time
+  ///   idle robots will be considered.
+  ///
+  enum class ExpansionPolicy
+  {
+    ShortestFinishTime = 0,
+    IdlePreferred = 1
+  };
+
   /// The Configuration class contains planning parameters that are immutable
   /// for each TaskPlanner instance and should not change in between plans.
   class Configuration
@@ -105,20 +123,15 @@ public:
     ///   A request factory that generates a tailored task for each agent/AGV
     ///   to perform at the end of their assignments
     ///
-    /// \param[in] idle_robot_preferred
-    ///   If true, the planner will prioritize assigning tasks to idle robots
-    ///   when expanding search nodes, rather than selecting solely based on the
-    ///   shortest estimated finish time.
-    ///   This helps fleets with many idle robots avoid overloading a single robot
-    ///   simply because it can finish tasks sooner.
-    ///   If all robots are idle or all are busy, the planner falls back to the
-    ///   default behavior of selecting the shortest finish time.
+    /// \param[in] expansion_policy
+    ///   The policy that defines how the planner expands search nodes during
+    ///   task assignment. Available options are in enum class ExpansionPolicy.
     ///
     Options(
       bool greedy,
       std::function<bool()> interrupter = nullptr,
       ConstRequestFactoryPtr finishing_request = nullptr,
-      bool idle_robot_preferred = false);
+      ExpansionPolicy expansion_policy = ExpansionPolicy::ShortestFinishTime);
 
     /// Set whether a greedy approach should be used
     Options& greedy(bool value);
@@ -139,11 +152,11 @@ public:
     /// Get the request factory that will generate a finishing task
     ConstRequestFactoryPtr finishing_request() const;
 
-    /// Set whether idle robots are preferred for task assignments
-    Options& idle_robot_preferred(bool value);
+    /// Set the expansion policy for task assignments
+    Options& expansion_policy(ExpansionPolicy policy);
 
-    /// Get whether idle robots are preferred for task assignments
-    bool idle_robot_preferred() const;
+    /// Get the expansion policy for task assignments
+    ExpansionPolicy expansion_policy() const;
 
     class Implementation;
   private:
