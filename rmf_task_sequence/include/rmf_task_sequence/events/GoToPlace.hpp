@@ -96,6 +96,12 @@ public:
 
   /// Specify whether or not to interpret the earliest start time as the robot's
   /// departure time (true) or arrival time (false).
+  ///
+  /// default: false
+  /// - false: The robot will try to be at its destination by the
+  ///   earliest start time of the task.
+  /// - true: The robot will not leave its starting point until the
+  ///   earliest start time of the task.
   Description& start_at_departure(bool choice);
 
   // Documentation inherited
