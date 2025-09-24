@@ -51,12 +51,16 @@ public:
   static Activity::ConstModelPtr make(
     State invariant_initial_state,
     const Parameters& parameters,
-    const std::vector<Goal>& goal);
+    const std::vector<Goal>& goal,
+    const bool start_at_departure);
 
   // Documentation inherited
+  // earliest_time_constraint:
+  //   - _start_at_departure == false: earliest allowed arrival time
+  //   - _start_at_departure == true: earliest allowed departure time
   std::optional<Estimate> estimate_finish(
     State initial_state,
-    rmf_traffic::Time earliest_arrival_time,
+    rmf_traffic::Time earliest_time_constraint,
     const Constraints& constraints,
     const TravelEstimator& estimator) const final;
 
@@ -71,18 +75,21 @@ private:
   Model(
     State invariant_finish_state,
     rmf_traffic::Duration invariant_duration,
-    Goal goal);
+    Goal goal,
+    const bool start_at_departure);
 
   State _invariant_finish_state;
   rmf_traffic::Duration _invariant_duration;
   Goal _goal;
+  const bool _start_at_departure;
 };
 
 //==============================================================================
 Activity::ConstModelPtr GoToPlace::Model::make(
   State invariant_initial_state,
   const Parameters& parameters,
-  const std::vector<Goal>& goals)
+  const std::vector<Goal>& goals,
+  const bool start_at_departure)
 {
   if (goals.empty())
   {
@@ -129,13 +136,14 @@ Activity::ConstModelPtr GoToPlace::Model::make(
     new Model(
       std::move(invariant_finish_state),
       shortest_travel_time.value_or(rmf_traffic::Duration(0)),
-      std::move(selected_goal)));
+      std::move(selected_goal),
+      start_at_departure));
 }
 
 //==============================================================================
 std::optional<Estimate> GoToPlace::Model::estimate_finish(
   State initial_state,
-  rmf_traffic::Time earliest_arrival_time,
+  rmf_traffic::Time earliest_time_constraint,
   const Constraints& constraints,
   const TravelEstimator& travel_estimator) const
 {
@@ -149,13 +157,28 @@ std::optional<Estimate> GoToPlace::Model::estimate_finish(
   if (!travel.has_value())
     return std::nullopt;
 
-  const auto arrival_time =
-    std::max(
-    initial_state.time().value() + travel->duration(),
-    earliest_arrival_time);
+  rmf_traffic::Time wait_until_time;
 
-  const auto wait_until_time = arrival_time - travel->duration();
-  finish.time(wait_until_time + travel->duration());
+  if (_start_at_departure)
+  {
+    // Event starts at 'departure'. The constraint applies to 'departure'.
+    const auto departure_time =
+      std::max(
+      initial_state.time().value(),
+      earliest_time_constraint);
+    wait_until_time = departure_time;
+    finish.time(departure_time + travel->duration());
+  }
+  else
+  {
+    // Event starts at 'arrival'. The constraint applies to 'arrival'.
+    const auto arrival_time =
+      std::max(
+      initial_state.time().value() + travel->duration(),
+      earliest_time_constraint);
+    wait_until_time = arrival_time - travel->duration();
+    finish.time(arrival_time);
+  }
 
   if (constraints.drain_battery())
   {
@@ -192,10 +215,12 @@ State GoToPlace::Model::invariant_finish_state() const
 GoToPlace::Model::Model(
   State invariant_finish_state,
   rmf_traffic::Duration invariant_duration,
-  Goal goal)
+  Goal goal,
+  const bool start_at_departure)
 : _invariant_finish_state(std::move(invariant_finish_state)),
   _invariant_duration(invariant_duration),
-  _goal(std::move(goal))
+  _goal(std::move(goal)),
+  _start_at_departure(start_at_departure)
 {
   // Do nothing
 }
@@ -207,6 +232,7 @@ public:
   std::vector<rmf_traffic::agv::Plan::Goal> one_of;
   std::vector<rmf_traffic::agv::Plan::Goal> expected_next_destinations;
   bool prefer_same_map = false;
+  bool start_at_departure = false;
 };
 
 //==============================================================================
@@ -248,7 +274,8 @@ Activity::ConstModelPtr GoToPlace::Description::make_model(
         goals.push_back(g);
     }
 
-    const auto model = Model::make(invariant_initial_state, parameters, goals);
+    const auto model = Model::make(
+      invariant_initial_state, parameters, goals, _pimpl->start_at_departure);
     if (model)
       return model;
   }
@@ -256,7 +283,8 @@ Activity::ConstModelPtr GoToPlace::Description::make_model(
   return Model::make(
     std::move(invariant_initial_state),
     parameters,
-    _pimpl->one_of);
+    _pimpl->one_of,
+    _pimpl->start_at_departure);
 }
 
 //==============================================================================
@@ -415,6 +443,19 @@ bool GoToPlace::Description::prefer_same_map() const
 auto GoToPlace::Description::prefer_same_map(bool choice) -> Description&
 {
   _pimpl->prefer_same_map = choice;
+  return *this;
+}
+
+//==============================================================================
+bool GoToPlace::Description::start_at_departure() const
+{
+  return _pimpl->start_at_departure;
+}
+
+//==============================================================================
+auto GoToPlace::Description::start_at_departure(bool choice) -> Description&
+{
+  _pimpl->start_at_departure = choice;
   return *this;
 }
 
