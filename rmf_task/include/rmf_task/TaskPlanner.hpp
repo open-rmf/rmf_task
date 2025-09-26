@@ -39,22 +39,71 @@ class TaskPlanner
 {
 public:
 
-  /// The ExpansionPolicy enum defines how the planner expands search nodes
-  /// during the task assignment search.
-  ///
-  /// 0: ShortestFinishTime: The planner expands the search nodes based on the
-  ///   shortest estimated finish time of the tasks, get from best_candidates().
-  ///
-  /// 1: IdlePreferred: The planner expands the search nodes by prioritizing
-  ///   idle robots, which means that if there are idle robots available, they
-  ///   will be preferred for task assignments over busy robots, even if the
-  ///   busy robots can finish tasks sooner. Only the shortest finish time
-  ///   idle robots will be considered.
-  ///
-  enum class ExpansionPolicy
+  /// The strategy to use when assigning tasks to robots during node expansion.
+  /// This struct defines the various profiles and their associated weights
+  /// for cost calculation.
+  struct TaskAssignmentStrategy
   {
-    ShortestFinishTime = 0,
-    IdlePreferred = 1
+    enum class Profile
+    {
+      DefaultFastest,
+      BatteryAware,
+      Custom
+    };
+
+    struct Weights
+    {
+      std::vector<double> finish_time;
+      std::vector<double> battery_penalty;
+      std::vector<double> busy_penalty;
+    };
+
+    struct Options
+    {
+      enum class BusyMode
+      {
+        Binary,
+        Count
+      };
+      BusyMode busy_mode = BusyMode::Binary;
+    };
+
+    Profile profile = Profile::DefaultFastest;
+    Weights weights;
+    Options options;
+
+    static TaskAssignmentStrategy make(Profile profile)
+    {
+      TaskAssignmentStrategy model;
+      model.profile = profile;
+
+      switch (profile)
+      {
+        case Profile::DefaultFastest:
+          // Default RMF assignment strategy with fastest-first approach
+          model.weights.finish_time = {0.0, 1.0};
+          model.weights.battery_penalty = {0.0};
+          model.weights.busy_penalty = {0.0};
+          break;
+
+        case Profile::BatteryAware:
+          // Prioritize battery level, strongly penalize low SOC with a quadratic term.
+          // Still account for task efficiency (fastest-first), but ignore busyness.
+          model.weights.finish_time = {0.0, 1.0};
+          model.weights.battery_penalty = {0.0, 20.0, 60.0};
+          model.weights.busy_penalty = {0.0};
+          break;
+
+        case Profile::Custom:
+          // To be overwritten from fleet_config.yaml
+          break;
+
+        default:
+          // Default to DefaultFastest
+          return make(Profile::DefaultFastest);
+      }
+      return model;
+    }
   };
 
   /// The Configuration class contains planning parameters that are immutable
@@ -122,16 +171,10 @@ public:
     /// \param[in] finishing_request
     ///   A request factory that generates a tailored task for each agent/AGV
     ///   to perform at the end of their assignments
-    ///
-    /// \param[in] expansion_policy
-    ///   The policy that defines how the planner expands search nodes during
-    ///   task assignment. Available options are in enum class ExpansionPolicy.
-    ///
     Options(
       bool greedy,
       std::function<bool()> interrupter = nullptr,
-      ConstRequestFactoryPtr finishing_request = nullptr,
-      ExpansionPolicy expansion_policy = ExpansionPolicy::ShortestFinishTime);
+      ConstRequestFactoryPtr finishing_request = nullptr);
 
     /// Set whether a greedy approach should be used
     Options& greedy(bool value);
@@ -152,11 +195,13 @@ public:
     /// Get the request factory that will generate a finishing task
     ConstRequestFactoryPtr finishing_request() const;
 
-    /// Set the expansion policy for task assignments
-    Options& expansion_policy(ExpansionPolicy policy);
+    /// Set the task assignment strategy (profile & custom weights)
+    /// used by the planner
+    Options& task_assignment_strategy(TaskAssignmentStrategy strategy);
 
-    /// Get the expansion policy for task assignments
-    ExpansionPolicy expansion_policy() const;
+    /// Get the task assignment strategy (profile & custom weights)
+    /// used by the planner
+    TaskAssignmentStrategy task_assignment_strategy() const;
 
     class Implementation;
   private:

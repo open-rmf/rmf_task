@@ -28,9 +28,6 @@
 #include <queue>
 #include <string_view>
 
-#include <algorithm>
-#include <iterator>
-
 namespace rmf_task {
 
 //==============================================================================
@@ -109,21 +106,20 @@ public:
   bool greedy;
   std::function<bool()> interrupter;
   ConstRequestFactoryPtr finishing_request;
-  ExpansionPolicy expansion_policy = ExpansionPolicy::ShortestFinishTime;
+  TaskAssignmentStrategy assignment_strategy;
 };
 
 //==============================================================================
 TaskPlanner::Options::Options(
   bool greedy,
   std::function<bool()> interrupter,
-  ConstRequestFactoryPtr finishing_request,
-  ExpansionPolicy expansion_policy)
+  ConstRequestFactoryPtr finishing_request)
 : _pimpl(rmf_utils::make_impl<Implementation>(
       Implementation{
         std::move(greedy),
         std::move(interrupter),
         std::move(finishing_request),
-        std::move(expansion_policy)
+        TaskAssignmentStrategy::make(TaskAssignmentStrategy::Profile::DefaultFastest)
       }))
 {
   // Do nothing
@@ -171,16 +167,18 @@ ConstRequestFactoryPtr TaskPlanner::Options::finishing_request() const
 }
 
 //==============================================================================
-auto TaskPlanner::Options::expansion_policy(ExpansionPolicy policy) -> Options&
+auto TaskPlanner::Options::task_assignment_strategy(
+  TaskAssignmentStrategy strategy) -> Options&
 {
-  _pimpl->expansion_policy = policy;
+  _pimpl->assignment_strategy = strategy;
   return *this;
 }
 
 //==============================================================================
-TaskPlanner::ExpansionPolicy TaskPlanner::Options::expansion_policy() const
+TaskPlanner::TaskAssignmentStrategy
+TaskPlanner::Options::task_assignment_strategy() const
 {
-  return _pimpl->expansion_policy;
+  return _pimpl->assignment_strategy;
 }
 
 //==============================================================================
@@ -527,19 +525,6 @@ public:
     }
   }
 
-  static bool has_non_charging(
-    const std::vector<Node::AssignmentWrapper>& assignments)
-  {
-    for (const auto& a : assignments)
-    {
-      if (!std::dynamic_pointer_cast<
-          const rmf_task::requests::ChargeBattery::Description>(
-          a.assignment.request()->description()))
-        return true;
-    }
-    return false;
-  }
-
   Result complete_solve(
     rmf_traffic::Time time_now,
     std::vector<State>& initial_states,
@@ -547,9 +532,8 @@ public:
     const std::function<bool()> interrupter,
     ConstRequestFactoryPtr finishing_request,
     bool greedy,
-    ExpansionPolicy expansion_policy)
+    TaskAssignmentStrategy task_assignment_strategy)
   {
-
     cost_calculator = config.cost_calculator() ? config.cost_calculator() :
       rmf_task::BinaryPriorityScheme::make_cost_calculator();
 
@@ -579,7 +563,7 @@ public:
         node = greedy_solve(node, initial_states, time_now);
       else
         node = solve(node, initial_states,
-            requests.size(), time_now, interrupter, expansion_policy);
+            requests.size(), time_now, interrupter, task_assignment_strategy);
 
       if (!node)
       {
@@ -1045,107 +1029,123 @@ public:
     return node;
   }
 
-  // Expand using default best_candidates() strategy (shortest finish time)
-  std::vector<ConstNodePtr> expand_shortest_finish_time_robots(
-    ConstNodePtr parent,
-    Filter& filter,
-    rmf_traffic::Time time_now)
+  double poly_eval(const std::vector<double>& coeffs, double x)
   {
-    std::vector<ConstNodePtr> nodes;
-    for (const auto& u : parent->unassigned_tasks)
+    double sum = 0.0;
+    for (std::size_t i = 0; i < coeffs.size(); ++i)
     {
-      const auto& range = u.second.candidates.best_candidates();
-      for (auto it = range.begin; it != range.end; ++it)
-      {
-        if (auto node = expand_candidate(it, u, parent, &filter, time_now))
-          nodes.push_back(std::move(node));
-      }
+      sum += coeffs[i] * std::pow(x, static_cast<int>(i));
     }
-    return nodes;
+    return sum;
   }
 
-  // Expand shortest-finish-time-idle-robots strategy:
-  // 1) If there are any idle robots that are still unassigned, try to expand them
-  //    first.
-  // 2) If there are no idle robots or all initially idle robots already assigned,
-  //    fall back to the default best_candidates() strategy.
-  std::vector<ConstNodePtr> expand_fastest_idle_robots(
-    ConstNodePtr parent,
-    Filter& filter,
-    const std::vector<State>& initial_states,
-    rmf_traffic::Time time_now)
+  double compute_task_cost(
+    double finish_time,
+    double soc,
+    int busy_count,
+    const TaskPlanner::TaskAssignmentStrategy& task_assignment_strategy)
   {
-    std::vector<ConstNodePtr> new_nodes;
+    // Finish time cost
+    double finish_time_cost =
+      poly_eval(task_assignment_strategy.weights.finish_time, finish_time);
 
-    // is this index an initially-idle robot and now still has no non-charging assignment?
-    std::vector<bool> idle_and_unassigned(initial_states.size(), false);
-    for (std::size_t i = 0; i < initial_states.size(); ++i)
-      idle_and_unassigned[i] =
-        initial_states[i].is_idle() &&
-        !has_non_charging(parent->assigned_tasks[i]);
+    // Battery penalty
+    double battery_x = 1.0 - soc;
+    double battery_penalty =
+      poly_eval(task_assignment_strategy.weights.battery_penalty, battery_x);
 
-    // is there any idle-and-still-unassigned candidate?
-    const bool any_idle_still_unassigned = std::any_of(
-      idle_and_unassigned.begin(),
-      idle_and_unassigned.end(),
-      [](bool v) { return v; }
-    );
-
-    for (const auto& u : parent->unassigned_tasks)
+    // Busyness penalty
+    // busy_x = 0 if idle, else 1 or task count depending on BusyMode
+    double busy_x = 0.0;
+    if (task_assignment_strategy.options.busy_mode ==
+      TaskPlanner::TaskAssignmentStrategy::Options::BusyMode::Binary)
     {
-      if (any_idle_still_unassigned)
-      {
-        // 1) Check if the next candidate is idle-and-still-unassigned from
-        //    all_candidates list, if yes, then add it to new_nodes.
-        //    (Will expand next equally-best-shortest-finish-time
-        //    idle robots only)
-
-        const auto& all_candidates = u.second.candidates.all_candidates();
-        bool added_any_idle_child = false;
-        rmf_traffic::Time added_child_finish_time = rmf_traffic::Time::max();
-
-        for (auto it = all_candidates.begin; it != all_candidates.end; ++it)
-        {
-          // stop if we've already added a child and the finish time of
-          // this next candidate is not equally-shortest as the previous one
-          if (added_any_idle_child && added_child_finish_time != it->first)
-            break;
-
-          // skip if not idle-and-still-unassigned
-          if (!idle_and_unassigned[it->second.candidate])
-            continue;
-
-          if (auto new_node =
-            expand_candidate(it, u, parent, &filter, time_now))
-          {
-            new_nodes.push_back(std::move(new_node));
-            if (!added_any_idle_child)
-              added_child_finish_time = it->first;
-            added_any_idle_child = true;
-          }
-        }
-
-        // If we added any idle robot, we skip the rest of the candidates
-        // and proceed to the next unassigned task.
-        if (added_any_idle_child)
-          continue;
-      }
-
-      // 2) If none of the idle robots node added (no idle robots or
-      //    all initially idle robots already assigned),
-      //    we fall back to default Best Candidates expansion strategy.
-
-      const auto& range = u.second.candidates.best_candidates();
-
-      for (auto it = range.begin; it != range.end; ++it)
-      {
-        if (auto new_node =
-          expand_candidate(it, u, parent, &filter, time_now))
-          new_nodes.push_back(std::move(new_node));
-      }
+      busy_x = (busy_count > 0 ? 1.0 : 0.0);
+    }
+    else if (task_assignment_strategy.options.busy_mode ==
+      TaskPlanner::TaskAssignmentStrategy::Options::BusyMode::Count)
+    {
+      busy_x = static_cast<double>(busy_count);
     }
 
-    return new_nodes;
+    double busy_penalty =
+      poly_eval(task_assignment_strategy.weights.busy_penalty, busy_x);
+
+    // Final cost
+    double total_cost = finish_time_cost + battery_penalty + busy_penalty;
+
+    // std::cout << "task_assignment_strategy: "
+    //       << static_cast<int>(task_assignment_strategy.profile)
+    //       << std::endl;
+    // std::cout << " In compute_task_cost(): \n"
+    //           << "  finish_time_cost: " << finish_time_cost
+    //           << ", battery_penalty: " << battery_penalty
+    //           << ", busy_penalty: " << busy_penalty
+    //           << ", total_cost: " << total_cost
+    //           << std::endl;
+
+    return total_cost;
+  }
+
+  // Returns the iterator of the lowest cost candidates
+  // calculated using the provided strategy
+  std::vector<Candidates::Map::const_iterator> find_lowest_cost_candidates(
+    const Candidates::Range& all_candidates,
+    const Node& parent,
+    const std::vector<State>& initial_states,
+    rmf_traffic::Time time_now,
+    const TaskPlanner::TaskAssignmentStrategy& task_assignment_strategy)
+  {
+    std::vector<Candidates::Map::const_iterator> lowest_cost_candidates;
+    double best_cost = std::numeric_limits<double>::infinity();
+
+    for (auto it = all_candidates.begin; it != all_candidates.end; ++it)
+    {
+      const auto& entry = it->second;
+      // duration of task finish time from current time
+      double finish_time = rmf_traffic::time::to_seconds(it->first - time_now);
+      // make sure finish_time is non-negative
+      finish_time = std::max(0.0, finish_time);
+      double soc = entry.state.battery_soc().value_or(1.0);
+
+      // If a robot is not idle at the start of planning (!initial_states.idle()),
+      // we consider it busy with one task.
+      // Reason being at the FleetUpdateHandle aggregate_expectations() there,
+      // it will re-putting all queued-tasks of robot into pending_requests & pass
+      // to task planner to replan altogether.
+      // So when robot is not idle (!initial_states.idle()), it will be having
+      // only 1 task, which is the task it is executing.
+      int initially_busy = initial_states[entry.candidate].is_idle() ? 0 : 1;
+      int task_assigned = parent.assigned_tasks[entry.candidate].size();
+      auto busy_count = initially_busy + task_assigned;
+
+      double cost =
+        compute_task_cost(finish_time, soc, busy_count,
+          task_assignment_strategy);
+
+      if (cost < best_cost)
+      {
+        best_cost = cost;
+        // found new best, reset the list
+        lowest_cost_candidates.clear();
+        lowest_cost_candidates.push_back(it);
+      }
+      else if (std::fabs(cost - best_cost) < 1e-9)
+      {
+        // Tie, include this candidate too
+        lowest_cost_candidates.push_back(it);
+      }
+
+      // std::cout << "In find_lowest_cost_candidates(): \n";
+      // std::cout << "  Candidate: Robot " << entry.candidate
+      //           << ", finish_time: " << finish_time
+      //           << ", soc: " << soc
+      //           << ", busy_count: " << busy_count
+      //           << ", cost: " << cost
+      //           << std::endl;
+    }
+
+    return lowest_cost_candidates;
   }
 
   std::vector<ConstNodePtr> expand(
@@ -1153,32 +1153,25 @@ public:
     Filter& filter,
     const std::vector<State>& initial_states,
     rmf_traffic::Time time_now,
-    ExpansionPolicy expansion_policy)
+    TaskAssignmentStrategy task_assignment_strategy)
   {
     std::vector<ConstNodePtr> new_nodes;
     new_nodes.reserve(
       parent->unassigned_tasks.size() + parent->assigned_tasks.size());
-
-    // Task-assignment node expansions based on policy
-    switch (expansion_policy)
+    for (const auto& u : parent->unassigned_tasks)
     {
-      case ExpansionPolicy::ShortestFinishTime:
-      {
-        auto n = expand_shortest_finish_time_robots(parent, filter, time_now);
-        new_nodes.insert(new_nodes.end(),
-          std::make_move_iterator(n.begin()),
-          std::make_move_iterator(n.end()));
-        break;
-      }
+      const auto& range = find_lowest_cost_candidates(
+        u.second.candidates.all_candidates(),
+        *parent,
+        initial_states,
+        time_now,
+        task_assignment_strategy);
 
-      case ExpansionPolicy::IdlePreferred:
+      for (const auto& it : range)
       {
-        auto n = expand_fastest_idle_robots(
-          parent, filter, initial_states, time_now);
-        new_nodes.insert(new_nodes.end(),
-          std::make_move_iterator(n.begin()),
-          std::make_move_iterator(n.end()));
-        break;
+        if (auto new_node = expand_candidate(
+            it, u, parent, &filter, time_now))
+          new_nodes.push_back(std::move(new_node));
       }
     }
 
@@ -1215,7 +1208,7 @@ public:
     const std::size_t num_tasks,
     rmf_traffic::Time time_now,
     std::function<bool()> interrupter,
-    ExpansionPolicy expansion_policy)
+    TaskAssignmentStrategy task_assignment_strategy)
   {
     using PriorityQueue = std::priority_queue<
       ConstNodePtr,
@@ -1243,7 +1236,7 @@ public:
 
       // Apply possible actions to expand the node
       const auto new_nodes = expand(
-        top, filter, initial_states, time_now, expansion_policy);
+        top, filter, initial_states, time_now, task_assignment_strategy);
 
       // Add copies and with a newly assigned task to queue
       for (const auto& n : new_nodes)
@@ -1299,7 +1292,7 @@ auto TaskPlanner::plan(
     _pimpl->default_options.interrupter(),
     _pimpl->default_options.finishing_request(),
     _pimpl->default_options.greedy(),
-    _pimpl->default_options.expansion_policy());
+    _pimpl->default_options.task_assignment_strategy());
 }
 
 // ============================================================================
@@ -1316,7 +1309,7 @@ auto TaskPlanner::plan(
     options.interrupter(),
     options.finishing_request(),
     options.greedy(),
-    options.expansion_policy());
+    options.task_assignment_strategy());
 }
 
 // ============================================================================
