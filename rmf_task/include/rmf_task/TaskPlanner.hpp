@@ -201,7 +201,7 @@ public:
 
     /// Get the task assignment strategy (profile & custom weights)
     /// used by the planner
-    TaskAssignmentStrategy task_assignment_strategy() const;
+    const TaskAssignmentStrategy& task_assignment_strategy() const;
 
     class Implementation;
   private:

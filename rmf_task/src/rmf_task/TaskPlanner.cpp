@@ -175,7 +175,7 @@ auto TaskPlanner::Options::task_assignment_strategy(
 }
 
 //==============================================================================
-TaskPlanner::TaskAssignmentStrategy
+const TaskPlanner::TaskAssignmentStrategy&
 TaskPlanner::Options::task_assignment_strategy() const
 {
   return _pimpl->assignment_strategy;
