@@ -39,71 +39,71 @@ class TaskPlanner
 {
 public:
 
-  /// The strategy to use when assigning tasks to robots during node expansion.
-  /// This struct defines the various profiles and their associated weights
-  /// for cost calculation.
-  struct TaskAssignmentStrategy
+  /// The TaskAssignmentStrategy class contains the various profiles and
+  /// their associated weights for cost calculation.
+  class TaskAssignmentStrategy
   {
-    enum class Profile
+  public:
+
+    /// Predefined profiles that initialize the strategy with
+    /// pre-defined weights and options.
+    enum class Profile : uint32_t
     {
-      DefaultFastest,
+      /// Standard RMF assignment strategy with fastest-first approach
+      DefaultFastest = 0,
+
+      /// Prioritize battery level, strongly penalize low SOC with a quadratic term.
+      /// Still account for task efficiency (fastest-first), but ignore busyness.
       BatteryAware,
-      Custom
+
+      /// To be overwritten from fleet_config.yaml
+      Unset
+    };
+    
+    /// Options for computing the busyness penalty.
+    enum class BusyMode : uint8_t
+    {
+      /// Mode where busyness penalty is 0 if idle, else 1
+      Binary = 0,
+
+      /// Mode where busyness penalty is based on task count
+      Count
     };
 
-    struct Weights
-    {
-      std::vector<double> finish_time;
-      std::vector<double> battery_penalty;
-      std::vector<double> busy_penalty;
-    };
+    /// Constructor
+    TaskAssignmentStrategy();
 
-    struct Options
-    {
-      enum class BusyMode
-      {
-        Binary,
-        Count
-      };
-      BusyMode busy_mode = BusyMode::Binary;
-    };
+    /// Make a strategy initialized from a predefined profile
+    static TaskAssignmentStrategy make(Profile profile);
+    
+    /// Set the finish-time polynomial weights
+    TaskAssignmentStrategy& finish_time_weights(std::vector<double> values);
 
-    Profile profile = Profile::DefaultFastest;
-    Weights weights;
-    Options options;
+    /// Get the finish-time polynomial weights
+    const std::vector<double>& finish_time_weights() const;
+    
+    /// Set the battery penalty polynomial weights
+    TaskAssignmentStrategy& battery_penalty_weights(std::vector<double> values);
 
-    static TaskAssignmentStrategy make(Profile profile)
-    {
-      TaskAssignmentStrategy model;
-      model.profile = profile;
+    /// Get the battery penalty polynomial weights
+    const std::vector<double>& battery_penalty_weights() const;
 
-      switch (profile)
-      {
-        case Profile::DefaultFastest:
-          // Default RMF assignment strategy with fastest-first approach
-          model.weights.finish_time = {0.0, 1.0};
-          model.weights.battery_penalty = {0.0};
-          model.weights.busy_penalty = {0.0};
-          break;
+    /// Set the busy penalty polynomial weights
+    TaskAssignmentStrategy& busy_penalty_weights(std::vector<double> values);
 
-        case Profile::BatteryAware:
-          // Prioritize battery level, strongly penalize low SOC with a quadratic term.
-          // Still account for task efficiency (fastest-first), but ignore busyness.
-          model.weights.finish_time = {0.0, 1.0};
-          model.weights.battery_penalty = {0.0, 20.0, 60.0};
-          model.weights.busy_penalty = {0.0};
-          break;
+    /// Get the busy penalty polynomial weights
+    const std::vector<double>& busy_penalty_weights() const;
 
-        case Profile::Custom:
-          // To be overwritten from fleet_config.yaml
-          break;
+    /// Set the busyness penalty mode
+    TaskAssignmentStrategy& busy_mode(BusyMode mode);
 
-        default:
-          // Default to DefaultFastest
-          return make(Profile::DefaultFastest);
-      }
-      return model;
-    }
+    /// Get the busyness penalty mode
+    BusyMode busy_mode() const;
+
+    class Implementation;
+
+  private:
+    rmf_utils::impl_ptr<Implementation> _pimpl;
   };
 
   /// The Configuration class contains planning parameters that are immutable

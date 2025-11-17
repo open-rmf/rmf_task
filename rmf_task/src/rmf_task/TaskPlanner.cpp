@@ -31,6 +31,122 @@
 namespace rmf_task {
 
 //==============================================================================
+class TaskPlanner::TaskAssignmentStrategy::Implementation
+{
+public:
+  std::vector<double> finish_time;
+  std::vector<double> battery_penalty;
+  std::vector<double> busy_penalty;
+  BusyMode busy_mode = BusyMode::Binary;
+};
+
+//==============================================================================
+TaskPlanner::TaskAssignmentStrategy::TaskAssignmentStrategy()
+: _pimpl(rmf_utils::make_impl<Implementation>())
+{
+  // Default-constructed strategy has no preset weights.
+  // TaskPlanner::Options::Options() applies DefaultFastest unless user overrides
+  // via setters.
+}
+
+//==============================================================================
+auto TaskPlanner::TaskAssignmentStrategy::make(Profile profile)
+  -> TaskAssignmentStrategy
+{
+  TaskAssignmentStrategy strategy;
+
+  switch (profile)
+  {
+    case Profile::DefaultFastest:
+      // Default RMF assignment strategy with fastest-first approach
+      strategy.finish_time_weights({0.0, 1.0});
+      strategy.battery_penalty_weights({});
+      strategy.busy_penalty_weights({});
+      strategy.busy_mode(BusyMode::Binary);
+      break;
+
+    case Profile::BatteryAware:
+      // Prioritize battery level, strongly penalize low SOC with a quadratic term.
+      // Still account for task efficiency (fastest-first), but ignore busyness.
+      strategy.finish_time_weights({0.0, 1.0});
+      strategy.battery_penalty_weights({0.0, 20.0, 60.0});
+      strategy.busy_penalty_weights({});
+      strategy.busy_mode(BusyMode::Binary);
+      break;
+
+    case Profile::Unset:
+      // To be overwritten from fleet_config.yaml,
+      // user must fill using setters
+      break;
+
+    default:
+      // Default to DefaultFastest
+      return make(Profile::DefaultFastest);
+  }
+  return strategy;
+}
+
+//==============================================================================
+const std::vector<double>&
+  TaskPlanner::TaskAssignmentStrategy::finish_time_weights() const
+{
+  return _pimpl->finish_time;
+}
+
+//==============================================================================
+auto TaskPlanner::TaskAssignmentStrategy::finish_time_weights(
+  std::vector<double> values) -> TaskAssignmentStrategy&
+{
+  _pimpl->finish_time = std::move(values);
+  return *this;
+}
+
+//==============================================================================
+const std::vector<double>&
+  TaskPlanner::TaskAssignmentStrategy::battery_penalty_weights() const
+{
+  return _pimpl->battery_penalty;
+}
+
+//==============================================================================
+auto TaskPlanner::TaskAssignmentStrategy::battery_penalty_weights(
+  std::vector<double> values) -> TaskAssignmentStrategy&
+{
+  _pimpl->battery_penalty = std::move(values);
+  return *this;
+}
+
+//==============================================================================
+const std::vector<double>&
+  TaskPlanner::TaskAssignmentStrategy::busy_penalty_weights() const
+{
+  return _pimpl->busy_penalty;
+}
+
+//==============================================================================
+auto TaskPlanner::TaskAssignmentStrategy::busy_penalty_weights(
+  std::vector<double> values) -> TaskAssignmentStrategy&
+{
+  _pimpl->busy_penalty = std::move(values);
+  return *this;
+}
+
+//==============================================================================
+TaskPlanner::TaskAssignmentStrategy::BusyMode
+  TaskPlanner::TaskAssignmentStrategy::busy_mode() const
+{
+  return _pimpl->busy_mode;
+}
+
+//==============================================================================
+auto TaskPlanner::TaskAssignmentStrategy::busy_mode(BusyMode mode)
+  -> TaskAssignmentStrategy&
+{
+  _pimpl->busy_mode = mode;
+  return *this;
+}
+
+//==============================================================================
 class TaskPlanner::Configuration::Implementation
 {
 public:
@@ -1047,36 +1163,33 @@ public:
   {
     // Finish time cost
     double finish_time_cost =
-      poly_eval(task_assignment_strategy.weights.finish_time, finish_time);
+      poly_eval(task_assignment_strategy.finish_time_weights(), finish_time);
 
     // Battery penalty
     double battery_x = 1.0 - soc;
     double battery_penalty =
-      poly_eval(task_assignment_strategy.weights.battery_penalty, battery_x);
+      poly_eval(task_assignment_strategy.battery_penalty_weights(), battery_x);
 
     // Busyness penalty
     // busy_x = 0 if idle, else 1 or task count depending on BusyMode
     double busy_x = 0.0;
-    if (task_assignment_strategy.options.busy_mode ==
-      TaskPlanner::TaskAssignmentStrategy::Options::BusyMode::Binary)
+    if (task_assignment_strategy.busy_mode() ==
+      TaskPlanner::TaskAssignmentStrategy::BusyMode::Binary)
     {
       busy_x = (busy_count > 0 ? 1.0 : 0.0);
     }
-    else if (task_assignment_strategy.options.busy_mode ==
-      TaskPlanner::TaskAssignmentStrategy::Options::BusyMode::Count)
+    else if (task_assignment_strategy.busy_mode() ==
+      TaskPlanner::TaskAssignmentStrategy::BusyMode::Count)
     {
       busy_x = static_cast<double>(busy_count);
     }
 
     double busy_penalty =
-      poly_eval(task_assignment_strategy.weights.busy_penalty, busy_x);
+      poly_eval(task_assignment_strategy.busy_penalty_weights(), busy_x);
 
     // Final cost
     double total_cost = finish_time_cost + battery_penalty + busy_penalty;
 
-    // std::cout << "task_assignment_strategy: "
-    //       << static_cast<int>(task_assignment_strategy.profile)
-    //       << std::endl;
     // std::cout << " In compute_task_cost(): \n"
     //           << "  finish_time_cost: " << finish_time_cost
     //           << ", battery_penalty: " << battery_penalty
