@@ -1109,12 +1109,13 @@ public:
       double soc = entry.state.battery_soc().value_or(1.0);
 
       // If a robot is not idle at the start of planning (!initial_states.idle()),
-      // we consider it busy with one task.
-      // Reason being at the FleetUpdateHandle aggregate_expectations() there,
-      // it will re-putting all queued-tasks of robot into pending_requests & pass
-      // to task planner to replan altogether.
-      // So when robot is not idle (!initial_states.idle()), it will be having
-      // only 1 task, which is the task it is executing.
+      // we count its current task towards its "busy count". After that, we
+      // add on any new tasks that have been assigned to this robot so far
+      // in the planning process.
+      //
+      // We do not need to consider tasks that had been queued up for
+      // this robot prior to this round of planning because those tasks will
+      // be reassigned based on the outcome of this plan generation.
       int initially_busy = initial_states[entry.candidate].is_idle() ? 0 : 1;
       int task_assigned = parent.assigned_tasks[entry.candidate].size();
       auto busy_count = initially_busy + task_assigned;
