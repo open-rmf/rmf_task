@@ -51,7 +51,7 @@ TaskPlanner::TaskAssignmentStrategy::TaskAssignmentStrategy()
 
 //==============================================================================
 auto TaskPlanner::TaskAssignmentStrategy::make(Profile profile)
-  -> TaskAssignmentStrategy
+-> TaskAssignmentStrategy
 {
   TaskAssignmentStrategy strategy;
 
@@ -88,7 +88,7 @@ auto TaskPlanner::TaskAssignmentStrategy::make(Profile profile)
 
 //==============================================================================
 const std::vector<double>&
-  TaskPlanner::TaskAssignmentStrategy::finish_time_weights() const
+TaskPlanner::TaskAssignmentStrategy::finish_time_weights() const
 {
   return _pimpl->finish_time;
 }
@@ -103,7 +103,7 @@ auto TaskPlanner::TaskAssignmentStrategy::finish_time_weights(
 
 //==============================================================================
 const std::vector<double>&
-  TaskPlanner::TaskAssignmentStrategy::battery_penalty_weights() const
+TaskPlanner::TaskAssignmentStrategy::battery_penalty_weights() const
 {
   return _pimpl->battery_penalty;
 }
@@ -118,7 +118,7 @@ auto TaskPlanner::TaskAssignmentStrategy::battery_penalty_weights(
 
 //==============================================================================
 const std::vector<double>&
-  TaskPlanner::TaskAssignmentStrategy::busy_penalty_weights() const
+TaskPlanner::TaskAssignmentStrategy::busy_penalty_weights() const
 {
   return _pimpl->busy_penalty;
 }
@@ -133,14 +133,14 @@ auto TaskPlanner::TaskAssignmentStrategy::busy_penalty_weights(
 
 //==============================================================================
 TaskPlanner::TaskAssignmentStrategy::BusyMode
-  TaskPlanner::TaskAssignmentStrategy::busy_mode() const
+TaskPlanner::TaskAssignmentStrategy::busy_mode() const
 {
   return _pimpl->busy_mode;
 }
 
 //==============================================================================
 auto TaskPlanner::TaskAssignmentStrategy::busy_mode(BusyMode mode)
-  -> TaskAssignmentStrategy&
+-> TaskAssignmentStrategy&
 {
   _pimpl->busy_mode = mode;
   return *this;
@@ -235,7 +235,8 @@ TaskPlanner::Options::Options(
         std::move(greedy),
         std::move(interrupter),
         std::move(finishing_request),
-        TaskAssignmentStrategy::make(TaskAssignmentStrategy::Profile::DefaultFastest)
+        TaskAssignmentStrategy::make(
+          TaskAssignmentStrategy::Profile::DefaultFastest)
       }))
 {
   // Do nothing

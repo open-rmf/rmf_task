@@ -59,7 +59,7 @@ public:
       /// To be overwritten from fleet_config.yaml
       Unset
     };
-    
+
     /// Options for computing the busyness penalty.
     enum class BusyMode : uint8_t
     {
@@ -75,13 +75,13 @@ public:
 
     /// Make a strategy initialized from a predefined profile
     static TaskAssignmentStrategy make(Profile profile);
-    
+
     /// Set the finish-time polynomial weights
     TaskAssignmentStrategy& finish_time_weights(std::vector<double> values);
 
     /// Get the finish-time polynomial weights
     const std::vector<double>& finish_time_weights() const;
-    
+
     /// Set the battery penalty polynomial weights
     TaskAssignmentStrategy& battery_penalty_weights(std::vector<double> values);
 
