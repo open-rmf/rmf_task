@@ -59,7 +59,7 @@ auto TaskPlanner::TaskAssignmentStrategy::make(Profile profile)
   {
     case Profile::DefaultFastest:
       // Default RMF assignment strategy with fastest-first approach
-      strategy.finish_time_weights({0.0, 1.0});
+      strategy.finish_time_weights({1.0});
       strategy.battery_penalty_weights({});
       strategy.busy_penalty_weights({});
       strategy.busy_mode(BusyMode::Binary);
@@ -68,8 +68,8 @@ auto TaskPlanner::TaskAssignmentStrategy::make(Profile profile)
     case Profile::BatteryAware:
       // Prioritize battery level, strongly penalize low SOC with a quadratic term.
       // Still account for task efficiency (fastest-first), but ignore busyness.
-      strategy.finish_time_weights({0.0, 1.0});
-      strategy.battery_penalty_weights({0.0, 20.0, 60.0});
+      strategy.finish_time_weights({1.0});
+      strategy.battery_penalty_weights({20.0, 60.0});
       strategy.busy_penalty_weights({});
       strategy.busy_mode(BusyMode::Binary);
       break;
@@ -1150,7 +1150,7 @@ public:
     double sum = 0.0;
     for (std::size_t i = 0; i < coeffs.size(); ++i)
     {
-      sum += coeffs[i] * std::pow(x, static_cast<int>(i));
+      sum += coeffs[i] * std::pow(x, static_cast<int>(i+1));
     }
     return sum;
   }
