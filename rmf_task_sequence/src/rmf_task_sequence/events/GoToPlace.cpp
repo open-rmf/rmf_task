@@ -109,6 +109,9 @@ Activity::ConstModelPtr GoToPlace::Model::make(
         invariant_initial_state,
         goal);
 
+      if (!invariant_duration_opt.has_value())
+        continue;
+
       if (!shortest_travel_time.has_value())
       {
         shortest_travel_time = invariant_duration_opt;
