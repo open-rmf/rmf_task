@@ -169,4 +169,20 @@ std::optional<rmf_traffic::agv::Plan::Start> State::extract_plan_start() const
   return rmf_traffic::agv::Plan::Start(t->value, wp->value, ori->value);
 }
 
+//==============================================================================
+bool State::is_idle() const
+{
+  if (const auto* idle = get<IsIdle>())
+    return idle->value;
+
+  return false;
+}
+
+//==============================================================================
+State& State::idle(bool is_idle)
+{
+  with<IsIdle>(is_idle);
+  return *this;
+}
+
 } // namespace rmf_task

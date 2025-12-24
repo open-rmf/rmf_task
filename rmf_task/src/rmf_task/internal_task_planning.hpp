@@ -87,6 +87,8 @@ public:
 
   Range best_candidates() const;
 
+  Range all_candidates() const;
+
   rmf_traffic::Time best_finish_time() const;
 
   void update_candidate(

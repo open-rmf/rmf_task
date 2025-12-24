@@ -31,6 +31,122 @@
 namespace rmf_task {
 
 //==============================================================================
+class TaskPlanner::TaskAssignmentStrategy::Implementation
+{
+public:
+  std::vector<double> finish_time;
+  std::vector<double> battery_penalty;
+  std::vector<double> busy_penalty;
+  BusyMode busy_mode = BusyMode::Binary;
+};
+
+//==============================================================================
+TaskPlanner::TaskAssignmentStrategy::TaskAssignmentStrategy()
+: _pimpl(rmf_utils::make_impl<Implementation>())
+{
+  // Default-constructed strategy has no preset weights.
+  // TaskPlanner::Options::Options() applies DefaultFastest unless user overrides
+  // via setters.
+}
+
+//==============================================================================
+auto TaskPlanner::TaskAssignmentStrategy::make(Profile profile)
+-> TaskAssignmentStrategy
+{
+  TaskAssignmentStrategy strategy;
+
+  switch (profile)
+  {
+    case Profile::DefaultFastest:
+      // Default RMF assignment strategy with fastest-first approach
+      strategy.finish_time_weights({1.0});
+      strategy.battery_penalty_weights({});
+      strategy.busy_penalty_weights({});
+      strategy.busy_mode(BusyMode::Binary);
+      break;
+
+    case Profile::BatteryAware:
+      // Prioritize battery level, strongly penalize low SOC with a quadratic term.
+      // Still account for task efficiency (fastest-first), but ignore busyness.
+      strategy.finish_time_weights({1.0});
+      strategy.battery_penalty_weights({20.0, 60.0});
+      strategy.busy_penalty_weights({});
+      strategy.busy_mode(BusyMode::Binary);
+      break;
+
+    case Profile::Unset:
+      // To be overwritten from fleet_config.yaml,
+      // user must fill using setters
+      break;
+
+    default:
+      // Default to DefaultFastest
+      return make(Profile::DefaultFastest);
+  }
+  return strategy;
+}
+
+//==============================================================================
+const std::vector<double>&
+TaskPlanner::TaskAssignmentStrategy::finish_time_weights() const
+{
+  return _pimpl->finish_time;
+}
+
+//==============================================================================
+auto TaskPlanner::TaskAssignmentStrategy::finish_time_weights(
+  std::vector<double> values) -> TaskAssignmentStrategy&
+{
+  _pimpl->finish_time = std::move(values);
+  return *this;
+}
+
+//==============================================================================
+const std::vector<double>&
+TaskPlanner::TaskAssignmentStrategy::battery_penalty_weights() const
+{
+  return _pimpl->battery_penalty;
+}
+
+//==============================================================================
+auto TaskPlanner::TaskAssignmentStrategy::battery_penalty_weights(
+  std::vector<double> values) -> TaskAssignmentStrategy&
+{
+  _pimpl->battery_penalty = std::move(values);
+  return *this;
+}
+
+//==============================================================================
+const std::vector<double>&
+TaskPlanner::TaskAssignmentStrategy::busy_penalty_weights() const
+{
+  return _pimpl->busy_penalty;
+}
+
+//==============================================================================
+auto TaskPlanner::TaskAssignmentStrategy::busy_penalty_weights(
+  std::vector<double> values) -> TaskAssignmentStrategy&
+{
+  _pimpl->busy_penalty = std::move(values);
+  return *this;
+}
+
+//==============================================================================
+TaskPlanner::TaskAssignmentStrategy::BusyMode
+TaskPlanner::TaskAssignmentStrategy::busy_mode() const
+{
+  return _pimpl->busy_mode;
+}
+
+//==============================================================================
+auto TaskPlanner::TaskAssignmentStrategy::busy_mode(BusyMode mode)
+-> TaskAssignmentStrategy&
+{
+  _pimpl->busy_mode = mode;
+  return *this;
+}
+
+//==============================================================================
 class TaskPlanner::Configuration::Implementation
 {
 public:
@@ -106,6 +222,7 @@ public:
   bool greedy;
   std::function<bool()> interrupter;
   ConstRequestFactoryPtr finishing_request;
+  TaskAssignmentStrategy assignment_strategy;
 };
 
 //==============================================================================
@@ -117,7 +234,9 @@ TaskPlanner::Options::Options(
       Implementation{
         std::move(greedy),
         std::move(interrupter),
-        std::move(finishing_request)
+        std::move(finishing_request),
+        TaskAssignmentStrategy::make(
+          TaskAssignmentStrategy::Profile::DefaultFastest)
       }))
 {
   // Do nothing
@@ -162,6 +281,21 @@ auto TaskPlanner::Options::finishing_request(
 ConstRequestFactoryPtr TaskPlanner::Options::finishing_request() const
 {
   return _pimpl->finishing_request;
+}
+
+//==============================================================================
+auto TaskPlanner::Options::task_assignment_strategy(
+  TaskAssignmentStrategy strategy) -> Options&
+{
+  _pimpl->assignment_strategy = strategy;
+  return *this;
+}
+
+//==============================================================================
+const TaskPlanner::TaskAssignmentStrategy&
+TaskPlanner::Options::task_assignment_strategy() const
+{
+  return _pimpl->assignment_strategy;
 }
 
 //==============================================================================
@@ -514,9 +648,9 @@ public:
     const std::vector<ConstRequestPtr>& requests,
     const std::function<bool()> interrupter,
     ConstRequestFactoryPtr finishing_request,
-    bool greedy)
+    bool greedy,
+    TaskAssignmentStrategy task_assignment_strategy)
   {
-
     cost_calculator = config.cost_calculator() ? config.cost_calculator() :
       rmf_task::BinaryPriorityScheme::make_cost_calculator();
 
@@ -546,7 +680,7 @@ public:
         node = greedy_solve(node, initial_states, time_now);
       else
         node = solve(node, initial_states,
-            requests.size(), time_now, interrupter);
+            requests.size(), time_now, interrupter, task_assignment_strategy);
 
       if (!node)
       {
@@ -1012,19 +1146,143 @@ public:
     return node;
   }
 
+  double poly_eval(const std::vector<double>& coeffs, double x)
+  {
+    double sum = 0.0;
+    for (std::size_t i = 0; i < coeffs.size(); ++i)
+    {
+      sum += coeffs[i] * std::pow(x, static_cast<int>(i+1));
+    }
+    return sum;
+  }
+
+  double compute_task_cost(
+    double finish_time,
+    double soc,
+    int busy_count,
+    const TaskPlanner::TaskAssignmentStrategy& task_assignment_strategy)
+  {
+    // Finish time cost
+    double finish_time_cost =
+      poly_eval(task_assignment_strategy.finish_time_weights(), finish_time);
+
+    // Battery penalty
+    double battery_x = 1.0 - soc;
+    double battery_penalty =
+      poly_eval(task_assignment_strategy.battery_penalty_weights(), battery_x);
+
+    // Busyness penalty
+    // busy_x = 0 if idle, else 1 or task count depending on BusyMode
+    double busy_x = 0.0;
+    if (task_assignment_strategy.busy_mode() ==
+      TaskPlanner::TaskAssignmentStrategy::BusyMode::Binary)
+    {
+      busy_x = (busy_count > 0 ? 1.0 : 0.0);
+    }
+    else if (task_assignment_strategy.busy_mode() ==
+      TaskPlanner::TaskAssignmentStrategy::BusyMode::Count)
+    {
+      busy_x = static_cast<double>(busy_count);
+    }
+
+    double busy_penalty =
+      poly_eval(task_assignment_strategy.busy_penalty_weights(), busy_x);
+
+    // Final cost
+    double total_cost = finish_time_cost + battery_penalty + busy_penalty;
+
+    // std::cout << " In compute_task_cost(): \n"
+    //           << "  finish_time_cost: " << finish_time_cost
+    //           << ", battery_penalty: " << battery_penalty
+    //           << ", busy_penalty: " << busy_penalty
+    //           << ", total_cost: " << total_cost
+    //           << std::endl;
+
+    return total_cost;
+  }
+
+  // Returns the iterator of the lowest cost candidates
+  // calculated using the provided strategy
+  std::vector<Candidates::Map::const_iterator> find_lowest_cost_candidates(
+    const Candidates::Range& all_candidates,
+    const Node& parent,
+    const std::vector<State>& initial_states,
+    rmf_traffic::Time time_now,
+    const TaskPlanner::TaskAssignmentStrategy& task_assignment_strategy)
+  {
+    std::vector<Candidates::Map::const_iterator> lowest_cost_candidates;
+    double best_cost = std::numeric_limits<double>::infinity();
+
+    for (auto it = all_candidates.begin; it != all_candidates.end; ++it)
+    {
+      const auto& entry = it->second;
+      // duration of task finish time from current time
+      double finish_time = rmf_traffic::time::to_seconds(it->first - time_now);
+      // make sure finish_time is non-negative
+      finish_time = std::max(0.0, finish_time);
+      double soc = entry.state.battery_soc().value_or(1.0);
+
+      // If a robot is not idle at the start of planning (!initial_states.idle()),
+      // we count its current task towards its "busy count". After that, we
+      // add on any new tasks that have been assigned to this robot so far
+      // in the planning process.
+      //
+      // We do not need to consider tasks that had been queued up for
+      // this robot prior to this round of planning because those tasks will
+      // be reassigned based on the outcome of this plan generation.
+      int initially_busy = initial_states[entry.candidate].is_idle() ? 0 : 1;
+      int task_assigned = parent.assigned_tasks[entry.candidate].size();
+      auto busy_count = initially_busy + task_assigned;
+
+      double cost =
+        compute_task_cost(finish_time, soc, busy_count,
+          task_assignment_strategy);
+
+      if (cost < best_cost)
+      {
+        best_cost = cost;
+        // found new best, reset the list
+        lowest_cost_candidates.clear();
+        lowest_cost_candidates.push_back(it);
+      }
+      else if (std::fabs(cost - best_cost) < 1e-9)
+      {
+        // Tie, include this candidate too
+        lowest_cost_candidates.push_back(it);
+      }
+
+      // std::cout << "In find_lowest_cost_candidates(): \n";
+      // std::cout << "  Candidate: Robot " << entry.candidate
+      //           << ", finish_time: " << finish_time
+      //           << ", soc: " << soc
+      //           << ", busy_count: " << busy_count
+      //           << ", cost: " << cost
+      //           << std::endl;
+    }
+
+    return lowest_cost_candidates;
+  }
+
   std::vector<ConstNodePtr> expand(
     ConstNodePtr parent,
     Filter& filter,
     const std::vector<State>& initial_states,
-    rmf_traffic::Time time_now)
+    rmf_traffic::Time time_now,
+    TaskAssignmentStrategy task_assignment_strategy)
   {
     std::vector<ConstNodePtr> new_nodes;
     new_nodes.reserve(
       parent->unassigned_tasks.size() + parent->assigned_tasks.size());
     for (const auto& u : parent->unassigned_tasks)
     {
-      const auto& range = u.second.candidates.best_candidates();
-      for (auto it = range.begin; it != range.end; it++)
+      const auto& range = find_lowest_cost_candidates(
+        u.second.candidates.all_candidates(),
+        *parent,
+        initial_states,
+        time_now,
+        task_assignment_strategy);
+
+      for (const auto& it : range)
       {
         if (auto new_node = expand_candidate(
             it, u, parent, &filter, time_now))
@@ -1064,7 +1322,8 @@ public:
     const std::vector<State>& initial_states,
     const std::size_t num_tasks,
     rmf_traffic::Time time_now,
-    std::function<bool()> interrupter)
+    std::function<bool()> interrupter,
+    TaskAssignmentStrategy task_assignment_strategy)
   {
     using PriorityQueue = std::priority_queue<
       ConstNodePtr,
@@ -1092,7 +1351,7 @@ public:
 
       // Apply possible actions to expand the node
       const auto new_nodes = expand(
-        top, filter, initial_states, time_now);
+        top, filter, initial_states, time_now, task_assignment_strategy);
 
       // Add copies and with a newly assigned task to queue
       for (const auto& n : new_nodes)
@@ -1147,7 +1406,8 @@ auto TaskPlanner::plan(
     requests,
     _pimpl->default_options.interrupter(),
     _pimpl->default_options.finishing_request(),
-    _pimpl->default_options.greedy());
+    _pimpl->default_options.greedy(),
+    _pimpl->default_options.task_assignment_strategy());
 }
 
 // ============================================================================
@@ -1163,7 +1423,8 @@ auto TaskPlanner::plan(
     requests,
     options.interrupter(),
     options.finishing_request(),
-    options.greedy());
+    options.greedy(),
+    options.task_assignment_strategy());
 }
 
 // ============================================================================
