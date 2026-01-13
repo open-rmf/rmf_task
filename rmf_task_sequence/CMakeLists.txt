@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5.0)
 
-project(rmf_task_sequence)
+project(rmf_task_sequence VERSION 2.9.0)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS on)
 
