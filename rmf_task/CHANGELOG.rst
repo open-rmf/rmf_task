@@ -2,8 +2,8 @@
 Changelog for package rmf_task
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.9.0 (2026-01-13)
+------------------
 * Customizable weights for task assignment cost (`#129 <https://github.com/open-rmf/rmf_task/issues/129>`_)
 * Contributors: kj
 
