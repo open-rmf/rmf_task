@@ -39,6 +39,73 @@ class TaskPlanner
 {
 public:
 
+  /// The TaskAssignmentStrategy class contains the various profiles and
+  /// their associated weights for cost calculation.
+  class TaskAssignmentStrategy
+  {
+  public:
+
+    /// Predefined profiles that initialize the strategy with
+    /// pre-defined weights and options.
+    enum class Profile : uint32_t
+    {
+      /// Standard RMF assignment strategy with fastest-first approach
+      DefaultFastest = 0,
+
+      /// Prioritize battery level, strongly penalize low SOC with a quadratic term.
+      /// Still account for task efficiency (fastest-first), but ignore busyness.
+      BatteryAware,
+
+      /// To be overwritten from fleet_config.yaml
+      Unset
+    };
+
+    /// Options for computing the busyness penalty.
+    enum class BusyMode : uint8_t
+    {
+      /// Mode where busyness penalty is 0 if idle, else 1
+      Binary = 0,
+
+      /// Mode where busyness penalty is based on task count
+      Count
+    };
+
+    /// Constructor
+    TaskAssignmentStrategy();
+
+    /// Make a strategy initialized from a predefined profile
+    static TaskAssignmentStrategy make(Profile profile);
+
+    /// Set the finish-time polynomial weights
+    TaskAssignmentStrategy& finish_time_weights(std::vector<double> values);
+
+    /// Get the finish-time polynomial weights
+    const std::vector<double>& finish_time_weights() const;
+
+    /// Set the battery penalty polynomial weights
+    TaskAssignmentStrategy& battery_penalty_weights(std::vector<double> values);
+
+    /// Get the battery penalty polynomial weights
+    const std::vector<double>& battery_penalty_weights() const;
+
+    /// Set the busy penalty polynomial weights
+    TaskAssignmentStrategy& busy_penalty_weights(std::vector<double> values);
+
+    /// Get the busy penalty polynomial weights
+    const std::vector<double>& busy_penalty_weights() const;
+
+    /// Set the busyness penalty mode
+    TaskAssignmentStrategy& busy_mode(BusyMode mode);
+
+    /// Get the busyness penalty mode
+    BusyMode busy_mode() const;
+
+    class Implementation;
+
+  private:
+    rmf_utils::impl_ptr<Implementation> _pimpl;
+  };
+
   /// The Configuration class contains planning parameters that are immutable
   /// for each TaskPlanner instance and should not change in between plans.
   class Configuration
@@ -127,6 +194,14 @@ public:
 
     /// Get the request factory that will generate a finishing task
     ConstRequestFactoryPtr finishing_request() const;
+
+    /// Set the task assignment strategy (profile & custom weights)
+    /// used by the planner
+    Options& task_assignment_strategy(TaskAssignmentStrategy strategy);
+
+    /// Get the task assignment strategy (profile & custom weights)
+    /// used by the planner
+    const TaskAssignmentStrategy& task_assignment_strategy() const;
 
     class Implementation;
   private:

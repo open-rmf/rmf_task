@@ -104,6 +104,15 @@ public:
   /// If any necessary component is missing (i.e. CurrentWaypoint,
   /// CurrentOrientation, or CurrentTime) then this will return a std::nullopt.
   std::optional<rmf_traffic::agv::Plan::Start> extract_plan_start() const;
+
+  /// Check if the robot is idle.
+  ///
+  /// True if the robot is not executing any task.
+  /// False only when the robot is actively executing a task
+  /// (finishing requests are not counted as execution).
+  RMF_TASK_DEFINE_COMPONENT(bool, IsIdle);
+  bool is_idle() const;
+  State& idle(bool is_idle);
 };
 
 } // namespace rmf_task
