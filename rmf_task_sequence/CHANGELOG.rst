@@ -2,6 +2,12 @@
 Changelog for package rmf_task_sequence
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.9.0 (2026-01-13)
+------------------
+* Fix nullopt dereference in GoToPlace goal selection (`#130 <https://github.com/open-rmf/rmf_task/issues/130>`_)
+* Introduce start_at_departure option for go_to_place event (`#128 <https://github.com/open-rmf/rmf_task/issues/128>`_)
+* Contributors: kj
+
 2.8.0 (2025-06-09)
 ------------------
 
