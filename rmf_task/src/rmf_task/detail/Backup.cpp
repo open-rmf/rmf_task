@@ -15,6 +15,7 @@
  *
 */
 
+#include <cstdint>
 #include <rmf_task/detail/Backup.hpp>
 
 namespace rmf_task {
