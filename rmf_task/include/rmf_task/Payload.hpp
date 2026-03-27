@@ -20,6 +20,7 @@
 
 #include <rmf_utils/impl_ptr.hpp>
 
+#include <cstdint>
 #include <string>
 #include <vector>
 
