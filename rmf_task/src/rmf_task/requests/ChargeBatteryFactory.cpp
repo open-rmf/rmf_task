@@ -87,6 +87,7 @@ ConstRequestPtr ChargeBatteryFactory::make_request(const State& state) const
 {
   const std::string id = "Charge" + generate_uuid();
   Task::ConstBookingPtr booking;
+  const std::vector<std::string> labels = {"charge"};
   if (_pimpl->requester.has_value() && _pimpl->time_now_cb)
   {
     booking =
@@ -96,7 +97,8 @@ ConstRequestPtr ChargeBatteryFactory::make_request(const State& state) const
       nullptr,
       _pimpl->requester.value(),
       _pimpl->time_now_cb(),
-      true);
+      true,
+      labels);
   }
   else
   {
@@ -105,7 +107,8 @@ ConstRequestPtr ChargeBatteryFactory::make_request(const State& state) const
       std::move(id),
       state.time().value(),
       nullptr,
-      true);
+      true,
+      labels);
   }
 
   const auto description = ChargeBattery::Description::make_indefinite();
