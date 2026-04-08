@@ -186,20 +186,18 @@ struct Node
   {
     unassigned_tasks.erase(task_id);
 
-    bool popped_invariant = false;
-    InvariantSet::iterator erase_it;
+    InvariantSet::iterator erase_it = unassigned_invariants.end();
     for (auto it = unassigned_invariants.begin();
       it != unassigned_invariants.end(); ++it)
     {
       if (it->task_id == task_id)
       {
-        popped_invariant = true;
         erase_it = it;
         break;
       }
     }
+    assert(erase_it != unassigned_invariants.end());
     unassigned_invariants.erase(erase_it);
-    assert(popped_invariant);
   }
 };
 
