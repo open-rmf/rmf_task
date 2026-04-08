@@ -80,7 +80,7 @@ std::optional<rmf_task::Estimate> PerformAction::Model::estimate_finish(
   rmf_task::State initial_state,
   rmf_traffic::Time earliest_arrival_time,
   const Constraints& constraints,
-  const TravelEstimator& travel_estimator) const
+  const TravelEstimator& /*travel_estimator*/) const
 {
   initial_state.time(initial_state.time().value() + _invariant_duration);
   if (_invariant_finish_state.waypoint().has_value())

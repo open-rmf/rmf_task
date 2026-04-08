@@ -1035,7 +1035,7 @@ void Task::Active::_begin_next_stage(std::optional<nlohmann::json> restore)
         tag,
         *_active_stage->description,
         std::move(restore),
-        [me = weak_from_this()](Phase::ConstSnapshotPtr snapshot)
+        [me = weak_from_this()](Phase::ConstSnapshotPtr /*snapshot*/)
         {
           if (const auto self = me.lock())
           {
@@ -1209,7 +1209,7 @@ auto Task::make_activator(
       return Active::make(
         phase_activator,
         clock,
-        std::move(get_state),
+        get_state,
         parameters,
         booking,
         description,
