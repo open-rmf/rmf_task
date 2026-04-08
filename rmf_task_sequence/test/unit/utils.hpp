@@ -68,7 +68,7 @@ std::shared_ptr<rmf_task::Constraints> make_test_constraints(
 
 //==============================================================================
 std::shared_ptr<rmf_task::Parameters> make_test_parameters(
-  bool drain_battery = true)
+  bool /*drain_battery*/ = true)
 {
   using BatterySystem = rmf_battery::agv::BatterySystem;
   using MechanicalSystem = rmf_battery::agv::MechanicalSystem;
@@ -206,6 +206,7 @@ void CHECK_STATE(
 
 //==============================================================================
 // TODO(YV): Also check for invariant_finish_state
+[[maybe_unused]]
 void CHECK_MODEL(
   const rmf_task_sequence::Activity::Model& model,
   const rmf_task::State& initial_state,
@@ -227,6 +228,7 @@ void CHECK_MODEL(
 }
 
 //==============================================================================
+[[maybe_unused]]
 std::optional<rmf_traffic::Duration> estimate_travel_duration(
   const std::shared_ptr<const rmf_traffic::agv::Planner>& planner,
   const rmf_task::State& initial_state,

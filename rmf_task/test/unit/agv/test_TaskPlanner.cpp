@@ -72,7 +72,7 @@ inline void CHECK_TIMES(const TaskPlanner::Assignments& assignments,
 //==============================================================================
 inline bool check_implicit_charging_task_start(
   const TaskPlanner::Assignments& assignments,
-  const double initial_soc)
+  const double /*initial_soc*/)
 {
   bool implicit_charging_task_added = false;
   for (const auto& agent : assignments)
@@ -82,7 +82,6 @@ inline bool check_implicit_charging_task_start(
       continue;
     }
 
-    const auto& s = agent[0].finish_state();
     auto is_charge_request =
       std::dynamic_pointer_cast<
       const rmf_task::requests::ChargeBattery::Description>(
