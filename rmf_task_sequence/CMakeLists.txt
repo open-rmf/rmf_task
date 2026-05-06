@@ -42,7 +42,7 @@ target_link_libraries(rmf_task_sequence
   PUBLIC
     rmf_task::rmf_task
     nlohmann_json::nlohmann_json
-    nlohmann_json_schema_validator
+    nlohmann_json_schema_validator::validator
 )
 
 target_include_directories(rmf_task_sequence
