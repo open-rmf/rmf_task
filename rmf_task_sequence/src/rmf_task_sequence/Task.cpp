@@ -672,13 +672,6 @@ void Task::Active::_load_backup(std::string backup_state_str)
     };
 
   const auto backup_state = nlohmann::json::parse(backup_state_str);
-  if (backup_state.is_null())
-  {
-    _generate_pending_phases();
-    _begin_next_stage();
-    return;
-  }
-
   if (const auto result =
     schemas::ErrorHandler::has_error(backup_schema_validator, backup_state))
   {
@@ -785,12 +778,7 @@ void Task::Active::_load_backup(std::string backup_state_str)
   }
 
   _generate_pending_phases();
-  std::optional<nlohmann::json> restore;
-  const auto& state = current_phase_json["state"];
-  if (!state.is_null())
-    restore = state;
-
-  _begin_next_stage(std::move(restore));
+  _begin_next_stage(std::optional<nlohmann::json>(current_phase_json["state"]));
 }
 
 //==============================================================================

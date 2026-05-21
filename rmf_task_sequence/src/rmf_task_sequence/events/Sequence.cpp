@@ -173,17 +173,6 @@ Event::ActivePtr Sequence::Active::restore(
   std::function<void()> checkpoint,
   std::function<void()> finished)
 {
-  if (backup.is_null())
-  {
-    return Sequence::Standby::initiate(
-      initializer,
-      id,
-      get_state,
-      parameters,
-      description,
-      std::move(parent_update))->begin(std::move(checkpoint), std::move(finished));
-  }
-
   auto state = Sequence::Standby::make_state(id, description);
   const auto update =
     [parent_update = std::move(parent_update), state]()
@@ -194,7 +183,7 @@ Event::ActivePtr Sequence::Active::restore(
 
   std::vector<Event::StandbyPtr> dependencies;
 
-  const auto& backup_state = backup;
+  const auto backup_state = backup;
   if (const auto result =
     schemas::ErrorHandler::has_error(backup_schema_validator, backup_state))
   {
