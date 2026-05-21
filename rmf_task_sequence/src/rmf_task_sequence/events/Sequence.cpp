@@ -168,11 +168,22 @@ Event::ActivePtr Sequence::Active::restore(
   const std::function<rmf_task::State()>& get_state,
   const ConstParametersPtr& parameters,
   const Bundle::Description& description,
-  const std::string& backup,
+  const nlohmann::json& backup,
   std::function<void()> parent_update,
   std::function<void()> checkpoint,
   std::function<void()> finished)
 {
+  if (backup.is_null())
+  {
+    return Sequence::Standby::initiate(
+      initializer,
+      id,
+      get_state,
+      parameters,
+      description,
+      std::move(parent_update))->begin(std::move(checkpoint), std::move(finished));
+  }
+
   auto state = Sequence::Standby::make_state(id, description);
   const auto update =
     [parent_update = std::move(parent_update), state]()
@@ -183,13 +194,13 @@ Event::ActivePtr Sequence::Active::restore(
 
   std::vector<Event::StandbyPtr> dependencies;
 
-  const auto backup_state = nlohmann::json::parse(backup);
+  const auto& backup_state = backup;
   if (const auto result =
     schemas::ErrorHandler::has_error(backup_schema_validator, backup_state))
   {
     state->update_log().error(
       "Parsing failed while restoring backup: " + result->message
-      + "\nOriginal backup state:\n```" + backup + "\n```");
+      + "\nOriginal backup state:\n```" + backup.dump() + "\n```");
     state->update_status(Event::Status::Error);
     return std::make_shared<Sequence::Active>(
       dependencies, std::move(state), nullptr, nullptr, nullptr);
@@ -206,7 +217,7 @@ Event::ActivePtr Sequence::Active::restore(
       "Failed to restore backup. Index ["
       + std::to_string(current_event_index) + "] is too high for ["
       + std::to_string(description.dependencies().size())
-      + "] event dependencies. Original text:\n```\n" + backup + "\n```");
+      + "] event dependencies. Original text:\n```\n" + backup.dump() + "\n```");
     state->update_status(Event::Status::Error);
     return std::make_shared<Sequence::Active>(
       dependencies, std::move(state), nullptr, nullptr, nullptr);

@@ -145,7 +145,7 @@ void SimplePhase::add(
 
       const auto assign_id = Event::AssignID::make();
 
-      if (backup_state.has_value())
+      if (backup_state.has_value() && !backup_state->is_null())
       {
         phase->_final_event = event_initializer->restore(
           assign_id,

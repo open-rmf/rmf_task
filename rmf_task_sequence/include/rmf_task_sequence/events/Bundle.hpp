@@ -154,7 +154,7 @@ public:
     const std::function<rmf_task::State()>& get_state,
     const ConstParametersPtr& parameters,
     const Bundle::Description& description,
-    const std::string& backup,
+    const nlohmann::json& backup,
     std::function<void()> update,
     std::function<void()> checkpoint,
     std::function<void()> finished);

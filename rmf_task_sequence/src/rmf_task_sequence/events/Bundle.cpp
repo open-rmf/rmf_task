@@ -84,11 +84,22 @@ Event::ActivePtr Bundle::restore(
   const std::function<rmf_task::State()>& get_state,
   const ConstParametersPtr& parameters,
   const Bundle::Description& description,
-  const std::string& backup,
+  const nlohmann::json& backup,
   std::function<void()> parent_update,
   std::function<void()> checkpoint,
   std::function<void()> finished)
 {
+  if (backup.is_null())
+  {
+    return initiate(
+      initializer,
+      id,
+      get_state,
+      parameters,
+      description,
+      std::move(parent_update))->begin(std::move(checkpoint), std::move(finished));
+  }
+
   if (description.type() == Bundle::Type::Sequence)
   {
     return internal::Sequence::Active::restore(
