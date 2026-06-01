@@ -38,12 +38,18 @@ void Phase::Activator::add_activator(Activate<Desc> activator)
       std::function<void(Active::Backup)> phase_checkpoint,
       std::function<void()> phase_finished)
     {
+      std::optional<nlohmann::json> json_backup_state = std::nullopt;
+      if (backup_state.has_value())
+      {
+        json_backup_state = nlohmann::json::parse(*backup_state);
+      }
+
       return activator(
         get_state,
         parameters,
         std::move(tag),
         static_cast<const Desc&>(description),
-        std::move(backup_state),
+        std::move(json_backup_state),
         std::move(phase_update),
         std::move(phase_checkpoint),
         std::move(phase_finished));
