@@ -10,10 +10,11 @@ on:
 jobs:
   tsan_test:
     name: rmf_task tsan
-    uses: open-rmf/rmf_ci_templates/.github/workflows/reusable_build.yaml@main
+    uses: open-rmf/rmf_ci_templates/.github/workflows/reusable_build.yaml@explicit_libclang-rt-dev
     with:
       # NOTE: Avoid adding comments in the package lines, this can break some of the called scripts in github actions
       packages: |
         rmf_task
         rmf_task_sequence
+      repos-branch-override: test_lyrical
       mixin: tsan
