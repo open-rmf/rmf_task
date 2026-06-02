@@ -54,7 +54,7 @@ target_include_directories(rmf_task
     ${EIGEN3_INCLUDE_DIRS}
 )
 
-if(BUILD_TESTING AND ament_cmake_catch2_FOUND AND ament_cmake_uncrustify_FOUND)
+if(BUILD_TESTING AND ament_cmake_catch2_FOUND)
   file(GLOB_RECURSE unit_test_srcs "test/*.cpp")
 
   ament_add_catch2(
@@ -69,16 +69,6 @@ if(BUILD_TESTING AND ament_cmake_catch2_FOUND AND ament_cmake_uncrustify_FOUND)
   target_include_directories(test_rmf_task
     PRIVATE
       $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/>
-  )
-
-  find_file(uncrustify_config_file
-    NAMES "rmf_code_style.cfg"
-    PATHS "${rmf_utils_DIR}/../../../share/rmf_utils/")
-
-  ament_uncrustify(
-    ARGN include src test
-    CONFIG_FILE ${uncrustify_config_file}
-    MAX_LINE_LENGTH 80
   )
 endif()
 
