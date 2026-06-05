@@ -17,3 +17,4 @@ jobs:
       packages: |
         rmf_task
         rmf_task_sequence
+    repos-branch-override: lyrical
