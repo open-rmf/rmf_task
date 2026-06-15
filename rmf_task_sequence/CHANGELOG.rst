@@ -8,6 +8,23 @@ Changelog for package rmf_task_sequence
 * Introduce start_at_departure option for go_to_place event (`#128 <https://github.com/open-rmf/rmf_task/issues/128>`_)
 * Contributors: kj
 
+2.10.0 (2026-06-15)
+-------------------
+* Fix poorly defined nlohmann_json conversion (`#137 <https://github.com/open-rmf/rmf_task/issues/137>`_)
+* Resolve warnings (`#135 <https://github.com/open-rmf/rmf_task/issues/135>`_)
+  * resolve warnings
+  * resolve UB
+  ---------
+* Prepare for release 2.9 (`#131 <https://github.com/open-rmf/rmf_task/issues/131>`_)
+  * Update changelogs
+  * Remove out of date version numbers
+  * 2.9.0
+  * Put version numbers back in
+  ---------
+* Fix nullopt dereference in GoToPlace goal selection (`#130 <https://github.com/open-rmf/rmf_task/issues/130>`_)
+* Introduce start_at_departure option for go_to_place event (`#128 <https://github.com/open-rmf/rmf_task/issues/128>`_)
+* Contributors: Aaron Chong, Grey, kj
+
 2.8.0 (2025-06-09)
 ------------------
 
