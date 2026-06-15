@@ -7,6 +7,25 @@ Changelog for package rmf_task
 * Customizable weights for task assignment cost (`#129 <https://github.com/open-rmf/rmf_task/issues/129>`_)
 * Contributors: kj
 
+Forthcoming
+-----------
+* Fix poorly defined nlohmann_json conversion (`#137 <https://github.com/open-rmf/rmf_task/issues/137>`_)
+* Resolve warnings (`#135 <https://github.com/open-rmf/rmf_task/issues/135>`_)
+  * resolve warnings
+  * resolve UB
+  ---------
+* add charge to labels (`#134 <https://github.com/open-rmf/rmf_task/issues/134>`_)
+  Co-authored-by: Xiyu <ohxiyu@gmail.com>
+* add missing includes for GCC 15 (`#133 <https://github.com/open-rmf/rmf_task/issues/133>`_)
+* Prepare for release 2.9 (`#131 <https://github.com/open-rmf/rmf_task/issues/131>`_)
+  * Update changelogs
+  * Remove out of date version numbers
+  * 2.9.0
+  * Put version numbers back in
+  ---------
+* Customizable weights for task assignment cost (`#129 <https://github.com/open-rmf/rmf_task/issues/129>`_)
+* Contributors: Aaron Chong, Grey, Guilhem Saurel, kj
+
 2.8.0 (2025-06-09)
 ------------------
 
