@@ -17,4 +17,3 @@ jobs:
         rmf_task
         rmf_task_sequence
       mixin: tsan
-      repos-branch-override: lyrical
