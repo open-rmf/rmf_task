@@ -8,8 +8,8 @@ Changelog for package rmf_task_sequence
 * Introduce start_at_departure option for go_to_place event (`#128 <https://github.com/open-rmf/rmf_task/issues/128>`_)
 * Contributors: kj
 
-Forthcoming
------------
+2.10.0 (2026-06-15)
+-------------------
 * Fix poorly defined nlohmann_json conversion (`#137 <https://github.com/open-rmf/rmf_task/issues/137>`_)
 * Resolve warnings (`#135 <https://github.com/open-rmf/rmf_task/issues/135>`_)
   * resolve warnings

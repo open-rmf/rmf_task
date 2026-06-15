@@ -7,8 +7,8 @@ Changelog for package rmf_task
 * Customizable weights for task assignment cost (`#129 <https://github.com/open-rmf/rmf_task/issues/129>`_)
 * Contributors: kj
 
-Forthcoming
------------
+2.10.0 (2026-06-15)
+-------------------
 * Fix poorly defined nlohmann_json conversion (`#137 <https://github.com/open-rmf/rmf_task/issues/137>`_)
 * Resolve warnings (`#135 <https://github.com/open-rmf/rmf_task/issues/135>`_)
   * resolve warnings
