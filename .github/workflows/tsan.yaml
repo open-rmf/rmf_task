@@ -17,4 +17,7 @@ jobs:
         rmf_task
         rmf_task_sequence
       mixin: tsan
-      repos-branch-override: lyrical
+      # The current version of rmf_task requires a newer version of
+      # nlohmann_json_schema_validator which is not available in the rmf.repos
+      # files of the older distros.
+      repos-branch-override: main
