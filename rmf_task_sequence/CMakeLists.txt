@@ -22,6 +22,7 @@ include(GNUInstallDirs)
 
 find_package(rmf_api_msgs REQUIRED)
 find_package(rmf_task REQUIRED)
+find_package(rmf_traffic REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(nlohmann_json_schema_validator_vendor REQUIRED)
 find_package(nlohmann_json_schema_validator REQUIRED)
@@ -41,6 +42,7 @@ add_library(rmf_task_sequence SHARED
 target_link_libraries(rmf_task_sequence
   PUBLIC
     rmf_task::rmf_task
+    rmf_traffic::rmf_traffic
     nlohmann_json::nlohmann_json
     nlohmann_json_schema_validator::validator
 )
