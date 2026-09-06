@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5.0)
 
-project(rmf_task VERSION 2.9.0)
+project(rmf_task VERSION 2.10.0)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS on)
 
@@ -54,7 +54,8 @@ target_include_directories(rmf_task
     ${EIGEN3_INCLUDE_DIRS}
 )
 
-if(BUILD_TESTING AND ament_cmake_catch2_FOUND AND ament_cmake_uncrustify_FOUND)
+option(STYLE_TEST "Run uncrustify to evaluate the code style")
+if(BUILD_TESTING)
   file(GLOB_RECURSE unit_test_srcs "test/*.cpp")
 
   ament_add_catch2(
@@ -71,15 +72,17 @@ if(BUILD_TESTING AND ament_cmake_catch2_FOUND AND ament_cmake_uncrustify_FOUND)
       $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/>
   )
 
-  find_file(uncrustify_config_file
-    NAMES "rmf_code_style.cfg"
-    PATHS "${rmf_utils_DIR}/../../../share/rmf_utils/")
+  if(ament_cmake_catch2_FOUND AND STYLE_TEST)
+    find_file(uncrustify_config_file
+      NAMES "rmf_code_style.cfg"
+      PATHS "${rmf_utils_DIR}/../../../share/rmf_utils/")
 
-  ament_uncrustify(
-    ARGN include src test
-    CONFIG_FILE ${uncrustify_config_file}
-    MAX_LINE_LENGTH 80
-  )
+    ament_uncrustify(
+      ARGN include src test
+      CONFIG_FILE ${uncrustify_config_file}
+      MAX_LINE_LENGTH 80
+    )
+  endif()
 endif()
 
 

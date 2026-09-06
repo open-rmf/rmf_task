@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5.0)
 
-project(rmf_task_sequence VERSION 2.9.0)
+project(rmf_task_sequence VERSION 2.10.0)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS on)
 
@@ -42,7 +42,7 @@ target_link_libraries(rmf_task_sequence
   PUBLIC
     rmf_task::rmf_task
     nlohmann_json::nlohmann_json
-    nlohmann_json_schema_validator
+    nlohmann_json_schema_validator::validator
 )
 
 target_include_directories(rmf_task_sequence
@@ -52,7 +52,8 @@ target_include_directories(rmf_task_sequence
     $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/rmf_api_generate_schema_headers/include> # for auto-generated schema headers
 )
 
-if(BUILD_TESTING AND ament_cmake_catch2_FOUND AND ament_cmake_uncrustify_FOUND)
+option(STYLE_TEST "Run uncrustify to evaluate the code style")
+if(BUILD_TESTING AND ament_cmake_catch2_FOUND)
   file(GLOB_RECURSE unit_test_srcs "test/*.cpp")
   ament_add_catch2(
     test_rmf_task_sequence test/main.cpp ${unit_test_srcs}
@@ -66,15 +67,17 @@ if(BUILD_TESTING AND ament_cmake_catch2_FOUND AND ament_cmake_uncrustify_FOUND)
       $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/>
   )
 
-  find_file(uncrustify_config_file
-    NAMES "rmf_code_style.cfg"
-    PATHS "${rmf_utils_DIR}/../../../share/rmf_utils/")
+  if(ament_cmake_uncrustify_FOUND AND STYLE_TEST)
+    find_file(uncrustify_config_file
+      NAMES "rmf_code_style.cfg"
+      PATHS "${rmf_utils_DIR}/../../../share/rmf_utils/")
 
-  ament_uncrustify(
-    ARGN include src test
-    CONFIG_FILE ${uncrustify_config_file}
-    MAX_LINE_LENGTH 80
-  )
+    ament_uncrustify(
+      ARGN include src test
+      CONFIG_FILE ${uncrustify_config_file}
+      MAX_LINE_LENGTH 80
+    )
+  endif()
 endif()
 
 # Generate the schema headers

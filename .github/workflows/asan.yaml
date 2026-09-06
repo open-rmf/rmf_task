@@ -12,11 +12,12 @@ jobs:
     name: rmf_task asan
     uses: open-rmf/rmf_ci_templates/.github/workflows/reusable_build.yaml@main
     with:
-      dist-matrix: |
-          [{"ros_distribution": "rolling",
-            "ubuntu_distribution": "noble"}]
       # NOTE: Avoid adding comments in the package lines, this can break some of the called scripts in github actions
       packages: |
         rmf_task
         rmf_task_sequence
       mixin: asan
+      # The current version of rmf_task requires a newer version of
+      # nlohmann_json_schema_validator which is not available in the rmf.repos
+      # files of the older distros.
+      repos-branch-override: main
