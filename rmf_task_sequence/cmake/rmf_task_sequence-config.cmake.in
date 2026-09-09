@@ -5,6 +5,7 @@ get_filename_component(rmf_task_sequence_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" 
 include(CMakeFindDependencyMacro)
 
 find_dependency(rmf_task)
+find_dependency(rmf_traffic)
 find_dependency(nlohmann_json)
 find_dependency(nlohmann_json_schema_validator_vendor)
 find_dependency(nlohmann_json_schema_validator)

@@ -42,6 +42,7 @@ add_library(rmf_task SHARED
 target_link_libraries(rmf_task
   PUBLIC
     rmf_battery::rmf_battery
+    rmf_traffic::rmf_traffic
     nlohmann_json::nlohmann_json
     Threads::Threads
     $<$<CXX_COMPILER_ID:GNU>:stdc++fs>
