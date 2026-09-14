@@ -7,19 +7,21 @@ namespace rmf_task_sequence {
 namespace events {
 
 namespace {
-// Wraps a GoToPlace Activity::Model and rejects robots whose current
-// waypoint is inside the target zone. Prevents robots already in the
-// zone from winning bids for zone tasks targeting the same zone.
-class ZoneGuardModel : public Activity::Model
+//==============================================================================
+// One GoToPlace model per zone vertex, costed against the nearest.
+class ZoneModel : public Activity::Model
 {
 public:
-  ZoneGuardModel(
-    Activity::ConstModelPtr inner,
-    std::vector<std::size_t> zone_waypoints)
-  : _inner(std::move(inner)),
-    _zone_waypoints(std::move(zone_waypoints))
+  ZoneModel(
+    std::vector<Activity::ConstModelPtr> candidates)
+  : _candidates(std::move(candidates)),
+    _nearest(_candidates.front())
   {
-    // Do nothing
+    for (const auto& candidate : _candidates)
+    {
+      if (candidate->invariant_duration() < _nearest->invariant_duration())
+        _nearest = candidate;
+    }
   }
 
   std::optional<rmf_task::Estimate> estimate_finish(
@@ -28,33 +30,37 @@ public:
     const rmf_task::Constraints& constraints,
     const rmf_task::TravelEstimator& travel_estimator) const override
   {
-    if (initial_state.waypoint().has_value())
+    std::optional<rmf_task::Estimate> best;
+    for (const auto& candidate : _candidates)
     {
-      const auto wp = *initial_state.waypoint();
-      for (const auto& zone_wp : _zone_waypoints)
+      auto estimate = candidate->estimate_finish(
+        initial_state, earliest_arrival_time, constraints, travel_estimator);
+      if (!estimate.has_value())
+        continue;
+
+      if (!best.has_value()
+        || *estimate->finish_state().time() < *best->finish_state().time())
       {
-        if (wp == zone_wp)
-          return std::nullopt;
+        best = std::move(estimate);
       }
     }
-    return _inner->estimate_finish(
-      std::move(initial_state), earliest_arrival_time,
-      constraints, travel_estimator);
+
+    return best;
   }
 
   rmf_traffic::Duration invariant_duration() const override
   {
-    return _inner->invariant_duration();
+    return _nearest->invariant_duration();
   }
 
   rmf_task::State invariant_finish_state() const override
   {
-    return _inner->invariant_finish_state();
+    return _nearest->invariant_finish_state();
   }
 
 private:
-  Activity::ConstModelPtr _inner;
-  std::vector<std::size_t> _zone_waypoints;
+  std::vector<Activity::ConstModelPtr> _candidates;
+  Activity::ConstModelPtr _nearest;
 };
 } // anonymous namespace
 
@@ -88,32 +94,23 @@ Activity::ConstModelPtr GoToZone::Description::make_model(
   if (!zone_props)
     return nullptr;
 
-  std::vector<rmf_traffic::agv::Plan::Goal> goals;
-  std::vector<std::size_t> zone_wp_indices;
+  std::vector<Activity::ConstModelPtr> candidates;
   for (const auto& iv : zone_props->internal_vertices())
   {
     const auto* wp = graph.find_waypoint(iv.name());
     if (!wp)
       continue;
-    goals.emplace_back(wp->index());
-    zone_wp_indices.push_back(wp->index());
+
+    auto model = GoToPlace::Description::make(wp->index())
+      ->make_model(invariant_initial_state, parameters);
+    if (model)
+      candidates.push_back(std::move(model));
   }
 
-  if (goals.empty())
+  if (candidates.empty())
     return nullptr;
 
-  const auto place_desc =
-    GoToPlace::Description::make_for_one_of(std::move(goals));
-  auto inner_model = place_desc->make_model(
-    std::move(invariant_initial_state), parameters);
-  if (!inner_model)
-    return nullptr;
-
-  // Wrap in ZoneGuardModel so that robots already at a zone vertex
-  // get filtered out during bidding (estimate_finish returns nullopt)
-  Activity::ConstModelPtr guard = std::make_shared<const ZoneGuardModel>(
-    std::move(inner_model), std::move(zone_wp_indices));
-  return guard;
+  return std::make_shared<ZoneModel>(std::move(candidates));
 }
 
 //==============================================================================
