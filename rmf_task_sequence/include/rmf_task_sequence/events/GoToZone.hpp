@@ -21,11 +21,34 @@ public:
 class GoToZone::Description : public Event::Description
 {
 public:
-  struct Modifiers
+  /// Hints for which waypoint in the zone to assign.
+  class Modifiers
   {
-    std::string group_hint;
-    std::optional<double> orientation_hint;
-    std::vector<std::string> preferred_waypoints;
+  public:
+    /// Construct with no hints set.
+    Modifiers();
+
+    /// Get the waypoint group to prefer. Empty means no preference.
+    const std::string& group_hint() const;
+
+    /// Set the waypoint group to prefer.
+    Modifiers& set_group_hint(std::string hint);
+
+    /// Get the orientation to prefer at the waypoint, in radians.
+    std::optional<double> orientation_hint() const;
+
+    /// Set the orientation to prefer at the waypoint, in radians.
+    Modifiers& set_orientation_hint(std::optional<double> hint);
+
+    /// Get the waypoints to prefer, in order.
+    const std::vector<std::string>& preferred_waypoints() const;
+
+    /// Set the waypoints to prefer, in order.
+    Modifiers& set_preferred_waypoints(std::vector<std::string> waypoints);
+
+    class Implementation;
+  private:
+    rmf_utils::impl_ptr<Implementation> _pimpl;
   };
 
   /// Make a GoToZone description using a zone name and optional modifiers.

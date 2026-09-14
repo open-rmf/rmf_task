@@ -159,5 +159,65 @@ GoToZone::Description::Description()
   // Do nothing
 }
 
+//==============================================================================
+class GoToZone::Description::Modifiers::Implementation
+{
+public:
+  std::string group_hint;
+  std::optional<double> orientation_hint;
+  std::vector<std::string> preferred_waypoints;
+};
+
+//==============================================================================
+GoToZone::Description::Modifiers::Modifiers()
+: _pimpl(rmf_utils::make_impl<Implementation>())
+{
+  // Do nothing
+}
+
+//==============================================================================
+const std::string& GoToZone::Description::Modifiers::group_hint() const
+{
+  return _pimpl->group_hint;
+}
+
+//==============================================================================
+auto GoToZone::Description::Modifiers::set_group_hint(std::string hint)
+-> Modifiers&
+{
+  _pimpl->group_hint = std::move(hint);
+  return *this;
+}
+
+//==============================================================================
+std::optional<double>
+GoToZone::Description::Modifiers::orientation_hint() const
+{
+  return _pimpl->orientation_hint;
+}
+
+//==============================================================================
+auto GoToZone::Description::Modifiers::set_orientation_hint(
+  std::optional<double> hint) -> Modifiers&
+{
+  _pimpl->orientation_hint = hint;
+  return *this;
+}
+
+//==============================================================================
+const std::vector<std::string>&
+GoToZone::Description::Modifiers::preferred_waypoints() const
+{
+  return _pimpl->preferred_waypoints;
+}
+
+//==============================================================================
+auto GoToZone::Description::Modifiers::set_preferred_waypoints(
+  std::vector<std::string> waypoints) -> Modifiers&
+{
+  _pimpl->preferred_waypoints = std::move(waypoints);
+  return *this;
+}
+
 } // namespace events
 } // namespace rmf_task_sequence
