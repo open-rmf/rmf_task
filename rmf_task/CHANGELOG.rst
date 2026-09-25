@@ -2,6 +2,11 @@
 Changelog for package rmf_task
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add explicit rmf_traffic dependencies (`#145 <https://github.com/open-rmf/rmf_task/issues/145>`_)
+* Contributors: Plumezz
+
 2.9.0 (2026-01-13)
 ------------------
 * Customizable weights for task assignment cost (`#129 <https://github.com/open-rmf/rmf_task/issues/129>`_)
