@@ -2,6 +2,11 @@
 Changelog for package rmf_task_sequence
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.11.0 (2026-09-26)
+-------------------
+* Add explicit rmf_traffic dependencies (`#145 <https://github.com/open-rmf/rmf_task/issues/145>`_)
+* Contributors: Plumezz
+
 2.9.0 (2026-01-13)
 ------------------
 * Fix nullopt dereference in GoToPlace goal selection (`#130 <https://github.com/open-rmf/rmf_task/issues/130>`_)
