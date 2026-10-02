@@ -451,7 +451,12 @@ Task::Description::Description()
 rmf_task::Event::Status Task::Active::status_overview() const
 {
   if (_active_phase)
+  {
+    if (!_pending_phases.empty())
+      return Event::Status::Underway;
+
     return _active_phase->final_event()->status();
+  }
 
   if (_completed_phases.empty() && _pending_phases.empty())
   {
