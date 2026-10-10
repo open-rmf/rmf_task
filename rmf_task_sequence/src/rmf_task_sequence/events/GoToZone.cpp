@@ -69,17 +69,17 @@ class GoToZone::Description::Implementation
 {
 public:
   std::string zone_name;
-  std::optional<Modifiers> modifiers;
+  std::vector<Hint> hints;
 };
 
 //==============================================================================
 auto GoToZone::Description::make(
   std::string zone_name,
-  std::optional<Modifiers> modifiers) -> DescriptionPtr
+  std::vector<Hint> hints) -> DescriptionPtr
 {
   auto desc = std::shared_ptr<Description>(new Description);
   desc->_pimpl = rmf_utils::make_impl<Implementation>(
-    Implementation{std::move(zone_name), std::move(modifiers)});
+    Implementation{std::move(zone_name), std::move(hints)});
 
   return desc;
 }
@@ -144,10 +144,10 @@ const std::string& GoToZone::Description::zone_name() const
 }
 
 //==============================================================================
-const std::optional<GoToZone::Description::Modifiers>&
-GoToZone::Description::modifiers() const
+const std::vector<GoToZone::Description::Hint>&
+GoToZone::Description::hints() const
 {
-  return _pimpl->modifiers;
+  return _pimpl->hints;
 }
 
 //==============================================================================
@@ -157,62 +157,58 @@ GoToZone::Description::Description()
 }
 
 //==============================================================================
-class GoToZone::Description::Modifiers::Implementation
+class GoToZone::Description::Hint::Implementation
 {
 public:
-  std::string group_hint;
-  std::optional<double> orientation_hint;
-  std::vector<std::string> preferred_waypoints;
+  std::string group;
+  std::string waypoint;
+  std::vector<double> orientations;
 };
 
 //==============================================================================
-GoToZone::Description::Modifiers::Modifiers()
+GoToZone::Description::Hint::Hint()
 : _pimpl(rmf_utils::make_impl<Implementation>())
 {
   // Do nothing
 }
 
 //==============================================================================
-const std::string& GoToZone::Description::Modifiers::group_hint() const
+const std::string& GoToZone::Description::Hint::group() const
 {
-  return _pimpl->group_hint;
+  return _pimpl->group;
 }
 
 //==============================================================================
-auto GoToZone::Description::Modifiers::set_group_hint(std::string hint)
--> Modifiers&
+auto GoToZone::Description::Hint::set_group(std::string group) -> Hint&
 {
-  _pimpl->group_hint = std::move(hint);
+  _pimpl->group = std::move(group);
   return *this;
 }
 
 //==============================================================================
-std::optional<double>
-GoToZone::Description::Modifiers::orientation_hint() const
+const std::string& GoToZone::Description::Hint::waypoint() const
 {
-  return _pimpl->orientation_hint;
+  return _pimpl->waypoint;
 }
 
 //==============================================================================
-auto GoToZone::Description::Modifiers::set_orientation_hint(
-  std::optional<double> hint) -> Modifiers&
+auto GoToZone::Description::Hint::set_waypoint(std::string waypoint) -> Hint&
 {
-  _pimpl->orientation_hint = hint;
+  _pimpl->waypoint = std::move(waypoint);
   return *this;
 }
 
 //==============================================================================
-const std::vector<std::string>&
-GoToZone::Description::Modifiers::preferred_waypoints() const
+const std::vector<double>& GoToZone::Description::Hint::orientations() const
 {
-  return _pimpl->preferred_waypoints;
+  return _pimpl->orientations;
 }
 
 //==============================================================================
-auto GoToZone::Description::Modifiers::set_preferred_waypoints(
-  std::vector<std::string> waypoints) -> Modifiers&
+auto GoToZone::Description::Hint::set_orientations(
+  std::vector<double> orientations) -> Hint&
 {
-  _pimpl->preferred_waypoints = std::move(waypoints);
+  _pimpl->orientations = std::move(orientations);
   return *this;
 }
 

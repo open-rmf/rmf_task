@@ -21,46 +21,51 @@ public:
 class GoToZone::Description : public Event::Description
 {
 public:
-  /// Hints for which waypoint in the zone to assign.
-  class Modifiers
+  /// One preference for the zone assignment: where to park, and facing
+  /// which way. Name a group, or a waypoint, or neither to accept any
+  /// waypoint in the zone.
+  class Hint
   {
   public:
-    /// Construct with no hints set.
-    Modifiers();
+    /// Construct with nothing named, which accepts any waypoint at any
+    /// orientation.
+    Hint();
 
-    /// Get the waypoint group to prefer. Empty means no preference.
-    const std::string& group_hint() const;
+    /// Get the group to prefer. Empty if none.
+    const std::string& group() const;
 
-    /// Set the waypoint group to prefer.
-    Modifiers& set_group_hint(std::string hint);
+    /// Set the group to prefer.
+    Hint& set_group(std::string group);
 
-    /// Get the orientation to prefer at the waypoint, in radians.
-    std::optional<double> orientation_hint() const;
+    /// Get the waypoint to prefer. Empty if none.
+    const std::string& waypoint() const;
 
-    /// Set the orientation to prefer at the waypoint, in radians.
-    Modifiers& set_orientation_hint(std::optional<double> hint);
+    /// Set the waypoint to prefer.
+    Hint& set_waypoint(std::string waypoint);
 
-    /// Get the waypoints to prefer, in order.
-    const std::vector<std::string>& preferred_waypoints() const;
+    /// Get the orientations the robot may park at, in radians. Empty means
+    /// any.
+    const std::vector<double>& orientations() const;
 
-    /// Set the waypoints to prefer, in order.
-    Modifiers& set_preferred_waypoints(std::vector<std::string> waypoints);
+    /// Set the orientations the robot may park at, in radians.
+    Hint& set_orientations(std::vector<double> orientations);
 
     class Implementation;
   private:
     rmf_utils::impl_ptr<Implementation> _pimpl;
   };
 
-  /// Make a GoToZone description using a zone name and optional modifiers.
+  /// Make a GoToZone description using a zone name and ordered hints, most
+  /// preferred first.
   static DescriptionPtr make(
     std::string zone_name,
-    std::optional<Modifiers> modifiers = std::nullopt);
+    std::vector<Hint> hints = {});
 
   /// Get the name of the zone for this description.
   const std::string& zone_name() const;
 
-  /// Get the modifiers for this description.
-  const std::optional<Modifiers>& modifiers() const;
+  /// Get the hints for this description, most preferred first.
+  const std::vector<Hint>& hints() const;
 
   // Documentation inherited
   Activity::ConstModelPtr make_model(
