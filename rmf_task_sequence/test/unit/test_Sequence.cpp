@@ -167,8 +167,10 @@ SCENARIO("Test Event Sequences")
   std::optional<rmf_task::Task::Active::Backup> last_backup;
   rmf_task::Phase::ConstCompletedPtr last_finished_phase;
   std::size_t task_finished_counter = 0;
-
-  auto task = task_activator.activate(
+  rmf_task::Event::Status status_during_phase_finished =
+    rmf_task::Event::Status::Underway;
+  rmf_task::Task::ActivePtr task;
+  task = task_activator.activate(
     []() { return rmf_task::State().time(std::chrono::steady_clock::now()); },
     params,
     rmf_task::Request(
@@ -184,9 +186,11 @@ SCENARIO("Test Event Sequences")
     {
       last_backup = std::move(backup);
     },
-    [&last_finished_phase](rmf_task::Phase::ConstCompletedPtr finished_phase)
+    [&last_finished_phase, &status_during_phase_finished, &task](
+      rmf_task::Phase::ConstCompletedPtr finished_phase)
     {
       last_finished_phase = std::move(finished_phase);
+      status_during_phase_finished = task->status_overview();
     },
     [&task_finished_counter]()
     {
@@ -305,6 +309,11 @@ SCENARIO("Test Event Sequences")
     check_status(
       {ctrl_1_0, ctrl_1_1, ctrl_1_2, ctrl_1_3},
       rmf_task::Event::Status::Completed);
+
+    CHECK(
+      status_during_phase_finished ==
+      rmf_task::Event::Status::Underway);
+
     check_active({ctrl_2_0});
     check_inactive({ctrl_3_0, ctrl_3_1});
     REQUIRE(last_snapshot);
