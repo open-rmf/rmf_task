@@ -145,6 +145,11 @@ auto MockActivity::Active::interrupt(std::function<void()> task_is_interrupted)
   return Resume::make(
     [state_data = state_data]()
     {
+      // Like a real event, ignore a resume that arrives after this event has
+      // already finished (e.g. it was cancelled while the task was interrupted)
+      if (state_data->finished())
+        return;
+
       state_data->update_status(rmf_task::Event::Status::Underway);
     });
 }

@@ -420,4 +420,58 @@ SCENARIO("Test Event Sequences")
     CHECK(task->completed_phases().size() == 3);
     CHECK(task->pending_phases().size() == 0);
   }
+
+  WHEN("Task is cancelled while it is interrupted")
+  {
+    bool interrupted = false;
+    const auto resume = task->interrupt([&interrupted]()
+        {
+          interrupted = true;
+        });
+    CHECK(interrupted);
+    check_status({ctrl_1_0}, rmf_task::Event::Status::Standby);
+
+    task->cancel();
+    check_status({ctrl_1_0}, rmf_task::Event::Status::Canceled);
+
+    // Nothing more happens while the task is still interrupted
+    check_inactive({cancel_ctrl_0, cancel_ctrl_1});
+    CHECK(task_finished_counter == 0);
+
+    resume();
+
+    // The cancelled phase must not be restarted by the resume. The task moves
+    // on to its cancellation sequence instead.
+    check_status({ctrl_1_0}, rmf_task::Event::Status::Canceled);
+    check_inactive({ctrl_1_1, ctrl_1_2, ctrl_1_3, ctrl_2_0, ctrl_3_0,
+        ctrl_3_1});
+    REQUIRE(cancel_ctrl_0->active);
+    CHECK(task_finished_counter == 0);
+
+    cancel_ctrl_0->active->complete();
+    REQUIRE(cancel_ctrl_1->active);
+    cancel_ctrl_1->active->complete();
+    CHECK(task_finished_counter == 1);
+  }
+
+  WHEN("Task is killed while it is interrupted")
+  {
+    bool interrupted = false;
+    const auto resume = task->interrupt([&interrupted]()
+        {
+          interrupted = true;
+        });
+    CHECK(interrupted);
+
+    task->kill();
+    check_status({ctrl_1_0}, rmf_task::Event::Status::Killed);
+    CHECK(task_finished_counter == 0);
+
+    resume();
+
+    // A killed task finishes right away: no restart, no cancellation sequence
+    check_status({ctrl_1_0}, rmf_task::Event::Status::Killed);
+    check_inactive({ctrl_1_1, cancel_ctrl_0, cancel_ctrl_1});
+    CHECK(task_finished_counter == 1);
+  }
 }
