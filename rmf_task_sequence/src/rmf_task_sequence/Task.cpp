@@ -554,7 +554,22 @@ auto Task::Active::interrupt(std::function<void()> task_is_interrupted)
 
       me->_task_is_interrupted = nullptr;
       if (me->_resume_phase.has_value())
+      {
+        const bool phase_was_stopped = me->_killed ||
+        (me->_cancelled_on_phase.has_value() && me->_active_phase &&
+        *me->_cancelled_on_phase == me->_active_phase->tag()->id());
+
+        if (phase_was_stopped)
+        {
+          // The interrupted phase was cancelled or killed while the task was
+          // interrupted, so it must not be restarted. Once it reports that it
+          // has finished, the task will move on to the cancellation sequence.
+          me->_resume_phase = std::nullopt;
+          return;
+        }
+
         (*me->_resume_phase)();
+      }
       else
         me->_begin_next_stage();
     });
@@ -834,6 +849,16 @@ void Task::Active::_finish_phase(Phase::Tag::Id id)
 void Task::Active::_begin_next_stage(std::optional<nlohmann::json> restore)
 {
   std::lock_guard<std::recursive_mutex> lock(_next_phase_mutex);
+  if (_resume_phase.has_value())
+  {
+    // If we were expecting to resume a phase but we wound up here instead, then
+    // the phase that we tried to interrupt finished instead of being
+    // interrupted (e.g. it was cancelled). We will clear this field since it is
+    // no longer relevant. This must happen before the interruption check below,
+    // otherwise resuming the task would restart the phase that just finished.
+    _resume_phase = std::nullopt;
+  }
+
   if (_task_is_interrupted)
   {
     // If we currently expect the task to be interrupted but we reach this
@@ -843,14 +868,6 @@ void Task::Active::_begin_next_stage(std::optional<nlohmann::json> restore)
     // refuse to move on to the next phase.
     _task_is_interrupted();
     return;
-  }
-
-  if (_resume_phase.has_value())
-  {
-    // If we were expecting to resume a phase but we wound up here instead, then
-    // the phase that we tried to interrupt finished instead of being
-    // interrupted. We will clear this field since it is no longer relevant.
-    _resume_phase = std::nullopt;
   }
 
   if (_killed)
