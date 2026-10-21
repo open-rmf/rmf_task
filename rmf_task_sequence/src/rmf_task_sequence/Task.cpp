@@ -17,6 +17,8 @@
 
 #include "phases/internal_CancellationPhase.hpp"
 
+#include <algorithm>
+#include <iterator>
 #include <list>
 
 #include <rmf_task/phases/RestoreBackup.hpp>
@@ -618,34 +620,64 @@ void Task::Active::rewind(uint64_t phase_id)
 {
   std::lock_guard lock(_next_phase_mutex);
   assert(_completed_phases.size() == _completed_stages.size());
-  std::size_t completed_index = 0;
-  auto stage_it = _completed_stages.begin();
-  while (stage_it != _completed_stages.end())
-  {
-    if ((*stage_it)->id == phase_id)
-      break;
 
-    ++completed_index;
+  if (!_active_stage || !_active_phase || _finished || _killed ||
+    _cancelled_on_phase.has_value())
+  {
+    // There is no phase to rewind from, or the task is already winding down.
+    return;
   }
 
-  if (stage_it == _completed_stages.end())
+  // Find the most recent completion of the requested phase. A phase can be
+  // recorded more than once, e.g. when an earlier rewind cancelled it and it
+  // was then run again.
+  const auto found = std::find_if(
+    _completed_stages.rbegin(), _completed_stages.rend(),
+    [phase_id](const ConstStagePtr& stage) { return stage->id == phase_id; });
+
+  if (found == _completed_stages.rend())
   {
+    if (_active_stage->id == phase_id)
+    {
+      // Rewinding to the phase that is currently active restarts that phase.
+      _pending_stages.push_front(_active_stage);
+      _generate_pending_phases();
+      _active_phase->cancel();
+      return;
+    }
+
     // TODO(MXG): Indicate to the user that they asked to rewind to a phase
     // that hasn't been reached yet.
     return;
   }
 
+  const auto stage_it = std::prev(found.base());
+  const auto completed_index = static_cast<std::size_t>(
+    std::distance(_completed_stages.begin(), stage_it));
+
+  // The currently active stage goes back into pending, to run again after the
+  // rewound stages have been repeated.
+  _pending_stages.push_front(_active_stage);
+
+  // Queue the completed stages from phase_id onwards ahead of it. This must
+  // happen before they are erased below, since stage_it points into
+  // _completed_stages.
   _pending_stages.insert(
     _pending_stages.begin(),
     stage_it,
-    _completed_stages.begin());
+    _completed_stages.end());
 
-  // The currently active stage should also be put back into pending
-  _pending_stages.push_back(_active_stage);
+  // The rewound phases are no longer completed. _completed_stages and
+  // _completed_phases are appended in lockstep by _finish_phase, so
+  // completed_index applies to both.
+  _completed_stages.erase(stage_it, _completed_stages.end());
+  _completed_phases.erase(
+    _completed_phases.begin() + completed_index, _completed_phases.end());
+
   _generate_pending_phases();
 
-  // If we are supposed to rewind to an earlier stage, then we should cancel
-  // the currently active one.
+  // Cancel the currently active phase so the task moves on to the first of the
+  // rewound phases.
   _active_phase->cancel();
 }
 

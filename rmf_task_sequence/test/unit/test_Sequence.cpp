@@ -421,3 +421,156 @@ SCENARIO("Test Event Sequences")
     CHECK(task->pending_phases().size() == 0);
   }
 }
+
+//==============================================================================
+SCENARIO("Rewind a task to an earlier phase")
+{
+  const auto event_initializer =
+    std::make_shared<rmf_task_sequence::Event::Initializer>();
+  rmf_task_sequence::events::Bundle::add(event_initializer);
+  MockActivity::add(event_initializer);
+
+  const auto phase_activator =
+    std::make_shared<rmf_task_sequence::Phase::Activator>();
+  rmf_task_sequence::phases::SimplePhase::add(
+    *phase_activator, event_initializer);
+
+  rmf_task::Activator task_activator;
+  rmf_task_sequence::Task::add(
+    task_activator,
+    phase_activator,
+    []() { return std::chrono::steady_clock::now(); });
+
+  // Four phases with one event each. ctrl[i] belongs to phase i+1.
+  std::vector<std::shared_ptr<MockActivity::Controller>> ctrl;
+  rmf_task_sequence::Task::Builder builder;
+  for (std::size_t i = 0; i < 4; ++i)
+  {
+    ctrl.push_back(std::make_shared<MockActivity::Controller>());
+    builder.add_phase(make_phase(ctrl.back()), {});
+  }
+
+  const auto params = std::make_shared<rmf_task::Parameters>(
+    nullptr,
+    rmf_battery::agv::BatterySystem::make(1.0, 1.0, 1.0).value(),
+    nullptr,
+    nullptr);
+
+  std::size_t task_finished_counter = 0;
+  auto task = task_activator.activate(
+    []() { return rmf_task::State().time(std::chrono::steady_clock::now()); },
+    params,
+    rmf_task::Request(
+      "mock_rewind_request",
+      std::chrono::steady_clock::now(),
+      nullptr,
+      builder.build("Mock Task", "Rewinding a task")),
+    [](rmf_task::Phase::ConstSnapshotPtr) {},
+    [](rmf_task::Task::Active::Backup) {},
+    [](rmf_task::Phase::ConstCompletedPtr) {},
+    [&task_finished_counter]() { ++task_finished_counter; });
+
+  const auto active_id = [&task]() -> uint64_t
+  {
+    return task->active_phase()->tag()->id();
+  };
+
+  // Complete the event of the active phase
+  const auto complete_active = [&]()
+  {
+    const auto& c = ctrl[active_id() - 1];
+    REQUIRE(c->active);
+    c->active->complete();
+  };
+
+  // Run phases 1 and 2, leaving phase 3 active
+  complete_active();
+  complete_active();
+  REQUIRE(active_id() == 3);
+  REQUIRE(task->completed_phases().size() == 2);
+
+  WHEN("Rewinding to the first phase")
+  {
+    task->rewind(1);
+    CHECK(active_id() == 1);
+    check_status({ctrl[0]}, rmf_task::Event::Status::Underway);
+    CHECK(task->pending_phases().size() == 3);
+
+    // Phases 1, 2 and 3 run again, then phase 4
+    for (const uint64_t expected : {1, 2, 3, 4})
+    {
+      CHECK(active_id() == expected);
+      complete_active();
+    }
+    CHECK(task_finished_counter == 1);
+  }
+
+  WHEN("Rewinding to a later completed phase")
+  {
+    // Before the fix, this spun forever inside rewind()
+    task->rewind(2);
+    CHECK(active_id() == 2);
+    CHECK(task->pending_phases().size() == 2);
+
+    for (const uint64_t expected : {2, 3, 4})
+    {
+      CHECK(active_id() == expected);
+      complete_active();
+    }
+    CHECK(task_finished_counter == 1);
+  }
+
+  WHEN("Rewinding to the active phase")
+  {
+    const auto first_run = ctrl[2]->active;
+    task->rewind(3);
+    CHECK(active_id() == 3);
+    CHECK(ctrl[2]->active != first_run);
+    check_status({ctrl[2]}, rmf_task::Event::Status::Underway);
+
+    for (const uint64_t expected : {3, 4})
+    {
+      CHECK(active_id() == expected);
+      complete_active();
+    }
+    CHECK(task_finished_counter == 1);
+  }
+
+  WHEN("Rewinding to a phase that has not been reached")
+  {
+    const auto active = ctrl[2]->active;
+    task->rewind(4);
+    CHECK(active_id() == 3);
+    CHECK(ctrl[2]->active == active);
+    check_status({ctrl[2]}, rmf_task::Event::Status::Underway);
+    CHECK(task->completed_phases().size() == 2);
+  }
+
+  WHEN("Rewinding while the task is being cancelled")
+  {
+    task->cancel();
+    task->rewind(1);
+    CHECK_FALSE(ctrl[0]->active->state()->status() ==
+      rmf_task::Event::Status::Underway);
+    CHECK(task_finished_counter == 1);
+  }
+
+  WHEN("Rewinding twice")
+  {
+    // The first rewind cancels phase 3, so phase 3 is recorded as finished
+    // before it runs again
+    task->rewind(2);
+    complete_active();  // phase 2
+    complete_active();  // phase 3
+    REQUIRE(active_id() == 4);
+
+    // Phase 3 is now in the record twice. The rewind must restart from its
+    // most recent run, so the task continues with phase 4 next, not phase 2.
+    task->rewind(3);
+    CHECK(active_id() == 3);
+    complete_active();
+    CHECK(active_id() == 4);
+    complete_active();
+    CHECK(task_finished_counter == 1);
+  }
+}
