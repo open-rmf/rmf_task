@@ -13,7 +13,7 @@ jobs:
     uses: open-rmf/rmf_ci_templates/.github/workflows/reusable_build.yaml@main
     with:
       dist-matrix: |
-          [{"ros_distribution": "rolling",
+          [{"ros_distribution": "jazzy",
             "ubuntu_distribution": "noble"}]
       # NOTE: Avoid adding comments in the package lines, this can break some of the called scripts in github actions
       packages: |
