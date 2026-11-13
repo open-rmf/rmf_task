@@ -2,6 +2,16 @@
 Changelog for package rmf_task_sequence
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix Task::Active::rewind() so it actually rewinds (`#154 <https://github.com/open-rmf/rmf_task/issues/154>`_)
+  Assisted-by: Claude Opus 5.5 <noreply@anthropic.com>
+* Add GoToZone task-sequence event (`#136 <https://github.com/open-rmf/rmf_task/issues/136>`_)
+  Co-authored-by: kjchee <keai_jiang_chee@cgh.com.sg>
+  Co-authored-by: Loke Ji Xian <loke_ji_xian@cgh.com.sg>
+* bump cmake version (`#151 <https://github.com/open-rmf/rmf_task/issues/151>`_)
+* Contributors: Aaron Chong, HappySamuel, chart
+
 2.11.0 (2026-09-26)
 -------------------
 * Add explicit rmf_traffic dependencies (`#145 <https://github.com/open-rmf/rmf_task/issues/145>`_)

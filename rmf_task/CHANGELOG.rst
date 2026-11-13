@@ -2,6 +2,11 @@
 Changelog for package rmf_task
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* bump cmake version (`#151 <https://github.com/open-rmf/rmf_task/issues/151>`_)
+* Contributors: Aaron Chong
+
 2.11.0 (2026-09-26)
 -------------------
 * Add explicit rmf_traffic dependencies (`#145 <https://github.com/open-rmf/rmf_task/issues/145>`_)
