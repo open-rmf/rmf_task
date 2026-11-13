@@ -2,8 +2,8 @@
 Changelog for package rmf_task_sequence
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.12.0 (2026-11-13)
+-------------------
 * Fix Task::Active::rewind() so it actually rewinds (`#154 <https://github.com/open-rmf/rmf_task/issues/154>`_)
   Assisted-by: Claude Opus 5.5 <noreply@anthropic.com>
 * Add GoToZone task-sequence event (`#136 <https://github.com/open-rmf/rmf_task/issues/136>`_)

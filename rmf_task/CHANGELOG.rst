@@ -2,8 +2,8 @@
 Changelog for package rmf_task
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.12.0 (2026-11-13)
+-------------------
 * bump cmake version (`#151 <https://github.com/open-rmf/rmf_task/issues/151>`_)
 * Contributors: Aaron Chong
 
