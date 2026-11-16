@@ -352,7 +352,7 @@ Header GoToPlace::Description::generate_header(
 
   if (!estimate.has_value())
   {
-    Header(
+    return Header(
       "Go to one of [" + destination_name(parameters) + "]",
       "Waiting for path to open up",
       rmf_traffic::Duration(0));
