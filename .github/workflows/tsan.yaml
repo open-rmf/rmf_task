@@ -6,6 +6,14 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      ros_distribution:
+        description: 'ROS distribution to build (empty = default matrix; options: https://github.com/open-rmf/rmf_ci_templates/blob/main/.github/workflows/reusable_build.yaml)'
+        type: string
+      repos_branch_override:
+        description: 'Branch of open-rmf/rmf for rmf.repos (auto = match ros_distribution)'
+        type: string
+        default: 'main'
 
 jobs:
   tsan_test:
@@ -16,8 +24,9 @@ jobs:
       packages: |
         rmf_task
         rmf_task_sequence
+      ros-distribution: ${{ inputs.ros_distribution || '' }}
       mixin: tsan
       # The current version of rmf_task requires a newer version of
       # nlohmann_json_schema_validator which is not available in the rmf.repos
       # files of the older distros.
-      repos-branch-override: main
+      repos-branch-override: ${{ inputs.repos_branch_override || 'main' }}
