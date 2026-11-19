@@ -69,4 +69,34 @@ SCENARIO("Test GoToPlace")
     REQUIRE(finish.has_value());
     CHECK(finish->finish_state().waypoint() == 8);
   }
+
+  WHEN("No destination can be reached")
+  {
+    // Waypoint 2 has no lanes, so nothing can reach it
+    rmf_traffic::agv::Graph graph;
+    graph.add_waypoint("test_map", {0, 0});
+    graph.add_waypoint("test_map", {5, 0});
+    graph.add_waypoint("test_map", {20, 0});
+    graph.add_lane(0, 1);
+    graph.add_lane(1, 0);
+
+    const auto& traits =
+      parameters->planner()->get_configuration().vehicle_traits();
+    auto disconnected_parameters = *parameters;
+    disconnected_parameters.planner(
+      std::make_shared<rmf_traffic::agv::Planner>(
+        rmf_traffic::agv::Planner::Configuration{graph, traits},
+        rmf_traffic::agv::Planner::Options{nullptr}));
+
+    rmf_task::State start = initial_state;
+    start.waypoint(0);
+
+    auto description = GoToPlace::Description::make(2);
+    const auto header =
+      description->generate_header(start, disconnected_parameters);
+
+    CHECK(header.category() == "Go to one of [[graph-wp:2]]");
+    CHECK(header.detail() == "Waiting for path to open up");
+    CHECK(header.original_duration_estimate().count() == 0);
+  }
 }
