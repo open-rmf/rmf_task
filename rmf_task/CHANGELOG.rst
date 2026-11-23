@@ -2,6 +2,14 @@
 Changelog for package rmf_task
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Resolve warnings (`#135 <https://github.com/open-rmf/rmf_task/issues/135>`_)
+* add charge to labels (`#134 <https://github.com/open-rmf/rmf_task/issues/134>`_)
+  Co-authored-by: Xiyu <ohxiyu@gmail.com>
+* add missing includes for GCC 15 (`#133 <https://github.com/open-rmf/rmf_task/issues/133>`_)
+* Contributors: Aaron Chong, Guilhem Saurel
+
 2.5.1 (2024-06-15)
 ------------------
 
