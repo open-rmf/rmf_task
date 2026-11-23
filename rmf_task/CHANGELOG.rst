@@ -2,8 +2,8 @@
 Changelog for package rmf_task
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.5.2 (2026-11-23)
+------------------
 * Resolve warnings (`#135 <https://github.com/open-rmf/rmf_task/issues/135>`_)
 * add charge to labels (`#134 <https://github.com/open-rmf/rmf_task/issues/134>`_)
   Co-authored-by: Xiyu <ohxiyu@gmail.com>
