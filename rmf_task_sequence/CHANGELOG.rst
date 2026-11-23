@@ -2,6 +2,14 @@
 Changelog for package rmf_task_sequence
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.5.2 (2026-11-23)
+------------------
+* Fix Task::Active::rewind() so it actually rewinds (`#154 <https://github.com/open-rmf/rmf_task/issues/154>`_)
+  Assisted-by: Claude Opus 5.5 <noreply@anthropic.com>
+* Resolve warnings (`#135 <https://github.com/open-rmf/rmf_task/issues/135>`_)
+* Fix nullopt dereference in GoToPlace goal selection (`#130 <https://github.com/open-rmf/rmf_task/issues/130>`_)
+* Contributors: Aaron Chong, HappySamuel, kj
+
 2.5.1 (2024-06-15)
 ------------------
 
